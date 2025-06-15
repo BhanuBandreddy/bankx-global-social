@@ -1,6 +1,6 @@
-
 import { useState } from "react";
-import { Shield, TrendingUp, Users, Globe, Zap, Eye } from "lucide-react";
+import { TrendingUp, Eye } from "lucide-react";
+import { CustomIcons } from "./CustomIcons";
 
 export const TrustMetrics = () => {
   const [selectedMetric, setSelectedMetric] = useState("global");
@@ -59,9 +59,9 @@ export const TrustMetrics = () => {
       <div className="p-6 bg-gray-50 border-b-4 border-black">
         <div className="flex space-x-4">
           {[
-            { key: "global", label: "Global Network", icon: Globe },
-            { key: "personal", label: "Your Network", icon: Users },
-            { key: "ai", label: "AI Reliability", icon: Zap }
+            { key: "global", label: "Global Network", icon: CustomIcons.Globe },
+            { key: "personal", label: "Your Network", icon: CustomIcons.Trust },
+            { key: "ai", label: "AI Reliability", icon: CustomIcons.Lightning }
           ].map(({ key, label, icon: Icon }) => (
             <button
               key={key}
@@ -144,7 +144,7 @@ export const TrustMetrics = () => {
       {/* Trust Insights */}
       <div className="p-6 bg-lime-50 border-t-4 border-black">
         <div className="flex items-start space-x-4">
-          <Shield className="w-8 h-8 text-lime-600 mt-1" />
+          <CustomIcons.Trust className="w-8 h-8 text-lime-600 mt-1" />
           <div>
             <h3 className="text-lg font-bold text-black mb-2">AI Trust Insights</h3>
             <p className="text-black leading-relaxed">

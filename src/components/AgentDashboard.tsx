@@ -1,6 +1,7 @@
 
 import { useState } from "react";
-import { Bot, Zap, Shield, TrendingUp, MessageSquare, CreditCard, Truck, Search } from "lucide-react";
+import { TrendingUp, MessageSquare } from "lucide-react";
+import { CustomIcons } from "./CustomIcons";
 
 export const AgentDashboard = () => {
   const [selectedAgent, setSelectedAgent] = useState("trust");
@@ -9,7 +10,7 @@ export const AgentDashboard = () => {
     trust: {
       name: "Trust Oracle",
       status: "Active",
-      icon: Shield,
+      icon: CustomIcons.Trust,
       color: "lime",
       description: "Analyzing trust patterns across 2.8M users",
       actions: ["Verified 847 transactions", "Detected 3 anomalies", "Updated 234 trust scores"],
@@ -18,7 +19,7 @@ export const AgentDashboard = () => {
     commerce: {
       name: "Commerce Conductor", 
       status: "Active",
-      icon: CreditCard,
+      icon: CustomIcons.Shop,
       color: "blue",
       description: "Orchestrating seamless global payments",
       actions: ["Processed $12.4K payments", "Optimized 156 routes", "Saved $890 in fees"],
@@ -27,7 +28,7 @@ export const AgentDashboard = () => {
     discovery: {
       name: "Discovery Engine",
       status: "Learning",
-      icon: Search, 
+      icon: CustomIcons.Globe, 
       color: "purple",
       description: "Connecting users with perfect matches",
       actions: ["Made 1,247 recommendations", "Matched 89 interests", "Found 23 rare items"],
@@ -36,7 +37,7 @@ export const AgentDashboard = () => {
     logistics: {
       name: "Logistics Wizard",
       status: "Active",
-      icon: Truck,
+      icon: CustomIcons.Lightning,
       color: "orange", 
       description: "Optimizing delivery routes globally",
       actions: ["Coordinated 234 shipments", "Reduced 12 delays", "Cut costs by 18%"],
@@ -64,7 +65,7 @@ export const AgentDashboard = () => {
             <p className="text-gray-600 font-medium mt-1">Your invisible workforce making magic happen</p>
           </div>
           <div className="flex items-center space-x-2">
-            <Bot className="w-6 h-6 text-black" />
+            <CustomIcons.Bot className="w-6 h-6 text-black" />
             <span className="text-sm font-bold text-black">4 AGENTS ACTIVE</span>
           </div>
         </div>
@@ -138,7 +139,7 @@ export const AgentDashboard = () => {
                 {currentAgent.actions.map((action, index) => (
                   <div key={index} className="p-3 bg-gray-50 border-3 border-gray-300">
                     <div className="flex items-center space-x-2">
-                      <Zap className="w-4 h-4 text-black" />
+                      <CustomIcons.Lightning className="w-4 h-4 text-black" />
                       <span className="text-black font-medium">{action}</span>
                     </div>
                   </div>
