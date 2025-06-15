@@ -5,6 +5,7 @@ import { Hero } from "@/components/Hero";
 import { SocialFeed } from "@/components/SocialFeed";
 import { TrustMetrics } from "@/components/TrustMetrics";
 import { AgentDashboard } from "@/components/AgentDashboard";
+import { CustomIcons } from "@/components/CustomIcons";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("feed");
@@ -21,7 +22,7 @@ const Index = () => {
         <div className="flex flex-wrap gap-6 mb-8 justify-center">
           {[
             { id: "feed", label: "Global Feed", icon: "🌐" },
-            { id: "agents", label: "AI Agents", icon: "🤖" },
+            { id: "agents", label: "AI Agents", icon: <CustomIcons.Sparkle className="w-6 h-6" /> },
             { id: "trust", label: "Trust Network", icon: "🔐" },
           ].map((tab) => (
             <button
@@ -33,7 +34,13 @@ const Index = () => {
                   : "bg-white text-black border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[8px_8px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px]"
               }`}
             >
-              <span className="mr-3 text-xl">{tab.icon}</span>
+              <span className="mr-3 flex items-center">
+                {typeof tab.icon === 'string' ? (
+                  <span className="text-xl">{tab.icon}</span>
+                ) : (
+                  tab.icon
+                )}
+              </span>
               {tab.label}
             </button>
           ))}
