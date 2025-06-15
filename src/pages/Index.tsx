@@ -10,7 +10,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("feed");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+    <div className="min-h-screen bg-black">
       <Navbar />
       
       {/* Hero Section */}
@@ -18,7 +18,7 @@ const Index = () => {
       
       {/* Main Navigation Tabs */}
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-wrap gap-4 mb-8 justify-center">
+        <div className="flex flex-wrap gap-6 mb-8 justify-center">
           {[
             { id: "feed", label: "Global Feed", icon: "🌐" },
             { id: "agents", label: "AI Agents", icon: "🤖" },
@@ -27,20 +27,20 @@ const Index = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
+              className={`px-8 py-4 font-black text-lg border-4 transition-all duration-200 transform ${
                 activeTab === tab.id
-                  ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/25"
-                  : "bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm"
+                  ? "bg-lime-400 text-black border-black shadow-[8px_8px_0px_0px_#000] hover:shadow-[12px_12px_0px_0px_#000] translate-x-[-4px] translate-y-[-4px]"
+                  : "bg-white text-black border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[8px_8px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px]"
               }`}
             >
-              <span className="mr-2">{tab.icon}</span>
+              <span className="mr-3 text-xl">{tab.icon}</span>
               {tab.label}
             </button>
           ))}
         </div>
 
         {/* Dynamic Content */}
-        <div className="transition-all duration-500 ease-in-out">
+        <div className="transition-all duration-300">
           {activeTab === "feed" && <SocialFeed />}
           {activeTab === "agents" && <AgentDashboard />}
           {activeTab === "trust" && <TrustMetrics />}

@@ -3,60 +3,62 @@ import { ArrowRight, Users, Shield, Zap } from "lucide-react";
 
 export const Hero = () => {
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative bg-white border-b-4 border-black">
       {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-blue-500/10"></div>
-      <div className="absolute top-0 left-1/4 w-72 h-72 bg-emerald-500/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl"></div>
+      <div className="absolute top-8 left-8 w-32 h-32 bg-lime-400 border-4 border-black transform rotate-12"></div>
+      <div className="absolute top-16 right-16 w-24 h-24 bg-pink-400 border-4 border-black transform -rotate-12"></div>
+      <div className="absolute bottom-8 left-1/3 w-20 h-20 bg-yellow-400 border-4 border-black transform rotate-45"></div>
 
-      <div className="relative container mx-auto px-4 py-16 text-center">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent leading-tight">
+      <div className="relative container mx-auto px-4 py-20 text-center">
+        <div className="max-w-5xl mx-auto">
+          <h1 className="text-6xl md:text-8xl font-black mb-8 text-black uppercase tracking-tighter leading-none">
             The Future of
             <br />
-            Social Commerce
+            <span className="bg-lime-400 px-4 border-4 border-black transform -skew-x-12 inline-block">
+              Social Commerce
+            </span>
           </h1>
           
-          <p className="text-xl md:text-2xl text-white/80 mb-8 leading-relaxed">
+          <p className="text-xl md:text-2xl text-black font-bold mb-12 leading-tight max-w-3xl mx-auto">
             Revolutionary AI-powered marketplace where every journey becomes a connection,
             every purchase builds community, and trust flows freely across borders.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <button className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-full font-semibold flex items-center justify-center space-x-2 hover:shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 transform hover:scale-105">
-              <span>Join the Revolution</span>
-              <ArrowRight className="w-5 h-5" />
+          <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
+            <button className="px-10 py-5 bg-lime-400 text-black font-black text-xl border-4 border-black shadow-[8px_8px_0px_0px_#000] hover:shadow-[12px_12px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-4px] hover:translate-y-[-4px] flex items-center justify-center space-x-3">
+              <span>JOIN THE REVOLUTION</span>
+              <ArrowRight className="w-6 h-6" />
             </button>
             
-            <button className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full font-semibold border border-white/20 hover:bg-white/20 transition-all duration-300">
-              Watch Demo
+            <button className="px-10 py-5 bg-white text-black font-black text-xl border-4 border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[8px_8px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-2px] hover:translate-y-[-2px]">
+              WATCH DEMO
             </button>
           </div>
 
           {/* Key Features */}
           <div className="grid md:grid-cols-3 gap-8 mt-16">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                <Users className="w-6 h-6 text-white" />
+            <div className="bg-yellow-300 border-4 border-black p-8 transform rotate-1 hover:rotate-0 transition-transform duration-300">
+              <div className="w-16 h-16 bg-black border-4 border-black flex items-center justify-center mb-6 mx-auto transform -rotate-12">
+                <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Social-First Commerce</h3>
-              <p className="text-white/70">Every transaction becomes a social connection, building global communities through commerce.</p>
+              <h3 className="text-2xl font-black text-black mb-4 uppercase">Social-First Commerce</h3>
+              <p className="text-black font-bold leading-tight">Every transaction becomes a social connection, building global communities through commerce.</p>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-500 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                <Shield className="w-6 h-6 text-white" />
+            <div className="bg-pink-300 border-4 border-black p-8 transform -rotate-1 hover:rotate-0 transition-transform duration-300">
+              <div className="w-16 h-16 bg-black border-4 border-black flex items-center justify-center mb-6 mx-auto transform rotate-12">
+                <Shield className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">AI-Driven Trust</h3>
-              <p className="text-white/70">Advanced AI agents create verifiable trust bridges across all global interactions.</p>
+              <h3 className="text-2xl font-black text-black mb-4 uppercase">AI-Driven Trust</h3>
+              <p className="text-black font-bold leading-tight">Advanced AI agents create verifiable trust bridges across all global interactions.</p>
             </div>
 
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-500 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                <Zap className="w-6 h-6 text-white" />
+            <div className="bg-blue-300 border-4 border-black p-8 transform rotate-1 hover:rotate-0 transition-transform duration-300">
+              <div className="w-16 h-16 bg-black border-4 border-black flex items-center justify-center mb-6 mx-auto transform -rotate-12">
+                <Zap className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Borderless Payments</h3>
-              <p className="text-white/70">Seamless global transactions without traditional banking limitations or borders.</p>
+              <h3 className="text-2xl font-black text-black mb-4 uppercase">Borderless Payments</h3>
+              <p className="text-black font-bold leading-tight">Seamless global transactions without traditional banking limitations or borders.</p>
             </div>
           </div>
         </div>
