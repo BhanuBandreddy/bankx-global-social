@@ -1,179 +1,191 @@
 
-import { Bot, Zap, Shield, TrendingUp, Activity, CheckCircle } from "lucide-react";
+import { useState } from "react";
+import { Bot, Zap, Shield, TrendingUp, MessageSquare, CreditCard, Truck, Search } from "lucide-react";
 
 export const AgentDashboard = () => {
-  const agents = [
-    {
-      id: 1,
-      name: "Commerce Navigator",
-      type: "Product Discovery",
-      status: "active",
-      description: "Intelligent product matching and price optimization across global markets",
-      metrics: {
-        accuracy: 98.7,
-        transactions: 1420,
-        saved: "$12,450"
-      },
-      icon: <Bot className="w-6 h-6" />,
-      color: "from-emerald-400 to-emerald-500"
+  const [selectedAgent, setSelectedAgent] = useState("trust");
+
+  const agents = {
+    trust: {
+      name: "Trust Oracle",
+      status: "Active",
+      icon: Shield,
+      color: "lime",
+      description: "Analyzing trust patterns across 2.8M users",
+      actions: ["Verified 847 transactions", "Detected 3 anomalies", "Updated 234 trust scores"],
+      efficiency: 98.7
     },
-    {
-      id: 2,
-      name: "Trust Guardian",
-      type: "Security & Verification",
-      status: "active",
-      description: "Advanced identity verification and transaction monitoring for maximum security",
-      metrics: {
-        accuracy: 99.2,
-        blocked: 47,
-        verified: 892
-      },
-      icon: <Shield className="w-6 h-6" />,
-      color: "from-blue-400 to-blue-500"
+    commerce: {
+      name: "Commerce Conductor", 
+      status: "Active",
+      icon: CreditCard,
+      color: "blue",
+      description: "Orchestrating seamless global payments",
+      actions: ["Processed $12.4K payments", "Optimized 156 routes", "Saved $890 in fees"],
+      efficiency: 96.3
     },
-    {
-      id: 3,
-      name: "Social Catalyst",
-      type: "Community Building",
-      status: "active",
-      description: "Facilitates meaningful connections and curates personalized social commerce experiences",
-      metrics: {
-        connections: 2341,
-        engagement: 94.8,
-        communities: 28
-      },
-      icon: <TrendingUp className="w-6 h-6" />,
-      color: "from-purple-400 to-purple-500"
+    discovery: {
+      name: "Discovery Engine",
+      status: "Learning",
+      icon: Search, 
+      color: "purple",
+      description: "Connecting users with perfect matches",
+      actions: ["Made 1,247 recommendations", "Matched 89 interests", "Found 23 rare items"],
+      efficiency: 94.8
     },
-    {
-      id: 4,
-      name: "Journey Optimizer",
-      type: "Travel Integration",
-      status: "learning",
-      description: "Analyzes travel patterns to suggest relevant products and local experiences",
-      metrics: {
-        routes: 156,
-        suggestions: 834,
-        satisfaction: 96.1
-      },
-      icon: <Activity className="w-6 h-6" />,
-      color: "from-amber-400 to-amber-500"
+    logistics: {
+      name: "Logistics Wizard",
+      status: "Active",
+      icon: Truck,
+      color: "orange", 
+      description: "Optimizing delivery routes globally",
+      actions: ["Coordinated 234 shipments", "Reduced 12 delays", "Cut costs by 18%"],
+      efficiency: 97.1
     }
+  };
+
+  const currentAgent = agents[selectedAgent as keyof typeof agents];
+
+  const recentActions = [
+    { agent: "Trust Oracle", action: "Verified Maya Chen's camera purchase", impact: "Trust +0.3", time: "Just now" },
+    { agent: "Commerce Conductor", action: "Optimized payment route via São Paulo", impact: "Saved $12", time: "2m ago" },
+    { agent: "Discovery Engine", action: "Found rare vinyl for @musiclover", impact: "Perfect match", time: "3m ago" },
+    { agent: "Logistics Wizard", action: "Rerouted Lagos shipment", impact: "2 days faster", time: "5m ago" },
+    { agent: "Trust Oracle", action: "Analyzed network patterns", impact: "94.2% healthy", time: "7m ago" }
   ];
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl font-bold text-white mb-4">AI Agent Ecosystem</h2>
-        <p className="text-white/70 text-lg">Your personal AI collective working 24/7 to enhance your commerce experience</p>
-        
-        {/* Global Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-            <div className="text-2xl font-bold text-emerald-400">1.2M+</div>
-            <div className="text-sm text-white/70">Transactions Processed</div>
+    <div className="max-w-6xl mx-auto bg-white border-4 border-black">
+      {/* Header */}
+      <div className="p-6 border-b-4 border-black bg-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold text-black uppercase tracking-tight">AI Agent Control</h2>
+            <p className="text-gray-600 font-medium mt-1">Your invisible workforce making magic happen</p>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-            <div className="text-2xl font-bold text-blue-400">99.7%</div>
-            <div className="text-sm text-white/70">Trust Accuracy</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-            <div className="text-2xl font-bold text-purple-400">45K+</div>
-            <div className="text-sm text-white/70">Active Agents</div>
-          </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-            <div className="text-2xl font-bold text-amber-400">178</div>
-            <div className="text-sm text-white/70">Countries Served</div>
+          <div className="flex items-center space-x-2">
+            <Bot className="w-6 h-6 text-black" />
+            <span className="text-sm font-bold text-black">4 AGENTS ACTIVE</span>
           </div>
         </div>
       </div>
 
-      {/* Agent Cards */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {agents.map((agent) => (
-          <div key={agent.id} className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 hover:bg-white/15 transition-all duration-300">
-            {/* Agent Header */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center space-x-4">
-                <div className={`w-12 h-12 bg-gradient-to-r ${agent.color} rounded-xl flex items-center justify-center`}>
-                  {agent.icon}
+      {/* Agent Selector */}
+      <div className="p-6 bg-gray-50 border-b-4 border-black">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {Object.entries(agents).map(([key, agent]) => {
+            const IconComponent = agent.icon;
+            return (
+              <button
+                key={key}
+                onClick={() => setSelectedAgent(key)}
+                className={`p-4 border-4 border-black transition-all duration-200 transform ${
+                  selectedAgent === key
+                    ? `bg-${agent.color}-400 shadow-[8px_8px_0px_0px_#000] translate-x-[-4px] translate-y-[-4px]`
+                    : "bg-white shadow-[4px_4px_0px_0px_#000] hover:shadow-[8px_8px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+                }`}
+              >
+                <div className="text-center">
+                  <IconComponent className={`w-8 h-8 mx-auto mb-2 ${selectedAgent === key ? 'text-black' : 'text-gray-600'}`} />
+                  <div className={`text-sm font-bold ${selectedAgent === key ? 'text-black' : 'text-gray-600'}`}>
+                    {agent.name}
+                  </div>
+                  <div className={`text-xs mt-1 px-2 py-1 border-2 border-black ${
+                    agent.status === 'Active' ? 'bg-green-300' : 'bg-yellow-300'
+                  }`}>
+                    {agent.status}
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-white">{agent.name}</h3>
-                  <p className="text-sm text-white/70">{agent.type}</p>
-                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Selected Agent Details */}
+      <div className="p-6 bg-white">
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Agent Info */}
+          <div>
+            <div className="flex items-center space-x-4 mb-6">
+              <div className={`w-16 h-16 bg-${currentAgent.color}-400 border-4 border-black flex items-center justify-center`}>
+                <currentAgent.icon className="w-8 h-8 text-black" />
               </div>
-              
-              <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${agent.status === 'active' ? 'bg-emerald-400' : 'bg-amber-400'}`}></div>
-                <span className="text-sm text-white/70 capitalize">{agent.status}</span>
+              <div>
+                <h3 className="text-2xl font-bold text-black">{currentAgent.name}</h3>
+                <p className="text-gray-600 font-medium">{currentAgent.description}</p>
               </div>
             </div>
 
-            {/* Description */}
-            <p className="text-white/80 mb-6 leading-relaxed">{agent.description}</p>
+            {/* Efficiency Meter */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-bold text-black uppercase">Efficiency</span>
+                <span className="text-lg font-bold text-black">{currentAgent.efficiency}%</span>
+              </div>
+              <div className="w-full bg-gray-200 border-4 border-black h-6">
+                <div 
+                  className={`h-full bg-${currentAgent.color}-400 border-r-4 border-black transition-all duration-1000`}
+                  style={{ width: `${currentAgent.efficiency}%` }}
+                ></div>
+              </div>
+            </div>
 
-            {/* Metrics */}
-            <div className="grid grid-cols-3 gap-4">
-              {Object.entries(agent.metrics).map(([key, value]) => (
-                <div key={key} className="text-center">
-                  <div className="text-lg font-bold text-white">
-                    {typeof value === 'number' && key.includes('accuracy') ? `${value}%` : 
-                     typeof value === 'number' && key.includes('saved') ? `$${value.toLocaleString()}` :
-                     typeof value === 'number' ? value.toLocaleString() : value}
+            {/* Recent Actions */}
+            <div>
+              <h4 className="text-lg font-bold text-black mb-4 uppercase">Recent Actions</h4>
+              <div className="space-y-3">
+                {currentAgent.actions.map((action, index) => (
+                  <div key={index} className="p-3 bg-gray-50 border-3 border-gray-300">
+                    <div className="flex items-center space-x-2">
+                      <Zap className="w-4 h-4 text-black" />
+                      <span className="text-black font-medium">{action}</span>
+                    </div>
                   </div>
-                  <div className="text-xs text-white/60 capitalize">{key}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Live Activity Stream */}
+          <div>
+            <div className="flex items-center space-x-2 mb-4">
+              <MessageSquare className="w-5 h-5 text-black" />
+              <h3 className="text-xl font-bold text-black uppercase">Live Agent Activity</h3>
+            </div>
+            
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {recentActions.map((action, index) => (
+                <div key={index} className="p-4 bg-gray-50 border-3 border-gray-300 hover:border-black transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="font-bold text-black text-sm">{action.agent}</div>
+                      <div className="text-black mt-1 leading-relaxed">{action.action}</div>
+                      <div className="text-sm font-medium text-green-600 mt-2">{action.impact}</div>
+                    </div>
+                    <div className="text-xs text-gray-500 whitespace-nowrap ml-4">
+                      {action.time}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
-
-            {/* Action Button */}
-            <div className="mt-6 pt-4 border-t border-white/10">
-              <button className="w-full px-4 py-2 bg-gradient-to-r from-white/10 to-white/20 backdrop-blur-sm text-white rounded-lg border border-white/20 hover:from-white/20 hover:to-white/30 transition-all duration-300 flex items-center justify-center space-x-2">
-                <Zap className="w-4 h-4" />
-                <span>Configure Agent</span>
-              </button>
-            </div>
           </div>
-        ))}
+        </div>
       </div>
 
-      {/* Agent Communication Visualization */}
-      <div className="mt-12 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-8">
-        <h3 className="text-2xl font-bold text-white mb-6 text-center">Real-Time Agent Network</h3>
-        <div className="relative">
-          {/* Network Visualization */}
-          <div className="flex justify-center items-center space-x-8 mb-8">
-            <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center animate-pulse">
-                <Bot className="w-8 h-8 text-white" />
-              </div>
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-emerald-400 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-4 h-4 text-white" />
-              </div>
-            </div>
-            
-            <div className="flex-1 h-0.5 bg-gradient-to-r from-emerald-400 to-blue-400 animate-pulse"></div>
-            
-            <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full flex items-center justify-center animate-pulse">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-400 rounded-full flex items-center justify-center">
-                <Activity className="w-4 h-4 text-white" />
-              </div>
-            </div>
-          </div>
-
-          {/* Communication Log */}
-          <div className="bg-black/30 rounded-xl p-4 max-h-32 overflow-y-auto">
-            <div className="space-y-2 text-sm">
-              <div className="text-emerald-400">→ Commerce Agent: Product verification complete for item #2847</div>
-              <div className="text-blue-400">→ Trust Guardian: Identity verified for user @elena_travels</div>
-              <div className="text-purple-400">→ Social Catalyst: Matching completed - 3 new connections</div>
-              <div className="text-amber-400">→ Journey Optimizer: Route analysis updated for Tokyo region</div>
-              <div className="text-emerald-400">→ Commerce Agent: Price optimization saved user $45.20</div>
-            </div>
+      {/* Agent Insights */}
+      <div className="p-6 bg-purple-50 border-t-4 border-black">
+        <div className="flex items-start space-x-4">
+          <TrendingUp className="w-8 h-8 text-purple-600 mt-1" />
+          <div>
+            <h3 className="text-lg font-bold text-black mb-2">AI Network Insights</h3>
+            <p className="text-black leading-relaxed">
+              Your AI agents are operating at <span className="font-bold">96.7% collective efficiency</span>. 
+              The Trust Oracle has identified new patterns in Asian markets, while the Commerce Conductor 
+              has optimized payment routes saving users an average of <span className="font-bold text-purple-700">23% on fees</span>. 
+              Discovery Engine is learning your preferences and improving recommendations daily.
+            </p>
           </div>
         </div>
       </div>
