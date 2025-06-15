@@ -5,9 +5,9 @@ export const Hero = () => {
   return (
     <div className="relative bg-white border-b-4 border-black">
       {/* Background Elements */}
-      <div className="absolute top-8 left-8 w-32 h-32 bg-lime-400 border-4 border-black transform rotate-12"></div>
-      <div className="absolute top-16 right-16 w-24 h-24 bg-pink-400 border-4 border-black transform -rotate-12"></div>
-      <div className="absolute bottom-8 left-1/3 w-20 h-20 bg-yellow-400 border-4 border-black transform rotate-45"></div>
+      <div className="absolute top-8 left-8 w-32 h-32 bg-black border-4 border-black transform rotate-12"></div>
+      <div className="absolute top-16 right-16 w-24 h-24 bg-gray-300 border-4 border-black transform -rotate-12"></div>
+      <div className="absolute bottom-8 left-1/3 w-20 h-20 bg-gray-200 border-4 border-black transform rotate-45"></div>
 
       <div className="relative container mx-auto px-4 py-20 text-center">
         <div className="max-w-5xl mx-auto">
@@ -37,7 +37,7 @@ export const Hero = () => {
 
           {/* Key Features */}
           <div className="grid md:grid-cols-3 gap-8 mt-16">
-            <div className="bg-yellow-300 border-4 border-black p-8 transform rotate-1 hover:rotate-0 transition-transform duration-300">
+            <div className="bg-white border-4 border-black p-8 transform rotate-1 hover:rotate-0 transition-transform duration-300">
               <div className="w-16 h-16 bg-black border-4 border-black flex items-center justify-center mb-6 mx-auto transform -rotate-12">
                 <Users className="w-8 h-8 text-white" />
               </div>
@@ -45,7 +45,7 @@ export const Hero = () => {
               <p className="text-black font-bold leading-tight">Every transaction becomes a social connection, building global communities through commerce.</p>
             </div>
 
-            <div className="bg-pink-300 border-4 border-black p-8 transform -rotate-1 hover:rotate-0 transition-transform duration-300">
+            <div className="bg-gray-100 border-4 border-black p-8 transform -rotate-1 hover:rotate-0 transition-transform duration-300">
               <div className="w-16 h-16 bg-black border-4 border-black flex items-center justify-center mb-6 mx-auto transform rotate-12">
                 <Shield className="w-8 h-8 text-white" />
               </div>
@@ -53,7 +53,7 @@ export const Hero = () => {
               <p className="text-black font-bold leading-tight">Advanced AI agents create verifiable trust bridges across all global interactions.</p>
             </div>
 
-            <div className="bg-blue-300 border-4 border-black p-8 transform rotate-1 hover:rotate-0 transition-transform duration-300">
+            <div className="bg-white border-4 border-black p-8 transform rotate-1 hover:rotate-0 transition-transform duration-300">
               <div className="w-16 h-16 bg-black border-4 border-black flex items-center justify-center mb-6 mx-auto transform -rotate-12">
                 <Zap className="w-8 h-8 text-white" />
               </div>
