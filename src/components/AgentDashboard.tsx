@@ -2,57 +2,60 @@
 import { useState } from "react";
 import { TrendingUp, MessageSquare } from "lucide-react";
 import { CustomIcons } from "./CustomIcons";
+import { useNandaAgents } from "@/lib/useNandaAgents";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const AgentDashboard = () => {
-  const [selectedAgent, setSelectedAgent] = useState("trust");
+  const [selectedAgent, setSelectedAgent] = useState(0);
+  const { data: agents, error } = useNandaAgents("travel_commerce");
 
-  const agents = {
-    trust: {
-      name: "Trust Oracle",
-      status: "Active",
-      icon: CustomIcons.Trust,
-      color: "lime",
-      description: "Analyzing trust patterns across 2.8M users",
-      actions: ["Verified 847 transactions", "Detected 3 anomalies", "Updated 234 trust scores"],
-      efficiency: 98.7
-    },
-    commerce: {
-      name: "Commerce Conductor", 
-      status: "Active",
-      icon: CustomIcons.Shop,
-      color: "blue",
-      description: "Orchestrating seamless global payments",
-      actions: ["Processed $12.4K payments", "Optimized 156 routes", "Saved $890 in fees"],
-      efficiency: 96.3
-    },
-    discovery: {
-      name: "Discovery Engine",
-      status: "Learning",
-      icon: CustomIcons.Globe, 
-      color: "purple",
-      description: "Connecting users with perfect matches",
-      actions: ["Made 1,247 recommendations", "Matched 89 interests", "Found 23 rare items"],
-      efficiency: 94.8
-    },
-    logistics: {
-      name: "Logistics Wizard",
-      status: "Active",
-      icon: CustomIcons.Lightning,
-      color: "orange", 
-      description: "Optimizing delivery routes globally",
-      actions: ["Coordinated 234 shipments", "Reduced 12 delays", "Cut costs by 18%"],
-      efficiency: 97.1
-    }
-  };
+  // Show skeleton loader while data is loading
+  if (!agents || agents.length === 0) {
+    return (
+      <div className="max-w-6xl mx-auto bg-white border-4 border-black">
+        <div className="p-6 border-b-4 border-black bg-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-black uppercase tracking-tight">AI Agent Control</h2>
+              <p className="text-gray-600 font-medium mt-1">Loading agents from Nanda registry...</p>
+            </div>
+            <Skeleton className="h-6 w-32" />
+          </div>
+        </div>
+        
+        <div className="p-6 bg-gray-50 border-b-4 border-black">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-32 w-full" />
+            ))}
+          </div>
+        </div>
+        
+        <div className="p-6">
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    );
+  }
 
-  const currentAgent = agents[selectedAgent as keyof typeof agents];
+  if (error) {
+    return (
+      <div className="max-w-6xl mx-auto bg-white border-4 border-black">
+        <div className="p-6 text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error Loading Agents</h2>
+          <p className="text-gray-600">Failed to load agents from Nanda registry</p>
+        </div>
+      </div>
+    );
+  }
+
+  const currentAgent = agents[selectedAgent] || agents[0];
 
   const recentActions = [
-    { agent: "Trust Oracle", action: "Verified Maya Chen's camera purchase", impact: "Trust +0.3", time: "Just now" },
-    { agent: "Commerce Conductor", action: "Optimized payment route via São Paulo", impact: "Saved $12", time: "2m ago" },
-    { agent: "Discovery Engine", action: "Found rare vinyl for @musiclover", impact: "Perfect match", time: "3m ago" },
-    { agent: "Logistics Wizard", action: "Rerouted Lagos shipment", impact: "2 days faster", time: "5m ago" },
-    { agent: "Trust Oracle", action: "Analyzed network patterns", impact: "94.2% healthy", time: "7m ago" }
+    { agent: "Travel Agent", action: "Found flight deals to Tokyo", impact: "Saved $200", time: "Just now" },
+    { agent: "Commerce Bot", action: "Processed payment via Singapore", impact: "Optimized routing", time: "2m ago" },
+    { agent: "Discovery AI", action: "Recommended local experiences", impact: "Perfect match", time: "3m ago" },
+    { agent: "Logistics AI", action: "Coordinated hotel booking", impact: "Best rate found", time: "5m ago" },
   ];
 
   return (
@@ -62,11 +65,11 @@ export const AgentDashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold text-black uppercase tracking-tight">AI Agent Control</h2>
-            <p className="text-gray-600 font-medium mt-1">Your invisible workforce making magic happen</p>
+            <p className="text-gray-600 font-medium mt-1">Travel & Commerce agents from Nanda registry</p>
           </div>
           <div className="flex items-center space-x-2">
             <CustomIcons.Sparkle className="w-6 h-6 text-black" />
-            <span className="text-sm font-bold text-black">4 AGENTS ACTIVE</span>
+            <span className="text-sm font-bold text-black">{agents.length} AGENTS ACTIVE</span>
           </div>
         </div>
       </div>
@@ -74,32 +77,29 @@ export const AgentDashboard = () => {
       {/* Agent Selector */}
       <div className="p-6 bg-gray-50 border-b-4 border-black">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {Object.entries(agents).map(([key, agent]) => {
-            const IconComponent = agent.icon;
-            return (
-              <button
-                key={key}
-                onClick={() => setSelectedAgent(key)}
-                className={`p-4 border-4 border-black transition-all duration-200 transform ${
-                  selectedAgent === key
-                    ? `bg-${agent.color}-400 shadow-[8px_8px_0px_0px_#000] translate-x-[-4px] translate-y-[-4px]`
-                    : "bg-white shadow-[4px_4px_0px_0px_#000] hover:shadow-[8px_8px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px]"
-                }`}
-              >
-                <div className="text-center">
-                  <IconComponent className={`w-8 h-8 mx-auto mb-2 ${selectedAgent === key ? 'text-black' : 'text-gray-600'}`} />
-                  <div className={`text-sm font-bold ${selectedAgent === key ? 'text-black' : 'text-gray-600'}`}>
-                    {agent.name}
-                  </div>
-                  <div className={`text-xs mt-1 px-2 py-1 border-2 border-black ${
-                    agent.status === 'Active' ? 'bg-green-300' : 'bg-yellow-300'
-                  }`}>
-                    {agent.status}
-                  </div>
+          {agents.map((agent, index) => (
+            <button
+              key={agent.id || index}
+              onClick={() => setSelectedAgent(index)}
+              className={`p-4 border-4 border-black transition-all duration-200 transform ${
+                selectedAgent === index
+                  ? "bg-blue-400 shadow-[8px_8px_0px_0px_#000] translate-x-[-4px] translate-y-[-4px]"
+                  : "bg-white shadow-[4px_4px_0px_0px_#000] hover:shadow-[8px_8px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+              }`}
+            >
+              <div className="text-center">
+                <CustomIcons.Globe className={`w-8 h-8 mx-auto mb-2 ${selectedAgent === index ? 'text-black' : 'text-gray-600'}`} />
+                <div className={`text-sm font-bold ${selectedAgent === index ? 'text-black' : 'text-gray-600'}`}>
+                  {agent.name || `Agent ${index + 1}`}
                 </div>
-              </button>
-            );
-          })}
+                <div className={`text-xs mt-1 px-2 py-1 border-2 border-black ${
+                  agent.status === 'active' ? 'bg-green-300' : 'bg-yellow-300'
+                }`}>
+                  {agent.status || 'Active'}
+                </div>
+              </div>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -109,41 +109,42 @@ export const AgentDashboard = () => {
           {/* Agent Info */}
           <div>
             <div className="flex items-center space-x-4 mb-6">
-              <div className={`w-16 h-16 bg-${currentAgent.color}-400 border-4 border-black flex items-center justify-center`}>
-                <currentAgent.icon className="w-8 h-8 text-black" />
+              <div className="w-16 h-16 bg-blue-400 border-4 border-black flex items-center justify-center">
+                <CustomIcons.Globe className="w-8 h-8 text-black" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-black">{currentAgent.name}</h3>
-                <p className="text-gray-600 font-medium">{currentAgent.description}</p>
+                <h3 className="text-2xl font-bold text-black">{currentAgent?.name || 'Travel Agent'}</h3>
+                <p className="text-gray-600 font-medium">{currentAgent?.description || 'Specialized in travel and commerce'}</p>
               </div>
             </div>
 
-            {/* Efficiency Meter */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-bold text-black uppercase">Efficiency</span>
-                <span className="text-lg font-bold text-black">{currentAgent.efficiency}%</span>
+            {/* Capabilities */}
+            {currentAgent?.capabilities && (
+              <div className="mb-6">
+                <h4 className="text-lg font-bold text-black mb-4 uppercase">Capabilities</h4>
+                <div className="flex flex-wrap gap-2">
+                  {currentAgent.capabilities.map((capability, index) => (
+                    <span key={index} className="px-3 py-1 bg-gray-100 border-2 border-gray-300 text-sm font-medium">
+                      {capability}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="w-full bg-gray-200 border-4 border-black h-6">
-                <div 
-                  className={`h-full bg-${currentAgent.color}-400 border-r-4 border-black transition-all duration-1000`}
-                  style={{ width: `${currentAgent.efficiency}%` }}
-                ></div>
-              </div>
-            </div>
+            )}
 
-            {/* Recent Actions */}
+            {/* Agent Details */}
             <div>
-              <h4 className="text-lg font-bold text-black mb-4 uppercase">Recent Actions</h4>
-              <div className="space-y-3">
-                {currentAgent.actions.map((action, index) => (
-                  <div key={index} className="p-3 bg-gray-50 border-3 border-gray-300">
-                    <div className="flex items-center space-x-2">
-                      <CustomIcons.Lightning className="w-4 h-4 text-black" />
-                      <span className="text-black font-medium">{action}</span>
-                    </div>
-                  </div>
-                ))}
+              <h4 className="text-lg font-bold text-black mb-4 uppercase">Agent Info</h4>
+              <div className="space-y-2">
+                <div className="p-3 bg-gray-50 border-3 border-gray-300">
+                  <strong>ID:</strong> {currentAgent?.id || 'N/A'}
+                </div>
+                <div className="p-3 bg-gray-50 border-3 border-gray-300">
+                  <strong>Version:</strong> {currentAgent?.version || 'N/A'}
+                </div>
+                <div className="p-3 bg-gray-50 border-3 border-gray-300">
+                  <strong>Endpoint:</strong> {currentAgent?.endpoint || 'N/A'}
+                </div>
               </div>
             </div>
           </div>
@@ -180,12 +181,12 @@ export const AgentDashboard = () => {
         <div className="flex items-start space-x-4">
           <TrendingUp className="w-8 h-8 text-purple-600 mt-1" />
           <div>
-            <h3 className="text-lg font-bold text-black mb-2">AI Network Insights</h3>
+            <h3 className="text-lg font-bold text-black mb-2">Nanda Registry Insights</h3>
             <p className="text-black leading-relaxed">
-              Your AI agents are operating at <span className="font-bold">96.7% collective efficiency</span>. 
-              The Trust Oracle has identified new patterns in Asian markets, while the Commerce Conductor 
-              has optimized payment routes saving users an average of <span className="font-bold text-purple-700">23% on fees</span>. 
-              Discovery Engine is learning your preferences and improving recommendations daily.
+              Currently showing <span className="font-bold">{agents.length} travel & commerce agents</span> from the Nanda registry. 
+              These agents specialize in travel booking, payment processing, and commerce optimization. 
+              The registry provides real-time agent discovery for <span className="font-bold text-purple-700">seamless integration</span> 
+              with your applications.
             </p>
           </div>
         </div>
@@ -193,4 +194,3 @@ export const AgentDashboard = () => {
     </div>
   );
 };
-
