@@ -65,7 +65,7 @@ export const AgentDashboard = () => {
             <p className="text-gray-600 font-medium mt-1">Your invisible workforce making magic happen</p>
           </div>
           <div className="flex items-center space-x-2">
-            <CustomIcons.Bot className="w-6 h-6 text-black" />
+            <CustomIcons.Sparkle className="w-6 h-6 text-black" />
             <span className="text-sm font-bold text-black">4 AGENTS ACTIVE</span>
           </div>
         </div>
@@ -193,3 +193,4 @@ export const AgentDashboard = () => {
     </div>
   );
 };
+
