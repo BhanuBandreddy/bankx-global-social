@@ -25,6 +25,7 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
   const [mapboxToken, setMapboxToken] = useState('');
   const [showTokenInput, setShowTokenInput] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Paris coordinates (default for demo)
   const destinationCoords: [number, number] = [2.3522, 48.8566];
@@ -35,21 +36,35 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
 
   const fetchMapboxToken = async () => {
     try {
+      console.log('Attempting to fetch Mapbox token from Supabase...');
+      
       // Try to get token from Supabase edge function
       const { data, error } = await supabase.functions.invoke('get-mapbox-token');
       
-      if (data && data.token) {
+      console.log('Supabase response:', { data, error });
+      
+      if (error) {
+        console.error('Supabase function error:', error);
+        setError(`Function error: ${error.message}`);
+        setShowTokenInput(true);
+        setIsLoading(false);
+        return;
+      }
+      
+      if (data && data.success && data.token) {
+        console.log('Token received successfully, initializing map...');
         setMapboxToken(data.token);
         setIsLoading(false);
         initializeMap(data.token);
       } else {
-        // Fallback to demo token or show input
-        console.log('No Mapbox token found in secrets, showing input form');
+        console.log('No token in response or unsuccessful:', data);
+        setError('No valid token received from server');
         setShowTokenInput(true);
         setIsLoading(false);
       }
     } catch (error) {
-      console.log('Error fetching Mapbox token, showing input form:', error);
+      console.error('Error fetching Mapbox token:', error);
+      setError(`Network error: ${error.message}`);
       setShowTokenInput(true);
       setIsLoading(false);
     }
@@ -58,69 +73,88 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
   const initializeMap = (token: string) => {
     if (!mapContainer.current || map.current) return;
 
-    mapboxgl.accessToken = token;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: destinationCoords,
-      zoom: 12,
-      pitch: 45,
-    });
-
-    // Add navigation controls
-    map.current.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: true,
-      }),
-      'top-right'
-    );
-
-    // Add destination marker
-    new mapboxgl.Marker({
-      color: '#10b981',
-      scale: 1.2
-    })
-      .setLngLat(destinationCoords)
-      .setPopup(new mapboxgl.Popup().setHTML(`<h3>📍 ${destination}</h3><p>Your destination</p>`))
-      .addTo(map.current);
-
-    // Add product markers
-    products.forEach((product) => {
-      const markerColor = product.type === 'duty-free' ? '#8b5cf6' : 
-                         product.type === 'local' ? '#f59e0b' : '#ef4444';
+    try {
+      console.log('Setting Mapbox access token and initializing map...');
+      mapboxgl.accessToken = token;
       
-      const marker = new mapboxgl.Marker({
-        color: markerColor,
-        scale: 0.8
-      })
-        .setLngLat(product.coordinates)
-        .setPopup(new mapboxgl.Popup().setHTML(
-          `<div class="p-2">
-            <h4 class="font-bold">${product.name}</h4>
-            <p class="text-sm text-gray-600">${product.location}</p>
-            <button onclick="window.selectProduct('${product.id}')" class="mt-2 px-3 py-1 bg-lime-400 text-black text-xs font-bold border-2 border-black">
-              View Details
-            </button>
-          </div>`
-        ))
-        .addTo(map.current!);
-    });
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: destinationCoords,
+        zoom: 12,
+        pitch: 45,
+      });
 
-    // Global function for popup buttons
-    (window as any).selectProduct = (productId: string) => {
-      const product = products.find(p => p.id === productId);
-      if (product && onProductClick) {
-        onProductClick(product);
-      }
-    };
+      map.current.on('load', () => {
+        console.log('Map loaded successfully!');
+      });
+
+      map.current.on('error', (e) => {
+        console.error('Map error:', e);
+        setError(`Map initialization error: ${e.error?.message || 'Unknown error'}`);
+      });
+
+      // Add navigation controls
+      map.current.addControl(
+        new mapboxgl.NavigationControl({
+          visualizePitch: true,
+        }),
+        'top-right'
+      );
+
+      // Add destination marker
+      new mapboxgl.Marker({
+        color: '#10b981',
+        scale: 1.2
+      })
+        .setLngLat(destinationCoords)
+        .setPopup(new mapboxgl.Popup().setHTML(`<h3>📍 ${destination}</h3><p>Your destination</p>`))
+        .addTo(map.current);
+
+      // Add product markers
+      products.forEach((product) => {
+        const markerColor = product.type === 'duty-free' ? '#8b5cf6' : 
+                           product.type === 'local' ? '#f59e0b' : '#ef4444';
+        
+        const marker = new mapboxgl.Marker({
+          color: markerColor,
+          scale: 0.8
+        })
+          .setLngLat(product.coordinates)
+          .setPopup(new mapboxgl.Popup().setHTML(
+            `<div class="p-2">
+              <h4 class="font-bold">${product.name}</h4>
+              <p class="text-sm text-gray-600">${product.location}</p>
+              <button onclick="window.selectProduct('${product.id}')" class="mt-2 px-3 py-1 bg-lime-400 text-black text-xs font-bold border-2 border-black">
+                View Details
+              </button>
+            </div>`
+          ))
+          .addTo(map.current!);
+      });
+
+      // Global function for popup buttons
+      (window as any).selectProduct = (productId: string) => {
+        const product = products.find(p => p.id === productId);
+        if (product && onProductClick) {
+          onProductClick(product);
+        }
+      };
+      
+    } catch (err) {
+      console.error('Error initializing map:', err);
+      setError(`Map setup error: ${err.message}`);
+    }
   };
 
   const handleTokenSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (mapboxToken.trim()) {
       setShowTokenInput(false);
+      setError(null);
+      setIsLoading(true);
       initializeMap(mapboxToken);
+      setIsLoading(false);
     }
   };
 
@@ -129,6 +163,28 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
       <div className="border-4 border-black p-6 bg-blue-50 text-center">
         <MapPin className="w-8 h-8 mx-auto mb-2 animate-pulse" />
         <p>Loading map...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="border-4 border-black p-6 bg-red-50">
+        <div className="flex items-center space-x-2 mb-4">
+          <MapPin className="w-6 h-6 text-red-600" />
+          <h3 className="text-lg font-bold text-red-800">Map Error</h3>
+        </div>
+        <p className="text-sm text-red-700 mb-4">{error}</p>
+        <button
+          onClick={() => {
+            setError(null);
+            setIsLoading(true);
+            fetchMapboxToken();
+          }}
+          className="bg-red-600 text-white px-4 py-2 border-4 border-red-800 hover:bg-red-700"
+        >
+          Retry
+        </button>
       </div>
     );
   }
