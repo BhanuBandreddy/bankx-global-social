@@ -26,6 +26,7 @@ export const DemoFlow = () => {
   const [escrowActive, setEscrowActive] = useState(false);
   const [courierFound, setCourierFound] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const { toast } = useToast();
 
   const steps = [
@@ -35,22 +36,26 @@ export const DemoFlow = () => {
     { id: 'logistics', name: 'Peer Logistics', agent: 'PathSync Social Logistics', icon: Users },
   ];
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const validateFile = (file: File) => {
     if (file.type !== 'application/pdf') {
       toast({
         title: "Invalid file type",
         description: "Please upload a PDF file",
         variant: "destructive"
       });
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const processFile = async (file: File) => {
+    if (!validateFile(file)) return;
 
     setIsProcessing(true);
     
     try {
+      console.log('Processing file:', file.name);
+      
       // Extract text from PDF
       const pdfText = await extractTextFromPDF(file);
       console.log('Extracted PDF text:', pdfText);
@@ -64,8 +69,11 @@ export const DemoFlow = () => {
       });
 
       if (error) {
+        console.error('Supabase function error:', error);
         throw new Error(error.message);
       }
+
+      console.log('Parse response:', data);
 
       if (data.success) {
         setItinerary(data.itinerary);
@@ -89,6 +97,35 @@ export const DemoFlow = () => {
       });
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      await processFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    const file = files[0];
+    
+    if (file) {
+      await processFile(file);
     }
   };
 
@@ -144,7 +181,16 @@ export const DemoFlow = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="border-4 border-dashed border-gray-300 p-8 text-center">
+            <div 
+              className={`border-4 border-dashed p-8 text-center transition-colors ${
+                isDragOver 
+                  ? 'border-purple-500 bg-purple-50' 
+                  : 'border-gray-300 bg-white'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
               {isProcessing ? (
                 <div className="flex flex-col items-center space-y-4">
                   <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
@@ -153,9 +199,13 @@ export const DemoFlow = () => {
                 </div>
               ) : (
                 <>
-                  <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                  <p className="text-lg font-medium mb-4">Drag & drop your PDF itinerary here</p>
-                  <p className="text-sm text-gray-600 mb-4">GlobeGuides™ will parse your travel details and provide smart insights</p>
+                  <Upload className={`w-12 h-12 mx-auto mb-4 ${isDragOver ? 'text-purple-600' : 'text-gray-400'}`} />
+                  <p className="text-lg font-medium mb-4">
+                    {isDragOver ? 'Drop your PDF here!' : 'Drag & drop your PDF itinerary here'}
+                  </p>
+                  <p className="text-sm text-gray-600 mb-4">
+                    GlobeGuides™ will parse your travel details and provide smart insights
+                  </p>
                   <input
                     type="file"
                     accept=".pdf"
@@ -165,8 +215,14 @@ export const DemoFlow = () => {
                     disabled={isProcessing}
                   />
                   <label htmlFor="file-upload">
-                    <Button className="bg-black text-white border-4 border-black hover:bg-gray-800">
-                      Choose PDF File
+                    <Button 
+                      className="bg-black text-white border-4 border-black hover:bg-gray-800"
+                      disabled={isProcessing}
+                      asChild
+                    >
+                      <span className="cursor-pointer">
+                        Choose PDF File
+                      </span>
                     </Button>
                   </label>
                 </>
