@@ -2,15 +2,30 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, MapPin, CreditCard, Users } from "lucide-react";
+import { Upload, MapPin, CreditCard, Users, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ProductDiscovery } from "./ProductDiscovery";
+import { extractTextFromPDF } from "@/utils/pdfUtils";
+import { supabase } from "@/integrations/supabase/client";
+
+interface ItineraryData {
+  route: string;
+  date: string;
+  weather: string;
+  alerts: string;
+  departureTime?: string;
+  arrivalTime?: string;
+  gate?: string;
+  flight?: string;
+}
 
 export const DemoFlow = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [itinerary, setItinerary] = useState(null);
+  const [itinerary, setItinerary] = useState<ItineraryData | null>(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [escrowActive, setEscrowActive] = useState(false);
   const [courierFound, setCourierFound] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
   const steps = [
@@ -20,24 +35,66 @@ export const DemoFlow = () => {
     { id: 'logistics', name: 'Peer Logistics', agent: 'PathSync Social Logistics', icon: Users },
   ];
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      // Simulate GlobeGuides processing
-      setTimeout(() => {
-        setItinerary({
-          route: "Chennai → Paris",
-          date: "12 Aug 2024",
-          weather: "24°C",
-          alerts: "Metro strike planned"
-        });
-        setCurrentStep(1);
-        toast({
-          title: "🛬 Welcome to Paris!",
-          description: "12 Aug, local weather 24°C, metro strike planned. 3 local pick-ups available.",
-        });
-      }, 1500);
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a PDF file",
+        variant: "destructive"
+      });
+      return;
     }
+
+    setIsProcessing(true);
+    
+    try {
+      // Extract text from PDF
+      const pdfText = await extractTextFromPDF(file);
+      console.log('Extracted PDF text:', pdfText);
+
+      // Call Supabase edge function to parse with OpenAI
+      const { data, error } = await supabase.functions.invoke('parse-itinerary', {
+        body: {
+          pdfText,
+          fileName: file.name
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data.success) {
+        setItinerary(data.itinerary);
+        setCurrentStep(1);
+        
+        // Show GlobeGuides success toast
+        toast({
+          title: `🛬 Welcome to ${data.itinerary.route.split(' → ')[1]}!`,
+          description: `${data.itinerary.date}, ${data.itinerary.weather}. ${data.itinerary.alerts}. 3 local pick-ups available.`,
+        });
+      } else {
+        throw new Error('Failed to parse itinerary');
+      }
+
+    } catch (error) {
+      console.error('Error processing PDF:', error);
+      toast({
+        title: "Processing Error",
+        description: "Failed to parse itinerary. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleProductSelect = (product: any) => {
+    setSelectedProduct(product);
+    setCurrentStep(2);
   };
 
   return (
@@ -88,26 +145,38 @@ export const DemoFlow = () => {
           </CardHeader>
           <CardContent className="p-6">
             <div className="border-4 border-dashed border-gray-300 p-8 text-center">
-              <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <p className="text-lg font-medium mb-4">Drag & drop your PDF itinerary here</p>
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="file-upload"
-              />
-              <label htmlFor="file-upload">
-                <Button className="bg-black text-white border-4 border-black hover:bg-gray-800">
-                  Choose File
-                </Button>
-              </label>
+              {isProcessing ? (
+                <div className="flex flex-col items-center space-y-4">
+                  <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
+                  <p className="text-lg font-medium">GlobeGuides™ is parsing your itinerary...</p>
+                  <p className="text-sm text-gray-600">Extracting travel details, weather, and local insights</p>
+                </div>
+              ) : (
+                <>
+                  <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                  <p className="text-lg font-medium mb-4">Drag & drop your PDF itinerary here</p>
+                  <p className="text-sm text-gray-600 mb-4">GlobeGuides™ will parse your travel details and provide smart insights</p>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="file-upload"
+                    disabled={isProcessing}
+                  />
+                  <label htmlFor="file-upload">
+                    <Button className="bg-black text-white border-4 border-black hover:bg-gray-800">
+                      Choose PDF File
+                    </Button>
+                  </label>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Itinerary Display */}
+      {/* Parsed Itinerary Display */}
       {itinerary && (
         <Card className="border-4 border-black">
           <CardHeader className="bg-blue-100 border-b-4 border-black">
@@ -132,8 +201,30 @@ export const DemoFlow = () => {
                 <div>{itinerary.alerts}</div>
               </div>
             </div>
+            
+            {(itinerary.flight || itinerary.gate) && (
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                {itinerary.flight && (
+                  <div className="p-4 bg-green-50 border-2 border-green-300">
+                    <div className="font-bold">Flight</div>
+                    <div>{itinerary.flight}</div>
+                  </div>
+                )}
+                {itinerary.gate && (
+                  <div className="p-4 bg-green-50 border-2 border-green-300">
+                    <div className="font-bold">Gate/Terminal</div>
+                    <div>{itinerary.gate}</div>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Step 2: LocaleLens - Product Discovery */}
+      {currentStep === 1 && (
+        <ProductDiscovery onProductSelect={handleProductSelect} />
       )}
 
       {/* Demo Controls */}
