@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { MapPin } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Product {
   id: string;
@@ -22,10 +23,37 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState('');
-  const [showTokenInput, setShowTokenInput] = useState(true);
+  const [showTokenInput, setShowTokenInput] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Paris coordinates (default for demo)
   const destinationCoords: [number, number] = [2.3522, 48.8566];
+
+  useEffect(() => {
+    fetchMapboxToken();
+  }, []);
+
+  const fetchMapboxToken = async () => {
+    try {
+      // Try to get token from Supabase edge function
+      const { data, error } = await supabase.functions.invoke('get-mapbox-token');
+      
+      if (data && data.token) {
+        setMapboxToken(data.token);
+        setIsLoading(false);
+        initializeMap(data.token);
+      } else {
+        // Fallback to demo token or show input
+        console.log('No Mapbox token found in secrets, showing input form');
+        setShowTokenInput(true);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.log('Error fetching Mapbox token, showing input form:', error);
+      setShowTokenInput(true);
+      setIsLoading(false);
+    }
+  };
 
   const initializeMap = (token: string) => {
     if (!mapContainer.current || map.current) return;
@@ -95,6 +123,15 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
       initializeMap(mapboxToken);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="border-4 border-black p-6 bg-blue-50 text-center">
+        <MapPin className="w-8 h-8 mx-auto mb-2 animate-pulse" />
+        <p>Loading map...</p>
+      </div>
+    );
+  }
 
   if (showTokenInput) {
     return (
