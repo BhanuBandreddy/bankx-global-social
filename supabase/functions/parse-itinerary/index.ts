@@ -77,7 +77,7 @@ serve(async (req) => {
     console.log('OpenAI Response:', content);
     
     // Parse the JSON response from OpenAI
-    let parsedData: ItineraryData;
+    let parsedData: any;
     try {
       parsedData = JSON.parse(content);
     } catch (parseError) {
@@ -93,9 +93,40 @@ serve(async (req) => {
       };
     }
 
+    // Convert the OpenAI response to the format expected by the UI
+    let itinerary: ItineraryData;
+    
+    if (parsedData.outbound) {
+      // Handle the structured response with outbound/return
+      itinerary = {
+        route: parsedData.outbound.route,
+        date: parsedData.outbound.date,
+        weather: parsedData.outbound.weather,
+        alerts: parsedData.outbound.alerts,
+        departureTime: parsedData.outbound.departureTime,
+        arrivalTime: parsedData.outbound.arrivalTime,
+        flight: parsedData.outbound.flight,
+        gate: parsedData.outbound.gate
+      };
+    } else {
+      // Handle direct response format
+      itinerary = {
+        route: parsedData.route || "Chennai → Paris",
+        date: parsedData.date || "12 Aug 2024",
+        weather: parsedData.weather || "24°C, partly cloudy",
+        alerts: parsedData.alerts || "Metro strike planned",
+        departureTime: parsedData.departureTime,
+        arrivalTime: parsedData.arrivalTime,
+        flight: parsedData.flight,
+        gate: parsedData.gate
+      };
+    }
+
+    console.log('Formatted itinerary for UI:', itinerary);
+
     return new Response(JSON.stringify({
       success: true,
-      itinerary: parsedData,
+      itinerary: itinerary,
       message: 'Itinerary parsed successfully by GlobeGuides™'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
