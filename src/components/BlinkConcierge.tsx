@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ export const BlinkConcierge = ({
   const [conversation, setConversation] = useState<ConversationMessage[]>([]);
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random()}`);
   const [isExpanded, setIsExpanded] = useState(!isFloating);
+  const [isMinimized, setIsMinimized] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const { profile } = useUserProfile();
@@ -159,16 +161,45 @@ export const BlinkConcierge = ({
   };
 
   const handleMinimize = () => {
-    setIsExpanded(false);
+    if (isFloating) {
+      setIsExpanded(false);
+    } else {
+      setIsMinimized(true);
+    }
   };
 
   const handleClose = () => {
     if (onClose) {
       onClose();
-    } else {
+    } else if (isFloating) {
       setIsExpanded(false);
+    } else {
+      setIsMinimized(true);
     }
   };
+
+  const handleRestore = () => {
+    if (isFloating) {
+      setIsExpanded(true);
+    } else {
+      setIsMinimized(false);
+    }
+  };
+
+  // Show minimized state for non-floating version
+  if (!isFloating && isMinimized) {
+    return (
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          onClick={handleRestore}
+          className="flex items-center space-x-2 bg-purple-500 text-white border-2 border-black font-bold shadow-[4px_4px_0px_0px_#000] hover:shadow-[6px_6px_0px_0px_#000] transition-all duration-200"
+        >
+          <Sparkles className="w-5 h-5" />
+          <span>Blink Concierge</span>
+        </Button>
+      </div>
+    );
+  }
 
   if (isFloating && !isExpanded) {
     return (
@@ -184,7 +215,7 @@ export const BlinkConcierge = ({
   }
 
   return (
-    <div className={`${isFloating ? 'fixed bottom-6 right-6 w-96 h-[600px] z-50' : 'w-full max-w-4xl mx-auto'} bg-white border-4 border-black`}>
+    <div className={`${isFloating ? 'fixed bottom-6 right-6 w-96 h-[600px] z-50' : 'w-full max-w-4xl mx-auto'} bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000]`}>
       {/* Header with minimize/close controls */}
       <div className="p-4 border-b-4 border-black bg-purple-100 flex items-center justify-between">
         <div className="flex items-center space-x-3">
@@ -200,39 +231,24 @@ export const BlinkConcierge = ({
         </div>
         
         <div className="flex items-center space-x-2">
-          {isFloating && (
-            <>
-              <Button
-                onClick={handleMinimize}
-                variant="ghost"
-                size="sm"
-                className="p-1 hover:bg-purple-200"
-                title="Minimize"
-              >
-                <Minimize2 className="w-4 h-4" />
-              </Button>
-              <Button
-                onClick={handleClose}
-                variant="ghost"
-                size="sm"
-                className="p-1 hover:bg-red-200"
-                title="Close"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </>
-          )}
-          {!isFloating && onClose && (
-            <Button
-              onClick={handleClose}
-              variant="ghost"
-              size="sm"
-              className="p-1 hover:bg-red-200"
-              title="Close"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          )}
+          <Button
+            onClick={handleMinimize}
+            variant="ghost"
+            size="sm"
+            className="p-2 hover:bg-purple-200 border-2 border-transparent hover:border-black transition-all"
+            title="Minimize"
+          >
+            <Minimize2 className="w-4 h-4" />
+          </Button>
+          <Button
+            onClick={handleClose}
+            variant="ghost"
+            size="sm"
+            className="p-2 hover:bg-red-200 border-2 border-transparent hover:border-black transition-all"
+            title="Close"
+          >
+            <X className="w-4 h-4" />
+          </Button>
         </div>
       </div>
 
