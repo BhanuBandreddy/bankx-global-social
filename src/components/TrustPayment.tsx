@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, Shield, Clock, CheckCircle, AlertTriangle } from "lucide-react";
@@ -202,7 +202,7 @@ export const TrustPayment = ({ product, onPaymentSuccess, onPaymentCancel }: Tru
         <div className="bg-blue-50 border-4 border-blue-200 p-4">
           <h4 className="font-bold text-blue-800 mb-3">🔐 x402 Micropayment Benefits</h4>
           <ul className="text-sm text-blue-700 space-y-1">
-            <li>• Ultra-low transaction fees (< $0.01)</li>
+            <li>• Ultra-low transaction fees (&lt; $0.01)</li>
             <li>• Instant settlement with crypto backing</li>
             <li>• Built-in escrow protection</li>
             <li>• Trust score integration</li>
