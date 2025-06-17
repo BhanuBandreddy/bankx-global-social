@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Upload, MapPin, CreditCard, Users, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDiscovery } from "./ProductDiscovery";
+import { TrustPayment } from "./TrustPayment";
 import { extractTextFromPDF } from "@/utils/pdfUtils";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,7 +24,7 @@ export const DemoFlow = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [itinerary, setItinerary] = useState<ItineraryData | null>(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [escrowActive, setEscrowActive] = useState(false);
+  const [escrowTransactionId, setEscrowTransactionId] = useState<string>('');
   const [courierFound, setCourierFound] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -132,6 +133,21 @@ export const DemoFlow = () => {
   const handleProductSelect = (product: any) => {
     setSelectedProduct(product);
     setCurrentStep(2);
+  };
+
+  const handlePaymentSuccess = (transactionId: string) => {
+    setEscrowTransactionId(transactionId);
+    setCurrentStep(3);
+    
+    toast({
+      title: "🚀 Proceeding to Logistics",
+      description: "Payment secured! PathSync is finding peer couriers for your delivery.",
+    });
+  };
+
+  const handlePaymentCancel = () => {
+    setSelectedProduct(null);
+    setCurrentStep(1);
   };
 
   return (
@@ -283,6 +299,63 @@ export const DemoFlow = () => {
         <ProductDiscovery onProductSelect={handleProductSelect} />
       )}
 
+      {/* Step 3: TrustPay - Secure Payment */}
+      {currentStep === 2 && selectedProduct && (
+        <TrustPayment
+          product={selectedProduct}
+          onPaymentSuccess={handlePaymentSuccess}
+          onPaymentCancel={handlePaymentCancel}
+        />
+      )}
+
+      {/* Step 4: PathSync - Peer Logistics */}
+      {currentStep === 3 && (
+        <Card className="border-4 border-black">
+          <CardHeader className="bg-orange-100 border-b-4 border-black">
+            <CardTitle className="flex items-center space-x-2">
+              <Users className="w-6 h-6" />
+              <span>Step 4: PathSync Social Logistics</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 space-y-6">
+            <div className="bg-green-50 border-4 border-green-300 p-4">
+              <h3 className="font-bold text-green-800 mb-2">🔒 Escrow Active</h3>
+              <p className="text-sm text-green-700">
+                Transaction ID: {escrowTransactionId}<br/>
+                Funds secured until delivery confirmation
+              </p>
+            </div>
+            
+            <div className="bg-white border-4 border-black p-4">
+              <h4 className="font-bold mb-3">🤝 Peer Courier Network</h4>
+              <p className="text-sm mb-4">
+                PathSync is connecting you with trusted peer couriers traveling your route.
+                Escrow will be released automatically upon delivery confirmation.
+              </p>
+              
+              <div className="space-y-2 text-sm">
+                <div>✅ 3 verified couriers found on Chennai → Paris route</div>
+                <div>✅ Trust scores: 98, 95, 92 (excellent ratings)</div>
+                <div>✅ Estimated delivery: 2-3 days after arrival</div>
+                <div>✅ GPS tracking + delivery confirmation enabled</div>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => {
+                toast({
+                  title: "🎉 Demo Complete!",
+                  description: "Full workflow: Itinerary → Discovery → Payment → Logistics integrated with x402 + Escrow"
+                });
+              }}
+              className="w-full bg-orange-500 text-white border-4 border-orange-700"
+            >
+              Complete Demo Experience
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Demo Controls */}
       <Card className="border-4 border-black">
         <CardHeader className="bg-gray-100 border-b-4 border-black">
@@ -310,7 +383,7 @@ export const DemoFlow = () => {
                 setCurrentStep(0);
                 setItinerary(null);
                 setSelectedProduct(null);
-                setEscrowActive(false);
+                setEscrowTransactionId('');
                 setCourierFound(false);
               }}
               variant="outline"

@@ -9,6 +9,86 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      escrow_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string
+          escrow_address: string | null
+          expires_at: string | null
+          id: string
+          payment_method: string
+          product_id: string
+          release_conditions: Json | null
+          status: string
+          updated_at: string | null
+          user_id: string
+          x402_payment_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string
+          escrow_address?: string | null
+          expires_at?: string | null
+          id?: string
+          payment_method?: string
+          product_id: string
+          release_conditions?: Json | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+          x402_payment_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string
+          escrow_address?: string | null
+          expires_at?: string | null
+          id?: string
+          payment_method?: string
+          product_id?: string
+          release_conditions?: Json | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+          x402_payment_id?: string | null
+        }
+        Relationships: []
+      }
+      payment_events: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          transaction_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          transaction_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_events_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "escrow_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
