@@ -9,6 +9,116 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      blink_conversations: {
+        Row: {
+          content: string
+          context_data: Json | null
+          created_at: string
+          id: string
+          message_type: string
+          session_id: string
+          speaker: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          context_data?: Json | null
+          created_at?: string
+          id?: string
+          message_type: string
+          session_id: string
+          speaker: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          context_data?: Json | null
+          created_at?: string
+          id?: string
+          message_type?: string
+          session_id?: string
+          speaker?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      blink_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+          workflow_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          title: string
+          type?: string
+          user_id: string
+          workflow_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+          workflow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blink_notifications_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "blink_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blink_workflows: {
+        Row: {
+          agent_responses: Json | null
+          context_data: Json
+          created_at: string
+          feed_post_id: string | null
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+          workflow_type: string
+        }
+        Insert: {
+          agent_responses?: Json | null
+          context_data?: Json
+          created_at?: string
+          feed_post_id?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          workflow_type: string
+        }
+        Update: {
+          agent_responses?: Json | null
+          context_data?: Json
+          created_at?: string
+          feed_post_id?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          workflow_type?: string
+        }
+        Relationships: []
+      }
       escrow_transactions: {
         Row: {
           amount: number

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Verified, TrendingUp, Shield, Zap } from "lucide-react";
 import { CustomIcons } from "./CustomIcons";
-import { Blink } from "./Blink";
+import { BlinkConcierge } from "./BlinkConcierge";
+import { FeedActionTrigger } from "./FeedActionTrigger";
+import { BlinkNotifications } from "./BlinkNotifications";
 
 export const SocialFeed = () => {
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
@@ -107,8 +109,8 @@ export const SocialFeed = () => {
 
   return (
     <div className="space-y-6">
-      {/* Blink Section */}
-      <Blink />
+      {/* Blink Concierge */}
+      <BlinkConcierge />
       
       {/* Original Social Feed */}
       <div className="max-w-md mx-auto bg-white border-4 border-black">
@@ -116,9 +118,12 @@ export const SocialFeed = () => {
         <div className="p-4 border-b-4 border-black bg-white sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-black uppercase tracking-tight">Global Feed</h2>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-lime-400 border-2 border-black rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium text-black">LIVE</span>
+            <div className="flex items-center space-x-4">
+              <BlinkNotifications />
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-lime-400 border-2 border-black rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium text-black">LIVE</span>
+              </div>
             </div>
           </div>
         </div>
@@ -199,7 +204,7 @@ export const SocialFeed = () => {
                 </div>
               </div>
 
-              {/* Product Card with Trust Elements */}
+              {/* Product Card with Trust Elements and Blink Integration */}
               <div className="mx-4 mb-4 p-4 bg-gray-50 border-4 border-black">
                 <div className="flex items-center justify-between mb-2">
                   <div>
@@ -216,10 +221,22 @@ export const SocialFeed = () => {
                       )}
                     </div>
                   </div>
-                  <button className="px-4 py-2 bg-black text-white font-bold border-4 border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[8px_8px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-2px] hover:translate-y-[-2px] flex items-center space-x-2">
-                    <CustomIcons.Shop className="w-4 h-4" />
-                    <span>BUY NOW</span>
-                  </button>
+                  <div className="flex flex-col space-y-2">
+                    <FeedActionTrigger
+                      action="purchase"
+                      postId={post.id}
+                      productData={post.product}
+                      label="Buy with Blink"
+                      className="px-3 py-2 bg-black text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-1px] hover:translate-y-[-1px] text-sm"
+                    />
+                    <FeedActionTrigger
+                      action="inquire"
+                      postId={post.id}
+                      productData={post.product}
+                      label="Ask Blink"
+                      className="px-3 py-2 bg-purple-500 text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-1px] hover:translate-y-[-1px] text-sm"
+                    />
+                  </div>
                 </div>
                 
                 {/* Trust Score for Product */}

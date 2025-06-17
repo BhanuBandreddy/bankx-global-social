@@ -6,6 +6,7 @@ import { Hero } from "@/components/Hero";
 import { SocialFeed } from "@/components/SocialFeed";
 import { TrustMetrics } from "@/components/TrustMetrics";
 import { AgentDashboard } from "@/components/AgentDashboard";
+import { BlinkConcierge } from "@/components/BlinkConcierge";
 import { CustomIcons } from "@/components/CustomIcons";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -78,6 +79,14 @@ const Index = () => {
           {activeTab === "trust" && <TrustMetrics />}
         </div>
       </div>
+
+      {/* Floating Blink Concierge */}
+      {activeTab !== "feed" && (
+        <BlinkConcierge 
+          contextType="generic"
+          isFloating={true}
+        />
+      )}
     </div>
   );
 };
