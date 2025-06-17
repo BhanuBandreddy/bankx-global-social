@@ -80,7 +80,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Floating Blink Concierge */}
+      {/* Floating Blink Concierge - Only show on non-feed tabs as a contextual helper */}
       {activeTab !== "feed" && (
         <BlinkConcierge 
           contextType="generic"

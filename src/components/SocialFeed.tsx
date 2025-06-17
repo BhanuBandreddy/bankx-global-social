@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Verified, TrendingUp, Shield, Zap } from "lucide-react";
 import { CustomIcons } from "./CustomIcons";
-import { BlinkConcierge } from "./BlinkConcierge";
 import { FeedActionTrigger } from "./FeedActionTrigger";
 import { BlinkNotifications } from "./BlinkNotifications";
 
@@ -109,10 +108,7 @@ export const SocialFeed = () => {
 
   return (
     <div className="space-y-6">
-      {/* Blink Concierge */}
-      <BlinkConcierge />
-      
-      {/* Original Social Feed */}
+      {/* Global Feed - Clean Mobile-First Design */}
       <div className="max-w-md mx-auto bg-white border-4 border-black">
         {/* Feed Header */}
         <div className="p-4 border-b-4 border-black bg-white sticky top-0 z-10">
@@ -204,7 +200,7 @@ export const SocialFeed = () => {
                 </div>
               </div>
 
-              {/* Product Card with Trust Elements and Blink Integration */}
+              {/* Product Card with Contextual Blink Integration */}
               <div className="mx-4 mb-4 p-4 bg-gray-50 border-4 border-black">
                 <div className="flex items-center justify-between mb-2">
                   <div>
