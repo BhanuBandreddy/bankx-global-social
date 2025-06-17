@@ -8,8 +8,6 @@ interface UserProfile {
   username: string;
   full_name: string;
   trust_score: number;
-  trust_points: number;
-  trust_points_history: any[];
   level: string;
   location: string;
   avatar_url: string;
@@ -36,20 +34,8 @@ export const useUserProfile = () => {
 
         if (error) {
           console.error('Error fetching profile:', error);
-        } else if (data) {
-          // Transform the database data to match our interface
-          const transformedProfile: UserProfile = {
-            id: data.id,
-            username: data.username || '',
-            full_name: data.full_name || '',
-            trust_score: data.trust_score || 0,
-            trust_points: data.trust_points || 0,
-            trust_points_history: Array.isArray(data.trust_points_history) ? data.trust_points_history : [],
-            level: data.level || 'Trust Newbie',
-            location: data.location || '',
-            avatar_url: data.avatar_url || ''
-          };
-          setProfile(transformedProfile);
+        } else {
+          setProfile(data);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);

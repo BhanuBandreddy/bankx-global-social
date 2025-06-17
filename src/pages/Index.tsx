@@ -4,8 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { SocialFeed } from "@/components/SocialFeed";
-import { ComprehensiveTrustDashboard } from "@/components/ComprehensiveTrustDashboard";
-import { EnhancedWorkflowExperience } from "@/components/EnhancedWorkflowExperience";
+import { EnhancedTrustMetrics } from "@/components/EnhancedTrustMetrics";
 import { AgentDashboard } from "@/components/AgentDashboard";
 import { BlinkConcierge } from "@/components/BlinkConcierge";
 import { CustomIcons } from "@/components/CustomIcons";
@@ -51,9 +50,8 @@ const Index = () => {
         <div className="flex flex-wrap gap-6 mb-8 justify-center">
           {[
             { id: "feed", label: "Global Feed", icon: "🌐" },
-            { id: "trust", label: "Trust Intelligence", icon: "🔐" },
-            { id: "workflows", label: "Multi-Agent Flows", icon: "🤖" },
             { id: "agents", label: "AI Agents", icon: <CustomIcons.Sparkle className="w-6 h-6" /> },
+            { id: "trust", label: "Trust Network", icon: "🔐" },
             { id: "itinerary", label: "Share Itinerary", icon: "✈️" },
             { id: "local", label: "Local Intel", icon: "🗺️" },
           ].map((tab) => (
@@ -81,9 +79,8 @@ const Index = () => {
         {/* Dynamic Content */}
         <div className="transition-all duration-300">
           {activeTab === "feed" && <SocialFeed />}
-          {activeTab === "trust" && <ComprehensiveTrustDashboard />}
-          {activeTab === "workflows" && <EnhancedWorkflowExperience />}
           {activeTab === "agents" && <AgentDashboard />}
+          {activeTab === "trust" && <EnhancedTrustMetrics />}
           {activeTab === "itinerary" && <ItineraryUpload />}
           {activeTab === "local" && <LocalIntelRequest />}
         </div>
