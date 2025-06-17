@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, Shield, Clock, CheckCircle, AlertTriangle } from "lucide-react";
@@ -25,6 +25,8 @@ export const SharedTrustPayment = ({ product, onPaymentSuccess, onPaymentCancel,
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [x402PaymentId, setX402PaymentId] = useState<string>('');
   const [escrowDetails, setEscrowDetails] = useState<any>(null);
+  const [escrowId, setEscrowId] = useState<string>('');
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   const extractAmount = (priceStr: string) => {
@@ -34,6 +36,49 @@ export const SharedTrustPayment = ({ product, onPaymentSuccess, onPaymentCancel,
 
   const amount = extractAmount(product.price);
   const currency = product.price.includes('€') ? 'EUR' : 'USD';
+
+  // Poll escrow status every 5 seconds until released
+  useEffect(() => {
+    if (escrowId && paymentStatus === 'success') {
+      const interval = setInterval(async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke('escrow-status/' + escrowId);
+          
+          if (error) throw error;
+          
+          if (data.success && data.escrow) {
+            setEscrowDetails(data.escrow);
+            
+            if (data.escrow.status === 'released') {
+              clearInterval(interval);
+              setPollingInterval(null);
+              toast({
+                title: "🎉 Escrow Released!",
+                description: "Transaction completed successfully. Funds have been released.",
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error polling escrow status:', error);
+        }
+      }, 5000);
+
+      setPollingInterval(interval);
+      
+      return () => {
+        clearInterval(interval);
+      };
+    }
+  }, [escrowId, paymentStatus, toast]);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
 
   const initiatex402Payment = async () => {
     try {
@@ -48,22 +93,27 @@ export const SharedTrustPayment = ({ product, onPaymentSuccess, onPaymentCancel,
           handlePaymentConfirmation(mockX402PaymentId);
         }, 2000);
       } else {
-        // Real flow - use actual Supabase function
+        // Real flow - use actual Supabase function with idempotency
+        const idempotencyKey = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
         const { data, error } = await supabase.functions.invoke('process-x402-payment', {
           body: {
             productId: product.id,
             amount,
             currency
+          },
+          headers: {
+            'Idempotency-Key': idempotencyKey
           }
         });
 
         if (error) throw error;
 
-        const mockX402PaymentId = `x402_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        setX402PaymentId(mockX402PaymentId);
+        const paymentId = data.payment_id || `x402_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        setX402PaymentId(paymentId);
 
         setTimeout(() => {
-          handlePaymentConfirmation(mockX402PaymentId);
+          handlePaymentConfirmation(paymentId);
         }, 2000);
       }
 
@@ -99,13 +149,18 @@ export const SharedTrustPayment = ({ product, onPaymentSuccess, onPaymentCancel,
           }
         };
       } else {
-        // Real flow - actual escrow
+        // Real flow - actual escrow with idempotency
+        const idempotencyKey = `escrow_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
         const { data, error } = await supabase.functions.invoke('initiate-escrow', {
           body: {
             productId: product.id,
             amount,
             currency,
             x402PaymentId: paymentId
+          },
+          headers: {
+            'Idempotency-Key': idempotencyKey
           }
         });
 
@@ -115,11 +170,12 @@ export const SharedTrustPayment = ({ product, onPaymentSuccess, onPaymentCancel,
 
       if (transactionData.success) {
         setEscrowDetails(transactionData.transaction);
+        setEscrowId(transactionData.transaction.id);
         setPaymentStatus('success');
         
         toast({
           title: "🔒 Escrow Activated!",
-          description: `${currency} ${amount} secured in TrustPay escrow. Funds will be released upon delivery confirmation.`,
+          description: `${currency} ${amount} secured in TrustPay escrow. Monitoring status...`,
         });
 
         onPaymentSuccess(transactionData.transaction.id);
@@ -152,6 +208,16 @@ export const SharedTrustPayment = ({ product, onPaymentSuccess, onPaymentCancel,
   };
 
   const getStatusMessage = () => {
+    if (paymentStatus === 'success' && escrowDetails) {
+      if (escrowDetails.status === 'pending') {
+        return 'Awaiting escrow confirmation...';
+      } else if (escrowDetails.status === 'escrowed') {
+        return 'Payment successful! Escrow active.';
+      } else if (escrowDetails.status === 'released') {
+        return 'Transaction completed! Funds released.';
+      }
+    }
+    
     switch (paymentStatus) {
       case 'processing':
         return 'Processing x402 micropayment...';
@@ -195,6 +261,18 @@ export const SharedTrustPayment = ({ product, onPaymentSuccess, onPaymentCancel,
               Payment ID: {x402PaymentId}
             </div>
           )}
+
+          {/* Show yellow badge for pending escrow confirmation */}
+          {paymentStatus === 'success' && escrowDetails?.status === 'pending' && (
+            <div className="bg-yellow-100 border-2 border-yellow-400 p-2 rounded mt-2">
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-yellow-600 animate-pulse" />
+                <span className="text-sm font-medium text-yellow-800">
+                  Awaiting escrow confirmation...
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Escrow Information */}
@@ -209,6 +287,12 @@ export const SharedTrustPayment = ({ product, onPaymentSuccess, onPaymentCancel,
               <div><strong>Amount Secured:</strong> {currency} {amount}</div>
               <div><strong>Status:</strong> {escrowDetails.status}</div>
               <div><strong>Auto-release:</strong> 7 days after delivery confirmation</div>
+              {pollingInterval && (
+                <div className="text-blue-600">
+                  <Clock className="w-4 h-4 inline mr-1" />
+                  Monitoring status every 5 seconds...
+                </div>
+              )}
             </div>
           </div>
         )}

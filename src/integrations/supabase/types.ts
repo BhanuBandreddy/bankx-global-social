@@ -122,6 +122,7 @@ export type Database = {
       escrow_transactions: {
         Row: {
           amount: number
+          buyer_id: string | null
           created_at: string | null
           currency: string
           escrow_address: string | null
@@ -130,6 +131,7 @@ export type Database = {
           payment_method: string
           product_id: string
           release_conditions: Json | null
+          seller_id: string | null
           status: string
           updated_at: string | null
           user_id: string
@@ -137,6 +139,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          buyer_id?: string | null
           created_at?: string | null
           currency?: string
           escrow_address?: string | null
@@ -145,6 +148,7 @@ export type Database = {
           payment_method?: string
           product_id: string
           release_conditions?: Json | null
+          seller_id?: string | null
           status?: string
           updated_at?: string | null
           user_id: string
@@ -152,6 +156,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          buyer_id?: string | null
           created_at?: string | null
           currency?: string
           escrow_address?: string | null
@@ -160,6 +165,7 @@ export type Database = {
           payment_method?: string
           product_id?: string
           release_conditions?: Json | null
+          seller_id?: string | null
           status?: string
           updated_at?: string | null
           user_id?: string
@@ -173,6 +179,7 @@ export type Database = {
           event_data: Json | null
           event_type: string
           id: string
+          payment_id: string | null
           transaction_id: string
         }
         Insert: {
@@ -180,6 +187,7 @@ export type Database = {
           event_data?: Json | null
           event_type: string
           id?: string
+          payment_id?: string | null
           transaction_id: string
         }
         Update: {
@@ -187,6 +195,7 @@ export type Database = {
           event_data?: Json | null
           event_type?: string
           id?: string
+          payment_id?: string | null
           transaction_id?: string
         }
         Relationships: [
@@ -211,6 +220,7 @@ export type Database = {
           location: string | null
           trust_points: number | null
           trust_score: number | null
+          trust_score_v2: number | null
           updated_at: string | null
           user_level: number | null
           username: string | null
@@ -226,6 +236,7 @@ export type Database = {
           location?: string | null
           trust_points?: number | null
           trust_score?: number | null
+          trust_score_v2?: number | null
           updated_at?: string | null
           user_level?: number | null
           username?: string | null
@@ -241,6 +252,7 @@ export type Database = {
           location?: string | null
           trust_points?: number | null
           trust_score?: number | null
+          trust_score_v2?: number | null
           updated_at?: string | null
           user_level?: number | null
           username?: string | null

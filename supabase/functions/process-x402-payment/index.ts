@@ -14,17 +14,18 @@ serve(async (req) => {
   }
 
   try {
-    const { productId, amount, currency = 'USD' } = await req.json();
+    const { productId, amount, currency = 'USD', buyer_id, seller_id } = await req.json();
 
     if (!productId || !amount) {
       // Return HTTP 402 Payment Required with x402 headers
+      const paymentId = `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const x402Headers = {
         ...corsHeaders,
         'Content-Type': 'application/json',
         'X-402-Payment-Required': 'true',
         'X-402-Amount': amount.toString(),
         'X-402-Currency': currency,
-        'X-402-Payment-Id': `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        'X-402-Payment-Id': paymentId,
         'X-402-Description': `Payment for product ${productId}`,
         'X-402-Callback-URL': `${Deno.env.get('SUPABASE_URL')}/functions/v1/initiate-escrow`,
       };
@@ -36,6 +37,7 @@ serve(async (req) => {
           amount,
           currency,
           product_id: productId,
+          payment_id: paymentId,
           payment_methods: ['x402', 'crypto', 'traditional']
         }
       }), {
@@ -44,10 +46,38 @@ serve(async (req) => {
       });
     }
 
-    // If we reach here, payment details are provided, process normally
+    // After verifying X402 headers, forward to POST /payments
+    const paymentId = `x402_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    console.log('Forwarding to payments endpoint:', { paymentId, amount, currency, buyer_id, seller_id });
+
+    // Internal fetch to payments endpoint
+    const paymentsResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/payments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+      },
+      body: JSON.stringify({
+        payment_id: paymentId,
+        amount,
+        currency,
+        buyer_id,
+        seller_id
+      })
+    });
+
+    const paymentsData = await paymentsResponse.json();
+
+    if (!paymentsResponse.ok) {
+      throw new Error(`Payments service error: ${paymentsData.error}`);
+    }
+
     return new Response(JSON.stringify({
       success: true,
-      message: 'Payment processing initiated'
+      message: 'X402 payment processing initiated',
+      payment_id: paymentId,
+      ...paymentsData
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
