@@ -8,6 +8,7 @@ import { TrustMetrics } from "@/components/TrustMetrics";
 import { AgentDashboard } from "@/components/AgentDashboard";
 import { CustomIcons } from "@/components/CustomIcons";
 import { LogisticsActivity } from "@/components/LogisticsActivity";
+import { WorkflowExperience } from "@/components/WorkflowExperience";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
@@ -72,6 +73,7 @@ const Index = () => {
         <div className="flex flex-wrap gap-6 mb-8 justify-center">
           {[
             { id: "feed", label: "Global Feed", icon: "🌐" },
+            { id: "experience", label: "Experience Flow", icon: "🚀" },
             { id: "agents", label: "AI Agents", icon: <CustomIcons.Sparkle className="w-6 h-6" /> },
             { id: "trust", label: "Trust Network", icon: "🔐" },
           ].map((tab) => (
@@ -115,6 +117,7 @@ const Index = () => {
               </div>
             </div>
           )}
+          {activeTab === "experience" && <WorkflowExperience />}
           {activeTab === "agents" && <AgentDashboard />}
           {activeTab === "trust" && <TrustMetrics />}
         </div>

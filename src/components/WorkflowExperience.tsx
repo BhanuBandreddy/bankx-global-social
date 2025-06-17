@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ interface ItineraryData {
   flight?: string;
 }
 
-export const DemoFlow = () => {
+export const WorkflowExperience = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [itinerary, setItinerary] = useState<ItineraryData | null>(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -148,12 +149,13 @@ export const DemoFlow = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Demo Progress Header */}
+      {/* Experience Progress Header */}
       <Card className="border-4 border-black">
         <CardHeader className="bg-lime-400 border-b-4 border-black">
           <CardTitle className="text-2xl font-bold text-black uppercase">
-            Global Socials Demo Flow
+            🌍 Global Socials Experience
           </CardTitle>
+          <p className="text-black font-medium">Experience the future of social commerce</p>
         </CardHeader>
         <CardContent className="p-6">
           <div className="flex justify-between items-center">
@@ -292,7 +294,7 @@ export const DemoFlow = () => {
 
       {/* Step 2: LocaleLens - Product Discovery */}
       {currentStep === 1 && (
-        <SharedProductDiscovery onProductSelect={handleProductSelect} isDemo={true} />
+        <SharedProductDiscovery onProductSelect={handleProductSelect} isDemo={false} />
       )}
 
       {/* Step 3: TrustPay - Secure Payment */}
@@ -301,7 +303,7 @@ export const DemoFlow = () => {
           product={selectedProduct}
           onPaymentSuccess={handlePaymentSuccess}
           onPaymentCancel={handlePaymentCancel}
-          isDemo={true}
+          isDemo={false}
         />
       )}
 
@@ -318,10 +320,10 @@ export const DemoFlow = () => {
         />
       )}
 
-      {/* Demo Controls */}
+      {/* Experience Controls */}
       <Card className="border-4 border-black">
         <CardHeader className="bg-gray-100 border-b-4 border-black">
-          <CardTitle>Demo Controls</CardTitle>
+          <CardTitle>Experience Controls</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           <div className="flex space-x-4">
@@ -350,7 +352,7 @@ export const DemoFlow = () => {
               variant="outline"
               className="border-4 border-red-500 text-red-500 hover:bg-red-50"
             >
-              Reset Demo
+              Reset Experience
             </Button>
           </div>
         </CardContent>
