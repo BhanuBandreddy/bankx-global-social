@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, MessageCircle, X, Bell } from "lucide-react";
+import { Loader2, Sparkles, MessageCircle, X, Minimize2, Bell } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
@@ -159,6 +158,18 @@ export const BlinkConcierge = ({
     }
   };
 
+  const handleMinimize = () => {
+    setIsExpanded(false);
+  };
+
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      setIsExpanded(false);
+    }
+  };
+
   if (isFloating && !isExpanded) {
     return (
       <div className="fixed bottom-6 right-6 z-50">
@@ -174,7 +185,7 @@ export const BlinkConcierge = ({
 
   return (
     <div className={`${isFloating ? 'fixed bottom-6 right-6 w-96 h-[600px] z-50' : 'w-full max-w-4xl mx-auto'} bg-white border-4 border-black`}>
-      {/* Header */}
+      {/* Header with minimize/close controls */}
       <div className="p-4 border-b-4 border-black bg-purple-100 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Sparkles className="w-6 h-6 text-purple-600" />
@@ -188,19 +199,41 @@ export const BlinkConcierge = ({
           </div>
         </div>
         
-        {isFloating && (
-          <Button
-            onClick={() => {
-              setIsExpanded(false);
-              onClose?.();
-            }}
-            variant="ghost"
-            size="sm"
-            className="p-1"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        )}
+        <div className="flex items-center space-x-2">
+          {isFloating && (
+            <>
+              <Button
+                onClick={handleMinimize}
+                variant="ghost"
+                size="sm"
+                className="p-1 hover:bg-purple-200"
+                title="Minimize"
+              >
+                <Minimize2 className="w-4 h-4" />
+              </Button>
+              <Button
+                onClick={handleClose}
+                variant="ghost"
+                size="sm"
+                className="p-1 hover:bg-red-200"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </>
+          )}
+          {!isFloating && onClose && (
+            <Button
+              onClick={handleClose}
+              variant="ghost"
+              size="sm"
+              className="p-1 hover:bg-red-200"
+              title="Close"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Conversation Display */}
