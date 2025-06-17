@@ -7,7 +7,6 @@ import { SocialFeed } from "@/components/SocialFeed";
 import { TrustMetrics } from "@/components/TrustMetrics";
 import { AgentDashboard } from "@/components/AgentDashboard";
 import { CustomIcons } from "@/components/CustomIcons";
-import { LogisticsActivity } from "@/components/LogisticsActivity";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
@@ -35,30 +34,6 @@ const Index = () => {
   if (!user) {
     return null;
   }
-
-  // Mock logistics activities for social feed integration
-  const logisticsActivities = [
-    {
-      type: 'delivery_request' as const,
-      title: 'Delivery Request: Paris → London',
-      description: 'Need someone traveling from Paris to London to carry a handmade scarf. Small package, high trust required.',
-      route: 'Paris → London',
-      trustScore: 95,
-      timeframe: 'Next 3 days',
-      price: '€25',
-      badges: ['Fragile', 'Handmade', 'Express']
-    },
-    {
-      type: 'delivery_offer' as const,
-      title: 'Offering Delivery: Tokyo → NYC',
-      description: 'Frequent business traveler offering delivery service for small items. Verified carrier with 98% success rate.',
-      route: 'Tokyo → New York',
-      trustScore: 98,
-      timeframe: 'Weekly trips',
-      price: '$40',
-      badges: ['Business Traveler', 'Verified', 'Electronics OK']
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-black">
@@ -98,23 +73,7 @@ const Index = () => {
 
         {/* Dynamic Content */}
         <div className="transition-all duration-300">
-          {activeTab === "feed" && (
-            <div className="space-y-6">
-              <SocialFeed />
-              
-              {/* Logistics Activities Section */}
-              <div className="bg-gray-900 border-4 border-orange-400 p-6">
-                <h2 className="text-2xl font-black text-orange-400 mb-4 uppercase">
-                  🚚 PathSync Logistics Activity
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {logisticsActivities.map((activity, idx) => (
-                    <LogisticsActivity key={idx} {...activity} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+          {activeTab === "feed" && <SocialFeed />}
           {activeTab === "agents" && <AgentDashboard />}
           {activeTab === "trust" && <TrustMetrics />}
         </div>
