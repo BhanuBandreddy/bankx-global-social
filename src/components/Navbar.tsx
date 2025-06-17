@@ -17,12 +17,20 @@ export const Navbar = () => {
             >
               GLOBAL SOCIAL 🌍
             </h1>
-            <Button
-              onClick={() => navigate("/demo")}
-              className="bg-lime-400 text-black border-4 border-lime-400 hover:bg-lime-500 font-bold"
-            >
-              DEMO FLOW
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                onClick={() => navigate("/demo")}
+                className="bg-lime-400 text-black border-4 border-lime-400 hover:bg-lime-500 font-bold"
+              >
+                DEMO FLOW
+              </Button>
+              <Button
+                onClick={() => navigate("/logistics")}
+                className="bg-orange-400 text-black border-4 border-orange-400 hover:bg-orange-500 font-bold"
+              >
+                PATHSYNC
+              </Button>
+            </div>
           </div>
           
           <AuthNavbar />
