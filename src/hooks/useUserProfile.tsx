@@ -36,8 +36,20 @@ export const useUserProfile = () => {
 
         if (error) {
           console.error('Error fetching profile:', error);
-        } else {
-          setProfile(data);
+        } else if (data) {
+          // Transform the database data to match our interface
+          const transformedProfile: UserProfile = {
+            id: data.id,
+            username: data.username || '',
+            full_name: data.full_name || '',
+            trust_score: data.trust_score || 0,
+            trust_points: data.trust_points || 0,
+            trust_points_history: Array.isArray(data.trust_points_history) ? data.trust_points_history : [],
+            level: data.level || 'Trust Newbie',
+            location: data.location || '',
+            avatar_url: data.avatar_url || ''
+          };
+          setProfile(transformedProfile);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
