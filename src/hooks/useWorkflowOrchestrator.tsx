@@ -2,6 +2,9 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import type { Database } from "@/integrations/supabase/types";
+
+type WorkflowType = Database['public']['Enums']['workflow_type'];
 
 interface WorkflowState {
   id: string;
@@ -209,7 +212,7 @@ export const useWorkflowOrchestrator = () => {
         .from('blink_workflows')
         .insert({
           user_id: user.id,
-          workflow_type: type,
+          workflow_type: type as WorkflowType,
           context_data: data,
           status: 'pending'
         })
