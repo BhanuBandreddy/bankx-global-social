@@ -55,7 +55,8 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
         console.log('Token received successfully, initializing map...');
         setMapboxToken(data.token);
         setIsLoading(false);
-        initializeMap(data.token);
+        // Add a small delay to ensure container is ready
+        setTimeout(() => initializeMap(data.token), 100);
       } else {
         console.log('No token in response or unsuccessful:', data);
         setError('No valid token received from server');
@@ -71,10 +72,21 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
   };
 
   const initializeMap = (token: string) => {
-    if (!mapContainer.current || map.current) return;
+    if (!mapContainer.current) {
+      console.error('Map container not found');
+      setError('Map container not available');
+      return;
+    }
+
+    if (map.current) {
+      console.log('Map already initialized');
+      return;
+    }
 
     try {
       console.log('Setting Mapbox access token and initializing map...');
+      console.log('Container dimensions:', mapContainer.current.offsetWidth, 'x', mapContainer.current.offsetHeight);
+      
       mapboxgl.accessToken = token;
       
       map.current = new mapboxgl.Map({
@@ -87,11 +99,18 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
 
       map.current.on('load', () => {
         console.log('Map loaded successfully!');
+        setError(null);
       });
 
       map.current.on('error', (e) => {
         console.error('Map error:', e);
-        setError(`Map initialization error: ${e.error?.message || 'Unknown error'}`);
+        const errorMessage = e.error?.message || 'Unknown map error';
+        console.error('Detailed error:', errorMessage);
+        setError(`Map initialization error: ${errorMessage}`);
+      });
+
+      map.current.on('style.load', () => {
+        console.log('Map style loaded');
       });
 
       // Add navigation controls
@@ -153,8 +172,10 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
       setShowTokenInput(false);
       setError(null);
       setIsLoading(true);
-      initializeMap(mapboxToken);
-      setIsLoading(false);
+      setTimeout(() => {
+        initializeMap(mapboxToken);
+        setIsLoading(false);
+      }, 100);
     }
   };
 
@@ -222,7 +243,11 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
 
   return (
     <div className="relative">
-      <div ref={mapContainer} className="w-full h-64 border-4 border-black" />
+      <div 
+        ref={mapContainer} 
+        className="w-full h-64 border-4 border-black"
+        style={{ minHeight: '256px' }}
+      />
       <div className="absolute top-4 left-4 bg-white border-4 border-black p-3 shadow-[4px_4px_0px_0px_#000]">
         <h4 className="font-bold text-sm">🗺️ {destination}</h4>
         <div className="flex items-center space-x-4 mt-2 text-xs">
