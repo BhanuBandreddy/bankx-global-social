@@ -1,6 +1,5 @@
 
 import { AuthNavbar } from "./AuthNavbar";
-import { WorkflowNotifications } from "./WorkflowNotifications";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -30,10 +29,7 @@ export const Navbar = () => {
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <WorkflowNotifications />
-            <AuthNavbar />
-          </div>
+          <AuthNavbar />
         </div>
       </div>
     </nav>

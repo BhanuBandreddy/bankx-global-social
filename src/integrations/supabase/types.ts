@@ -90,12 +90,10 @@ export type Database = {
           created_at: string
           feed_post_id: string | null
           id: string
-          parsed_data: Json | null
-          share_as_post: boolean | null
           status: string
           updated_at: string
           user_id: string
-          workflow_type: Database["public"]["Enums"]["workflow_type"]
+          workflow_type: string
         }
         Insert: {
           agent_responses?: Json | null
@@ -103,12 +101,10 @@ export type Database = {
           created_at?: string
           feed_post_id?: string | null
           id?: string
-          parsed_data?: Json | null
-          share_as_post?: boolean | null
           status?: string
           updated_at?: string
           user_id: string
-          workflow_type: Database["public"]["Enums"]["workflow_type"]
+          workflow_type: string
         }
         Update: {
           agent_responses?: Json | null
@@ -116,12 +112,10 @@ export type Database = {
           created_at?: string
           feed_post_id?: string | null
           id?: string
-          parsed_data?: Json | null
-          share_as_post?: boolean | null
           status?: string
           updated_at?: string
           user_id?: string
-          workflow_type?: Database["public"]["Enums"]["workflow_type"]
+          workflow_type?: string
         }
         Relationships: []
       }
@@ -225,7 +219,6 @@ export type Database = {
           level: string | null
           location: string | null
           trust_points: number | null
-          trust_points_history: Json | null
           trust_score: number | null
           trust_score_v2: number | null
           updated_at: string | null
@@ -242,7 +235,6 @@ export type Database = {
           level?: string | null
           location?: string | null
           trust_points?: number | null
-          trust_points_history?: Json | null
           trust_score?: number | null
           trust_score_v2?: number | null
           updated_at?: string | null
@@ -259,7 +251,6 @@ export type Database = {
           level?: string | null
           location?: string | null
           trust_points?: number | null
-          trust_points_history?: Json | null
           trust_score?: number | null
           trust_score_v2?: number | null
           updated_at?: string | null
@@ -268,64 +259,15 @@ export type Database = {
         }
         Relationships: []
       }
-      workflow_notifications: {
-        Row: {
-          created_at: string | null
-          id: string
-          message: string
-          read: boolean | null
-          title: string
-          type: string
-          user_id: string
-          workflow_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          message: string
-          read?: boolean | null
-          title: string
-          type?: string
-          user_id: string
-          workflow_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          message?: string
-          read?: boolean | null
-          title?: string
-          type?: string
-          user_id?: string
-          workflow_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "workflow_notifications_workflow_id_fkey"
-            columns: ["workflow_id"]
-            isOneToOne: false
-            referencedRelation: "blink_workflows"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      award_trust_points: {
-        Args: { user_uuid: string; points: number; reason: string }
-        Returns: undefined
-      }
+      [_ in never]: never
     }
     Enums: {
-      workflow_type:
-        | "product_inquiry"
-        | "product_purchase"
-        | "itinerary_upload"
-        | "logistics_request"
-        | "local_intel"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -440,14 +382,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      workflow_type: [
-        "product_inquiry",
-        "product_purchase",
-        "itinerary_upload",
-        "logistics_request",
-        "local_intel",
-      ],
-    },
+    Enums: {},
   },
 } as const
