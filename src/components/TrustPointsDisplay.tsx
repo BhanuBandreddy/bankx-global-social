@@ -7,7 +7,7 @@ import { Trophy, TrendingUp, Star } from "lucide-react";
 
 export const TrustPointsDisplay = () => {
   const { user } = useAuth();
-  const { profile } = useUserProfile(user?.id);
+  const { profile } = useUserProfile();
 
   if (!profile) return null;
 

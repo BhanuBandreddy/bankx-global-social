@@ -8,6 +8,8 @@ interface UserProfile {
   username: string;
   full_name: string;
   trust_score: number;
+  trust_points: number;
+  trust_points_history: any[];
   level: string;
   location: string;
   avatar_url: string;
