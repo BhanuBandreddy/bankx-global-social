@@ -72,11 +72,21 @@ serve(async (req) => {
         }
       });
 
+    // Get current user trust points and update them
+    const { data: currentProfile } = await supabaseClient
+      .from('profiles')
+      .select('trust_points')
+      .eq('id', user.id)
+      .single();
+
+    const currentTrustPoints = currentProfile?.trust_points || 0;
+    const newTrustPoints = currentTrustPoints + 10;
+
     // Update user trust score for successful escrow creation
     await supabaseClient
       .from('profiles')
       .update({
-        trust_points: supabaseClient.raw('trust_points + 10'),
+        trust_points: newTrustPoints,
         updated_at: new Date().toISOString()
       })
       .eq('id', user.id);
