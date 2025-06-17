@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Upload, MapPin, CreditCard, Users, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ProductDiscovery } from "./ProductDiscovery";
 import { TrustPayment } from "./TrustPayment";
+import { PathSyncLogistics } from "./PathSyncLogistics"; // Added import for PathSyncLogistics
 import { extractTextFromPDF } from "@/utils/pdfUtils";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -25,7 +25,6 @@ export const DemoFlow = () => {
   const [itinerary, setItinerary] = useState<ItineraryData | null>(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [escrowTransactionId, setEscrowTransactionId] = useState<string>('');
-  const [courierFound, setCourierFound] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const { toast } = useToast();
@@ -36,6 +35,8 @@ export const DemoFlow = () => {
     { id: 'payment', name: 'Secure Payment', agent: 'TrustPay Orchestrator', icon: CreditCard },
     { id: 'logistics', name: 'Peer Logistics', agent: 'PathSync Social Logistics', icon: Users },
   ];
+
+  // ... keep existing code (validateFile, processFile, handleFileUpload, handleDragOver, handleDragLeave, handleDrop functions)
 
   const validateFile = (file: File) => {
     if (file.type !== 'application/pdf') {
@@ -141,7 +142,7 @@ export const DemoFlow = () => {
     
     toast({
       title: "🚀 Proceeding to Logistics",
-      description: "Payment secured! PathSync is finding peer couriers for your delivery.",
+      description: "Payment secured! PathSync is matching you with optimal logistics partners.",
     });
   };
 
@@ -308,52 +309,17 @@ export const DemoFlow = () => {
         />
       )}
 
-      {/* Step 4: PathSync - Peer Logistics */}
+      {/* Step 4: PathSync - Enhanced Peer Logistics */}
       {currentStep === 3 && (
-        <Card className="border-4 border-black">
-          <CardHeader className="bg-orange-100 border-b-4 border-black">
-            <CardTitle className="flex items-center space-x-2">
-              <Users className="w-6 h-6" />
-              <span>Step 4: PathSync Social Logistics</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-6">
-            <div className="bg-green-50 border-4 border-green-300 p-4">
-              <h3 className="font-bold text-green-800 mb-2">🔒 Escrow Active</h3>
-              <p className="text-sm text-green-700">
-                Transaction ID: {escrowTransactionId}<br/>
-                Funds secured until delivery confirmation
-              </p>
-            </div>
-            
-            <div className="bg-white border-4 border-black p-4">
-              <h4 className="font-bold mb-3">🤝 Peer Courier Network</h4>
-              <p className="text-sm mb-4">
-                PathSync is connecting you with trusted peer couriers traveling your route.
-                Escrow will be released automatically upon delivery confirmation.
-              </p>
-              
-              <div className="space-y-2 text-sm">
-                <div>✅ 3 verified couriers found on Chennai → Paris route</div>
-                <div>✅ Trust scores: 98, 95, 92 (excellent ratings)</div>
-                <div>✅ Estimated delivery: 2-3 days after arrival</div>
-                <div>✅ GPS tracking + delivery confirmation enabled</div>
-              </div>
-            </div>
-
-            <Button
-              onClick={() => {
-                toast({
-                  title: "🎉 Demo Complete!",
-                  description: "Full workflow: Itinerary → Discovery → Payment → Logistics integrated with x402 + Escrow"
-                });
-              }}
-              className="w-full bg-orange-500 text-white border-4 border-orange-700"
-            >
-              Complete Demo Experience
-            </Button>
-          </CardContent>
-        </Card>
+        <PathSyncLogistics
+          escrowTransactionId={escrowTransactionId}
+          userItinerary={itinerary ? {
+            route: itinerary.route,
+            date: itinerary.date,
+            isActive: true
+          } : undefined}
+          productLocation={selectedProduct?.name.includes('Chennai') ? 'Chennai' : 'Paris'}
+        />
       )}
 
       {/* Demo Controls */}
@@ -384,7 +350,6 @@ export const DemoFlow = () => {
                 setItinerary(null);
                 setSelectedProduct(null);
                 setEscrowTransactionId('');
-                setCourierFound(false);
               }}
               variant="outline"
               className="border-4 border-red-500 text-red-500 hover:bg-red-50"
