@@ -30,8 +30,9 @@ serve(async (req) => {
     const { pdfText, fileName } = await req.json();
     
     console.log('Processing PDF:', fileName);
-    console.log('PDF Text Length:', pdfText.length);
+    console.log('PDF Text Content:', pdfText.substring(0, 500) + '...');
 
+    // Improved OpenAI prompt for better parsing
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -43,34 +44,46 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are GlobeGuides™ Concierge, an AI travel assistant that parses travel itineraries and provides smart insights. 
-            
-            Extract key travel information from the provided itinerary text and return a JSON object with:
-            - route: "Origin → Destination" format
-            - date: Human-readable date (e.g., "12 Aug 2024")
-            - departureTime: if available
-            - arrivalTime: if available
-            - flight: flight number if available
-            - gate: gate information if available
-            - weather: Mock weather for destination (e.g., "24°C, sunny")
-            - alerts: One relevant travel alert for the destination (e.g., "Metro strike planned", "Airport construction delays")
-            
-            If information is missing, make reasonable assumptions based on common travel patterns.
-            Return only valid JSON.`
+            content: `You are a travel itinerary parser. Extract key information from travel documents and return a JSON object with the following structure:
+
+{
+  "route": "Origin → Destination",
+  "date": "DD MMM YYYY format",
+  "departureTime": "HH:MM",
+  "arrivalTime": "HH:MM", 
+  "flight": "flight number",
+  "gate": "gate/terminal info",
+  "weather": "realistic weather for destination and season",
+  "alerts": "relevant travel alert for the destination"
+}
+
+Rules:
+- Extract actual information from the text when available
+- For route, use format like "Chennai → Paris" or "New York → London"
+- For dates, convert to readable format like "12 Aug 2024"
+- Generate realistic weather based on destination and time of year
+- Create relevant travel alerts (construction, strikes, events, etc.)
+- If information is missing, make reasonable assumptions based on context
+- Return ONLY valid JSON, no additional text`
           },
           {
             role: 'user',
-            content: `Parse this travel itinerary and extract key information:\n\n${pdfText}`
+            content: `Parse this travel itinerary and extract the key information:\n\n${pdfText}`
           }
         ],
-        temperature: 0.3,
+        temperature: 0.2,
+        max_tokens: 500,
       }),
     });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+    }
 
     const data = await response.json();
     
     if (!data.choices || !data.choices[0]) {
-      throw new Error('Invalid OpenAI response');
+      throw new Error('Invalid OpenAI response structure');
     }
 
     const content = data.choices[0].message.content;
@@ -79,50 +92,47 @@ serve(async (req) => {
     // Parse the JSON response from OpenAI
     let parsedData: any;
     try {
-      parsedData = JSON.parse(content);
+      // Clean the response to ensure it's valid JSON
+      const cleanedContent = content.replace(/```json\n?|\n?```/g, '').trim();
+      parsedData = JSON.parse(cleanedContent);
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
-      // Fallback with mock data if parsing fails
+      console.error('Raw content:', content);
+      
+      // Enhanced fallback parsing - try to extract information manually
+      const routeMatch = pdfText.match(/([A-Za-z\s]+)\s*(?:→|->|to)\s*([A-Za-z\s]+)/i) || 
+                       pdfText.match(/from\s+([A-Za-z\s]+)\s+to\s+([A-Za-z\s]+)/i) ||
+                       pdfText.match(/([A-Z]{3})\s*(?:→|->|to)\s*([A-Z]{3})/);
+      
+      const flightMatch = pdfText.match(/([A-Z]{1,3}\d{2,4})/);
+      const dateMatch = pdfText.match(/(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})/i);
+      const timeMatch = pdfText.match(/(\d{1,2}:\d{2})/g);
+      
       parsedData = {
-        route: "Chennai → Paris",
-        date: "12 Aug 2024",
-        weather: "24°C, partly cloudy",
-        alerts: "Metro strike planned",
-        flight: "AF271",
-        gate: "Terminal 2E"
+        route: routeMatch ? `${routeMatch[1].trim()} → ${routeMatch[2].trim()}` : "Unknown → Unknown",
+        date: dateMatch ? `${dateMatch[1]} ${dateMatch[2]} ${dateMatch[3]}` : "Date not found",
+        flight: flightMatch ? flightMatch[1] : null,
+        departureTime: timeMatch && timeMatch[0] ? timeMatch[0] : null,
+        arrivalTime: timeMatch && timeMatch[1] ? timeMatch[1] : null,
+        gate: null,
+        weather: "22°C, partly cloudy",
+        alerts: "Please check local travel updates"
       };
     }
 
-    // Convert the OpenAI response to the format expected by the UI
-    let itinerary: ItineraryData;
-    
-    if (parsedData.outbound) {
-      // Handle the structured response with outbound/return
-      itinerary = {
-        route: parsedData.outbound.route,
-        date: parsedData.outbound.date,
-        weather: parsedData.outbound.weather,
-        alerts: parsedData.outbound.alerts,
-        departureTime: parsedData.outbound.departureTime,
-        arrivalTime: parsedData.outbound.arrivalTime,
-        flight: parsedData.outbound.flight,
-        gate: parsedData.outbound.gate
-      };
-    } else {
-      // Handle direct response format
-      itinerary = {
-        route: parsedData.route || "Chennai → Paris",
-        date: parsedData.date || "12 Aug 2024",
-        weather: parsedData.weather || "24°C, partly cloudy",
-        alerts: parsedData.alerts || "Metro strike planned",
-        departureTime: parsedData.departureTime,
-        arrivalTime: parsedData.arrivalTime,
-        flight: parsedData.flight,
-        gate: parsedData.gate
-      };
-    }
+    // Ensure required fields have fallback values
+    const itinerary: ItineraryData = {
+      route: parsedData.route || "Travel Route",
+      date: parsedData.date || "Travel Date",
+      weather: parsedData.weather || "Please check weather",
+      alerts: parsedData.alerts || "No alerts",
+      departureTime: parsedData.departureTime,
+      arrivalTime: parsedData.arrivalTime,
+      flight: parsedData.flight,
+      gate: parsedData.gate
+    };
 
-    console.log('Formatted itinerary for UI:', itinerary);
+    console.log('Final parsed itinerary:', itinerary);
 
     return new Response(JSON.stringify({
       success: true,

@@ -1,5 +1,5 @@
 
-// Simple PDF text extraction utility
+// Enhanced PDF text extraction utility
 export const extractTextFromPDF = async (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -11,9 +11,12 @@ export const extractTextFromPDF = async (file: File): Promise<string> => {
         // For demo purposes, we'll simulate PDF text extraction
         // In a real implementation, you'd use a library like pdf-parse or pdf2pic
         
-        // Mock extracted text based on file name or size
-        const mockItineraryText = `
-TRAVEL ITINERARY
+        // More comprehensive mock extracted text based on file name patterns
+        let mockItineraryText = '';
+        
+        if (file.name.toLowerCase().includes('travel') || file.name.toLowerCase().includes('itinerary')) {
+          mockItineraryText = `
+TRAVEL ITINERARY - ${file.name}
 Passenger: John Doe
 Booking Reference: ABC123
 
@@ -38,8 +41,39 @@ Flight: AF272 (Air France)
 Route: Paris (CDG) → Chennai (MAA)
 Departure: 14:30 (Local Time)
 Arrival: 01:45+1 (Local Time)
+
+Additional Information:
+- Travel insurance included
+- Baggage allowance: 23kg checked, 8kg carry-on
+- Seat selection: 12A (outbound), 15F (return)
+- Special meal: Vegetarian
 `;
+        } else {
+          // Generic travel document
+          mockItineraryText = `
+BOOKING CONFIRMATION
+Reference: ${Math.random().toString(36).substr(2, 9).toUpperCase()}
+
+Flight Details:
+From: New York JFK
+To: London Heathrow
+Date: ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', { 
+  day: 'numeric', 
+  month: 'long', 
+  year: 'numeric' 
+})}
+Flight: BA178
+Departure: 21:20
+Arrival: 08:05+1
+Terminal: Terminal 5
+
+Passenger: Travel Guest
+Seat: 14C
+Class: Economy
+`;
+        }
         
+        console.log('Extracted PDF text:', mockItineraryText);
         resolve(mockItineraryText);
       } catch (error) {
         reject(error);
