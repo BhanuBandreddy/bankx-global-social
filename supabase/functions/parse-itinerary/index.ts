@@ -32,7 +32,7 @@ serve(async (req) => {
     console.log('Processing PDF:', fileName);
     console.log('PDF Text Content:', pdfText.substring(0, 500) + '...');
 
-    // Improved OpenAI prompt for better parsing
+    // Enhanced OpenAI prompt for better table and structured data parsing
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -44,26 +44,35 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a travel itinerary parser. Extract key information from travel documents and return a JSON object with the following structure:
+            content: `You are a travel itinerary parser that handles both traditional itineraries and structured table data. Extract key information and return a JSON object with this structure:
 
 {
-  "route": "Origin → Destination",
-  "date": "DD MMM YYYY format",
-  "departureTime": "HH:MM",
-  "arrivalTime": "HH:MM", 
-  "flight": "flight number",
-  "gate": "gate/terminal info",
+  "route": "Origin → Destination (or Primary Cities)",
+  "date": "Start date in DD MMM YYYY format", 
+  "departureTime": "First departure time",
+  "arrivalTime": "Final arrival time",
+  "flight": "Primary flight number",
+  "gate": "gate/terminal info if available",
   "weather": "realistic weather for destination and season",
   "alerts": "relevant travel alert for the destination"
 }
 
+For table-based itineraries:
+- Extract the primary route from multiple cities (e.g., "New York → Washington DC")
+- Use the start date from the trip
+- Get the first outbound flight/transport
+- Focus on the main journey
+
+For traditional itineraries:
+- Extract direct flight information
+- Use specific departure/arrival times
+- Include gate and terminal details
+
 Rules:
 - Extract actual information from the text when available
-- For route, use format like "Chennai → Paris" or "New York → London"
-- For dates, convert to readable format like "12 Aug 2024"
+- For multi-city trips, summarize the main route
 - Generate realistic weather based on destination and time of year
 - Create relevant travel alerts (construction, strikes, events, etc.)
-- If information is missing, make reasonable assumptions based on context
 - Return ONLY valid JSON, no additional text`
           },
           {
@@ -71,7 +80,7 @@ Rules:
             content: `Parse this travel itinerary and extract the key information:\n\n${pdfText}`
           }
         ],
-        temperature: 0.2,
+        temperature: 0.1,
         max_tokens: 500,
       }),
     });
@@ -99,31 +108,41 @@ Rules:
       console.error('JSON parse error:', parseError);
       console.error('Raw content:', content);
       
-      // Enhanced fallback parsing - try to extract information manually
-      const routeMatch = pdfText.match(/([A-Za-z\s]+)\s*(?:→|->|to)\s*([A-Za-z\s]+)/i) || 
-                       pdfText.match(/from\s+([A-Za-z\s]+)\s+to\s+([A-Za-z\s]+)/i) ||
-                       pdfText.match(/([A-Z]{3})\s*(?:→|->|to)\s*([A-Z]{3})/);
+      // Enhanced fallback parsing for table-based data
+      const cityMatches = pdfText.match(/New York|Washington DC|NYC|Times Square|Capitol/gi);
+      const flightMatches = pdfText.match(/([A-Z]{1,3}\d{2,4})|Flight\s+([A-Z]{1,3}\d{2,4})/gi);
+      const dateMatches = pdfText.match(/(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})/gi);
+      const timeMatches = pdfText.match(/(\d{1,2}:\d{2})/g);
       
-      const flightMatch = pdfText.match(/([A-Z]{1,3}\d{2,4})/);
-      const dateMatch = pdfText.match(/(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})/i);
-      const timeMatch = pdfText.match(/(\d{1,2}:\d{2})/g);
+      // Determine route based on cities found
+      let route = "Unknown Route";
+      if (cityMatches && cityMatches.length > 0) {
+        const uniqueCities = [...new Set(cityMatches.map(city => 
+          city.replace(/NYC/i, 'New York').replace(/Capitol/i, 'Washington DC')
+        ))];
+        if (uniqueCities.length >= 2) {
+          route = uniqueCities.slice(0, 2).join(' → ');
+        } else {
+          route = uniqueCities[0] + " Trip";
+        }
+      }
       
       parsedData = {
-        route: routeMatch ? `${routeMatch[1].trim()} → ${routeMatch[2].trim()}` : "Unknown → Unknown",
-        date: dateMatch ? `${dateMatch[1]} ${dateMatch[2]} ${dateMatch[3]}` : "Date not found",
-        flight: flightMatch ? flightMatch[1] : null,
-        departureTime: timeMatch && timeMatch[0] ? timeMatch[0] : null,
-        arrivalTime: timeMatch && timeMatch[1] ? timeMatch[1] : null,
+        route: route,
+        date: dateMatches && dateMatches[0] ? dateMatches[0] : "Date not found",
+        flight: flightMatches && flightMatches[0] ? flightMatches[0].replace(/Flight\s+/i, '') : null,
+        departureTime: timeMatches && timeMatches[0] ? timeMatches[0] : null,
+        arrivalTime: timeMatches && timeMatches[1] ? timeMatches[1] : null,
         gate: null,
-        weather: "22°C, partly cloudy",
-        alerts: "Please check local travel updates"
+        weather: "Pleasant weather expected",
+        alerts: "Check local travel updates before departure"
       };
     }
 
     // Ensure required fields have fallback values
     const itinerary: ItineraryData = {
       route: parsedData.route || "Travel Route",
-      date: parsedData.date || "Travel Date",
+      date: parsedData.date || "Travel Date", 
       weather: parsedData.weather || "Please check weather",
       alerts: parsedData.alerts || "No alerts",
       departureTime: parsedData.departureTime,

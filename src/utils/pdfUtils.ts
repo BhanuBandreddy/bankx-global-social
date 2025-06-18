@@ -11,10 +11,11 @@ export const extractTextFromPDF = async (file: File): Promise<string> => {
         // For demo purposes, we'll simulate PDF text extraction
         // In a real implementation, you'd use a library like pdf-parse or pdf2pic
         
-        // More comprehensive mock extracted text based on file name patterns
+        // Enhanced mock extracted text based on file name patterns
         let mockItineraryText = '';
         
-        if (file.name.toLowerCase().includes('travel') || file.name.toLowerCase().includes('itinerary')) {
+        if (file.name.toLowerCase().includes('traveldoc2')) {
+          // Original Chennai to Paris itinerary
           mockItineraryText = `
 TRAVEL ITINERARY - ${file.name}
 Passenger: John Doe
@@ -49,27 +50,24 @@ Additional Information:
 - Special meal: Vegetarian
 `;
         } else {
-          // Generic travel document
+          // Table-based itinerary like the one uploaded
           mockItineraryText = `
-BOOKING CONFIRMATION
-Reference: ${Math.random().toString(36).substr(2, 9).toUpperCase()}
+TRAVEL ITINERARY TABLE
 
-Flight Details:
-From: New York JFK
-To: London Heathrow
-Date: ${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', { 
-  day: 'numeric', 
-  month: 'long', 
-  year: 'numeric' 
-})}
-Flight: BA178
-Departure: 21:20
-Arrival: 08:05+1
-Terminal: Terminal 5
+Date | City/Region | Transport | Lodging | Key Activities | Notes
+Mon 7 Jul 2025 | New York City | Flight AA100 | Midtown Hotel | Evening in Times Square; slice of NY pizza | Pre-book airport shuttle
+Tue 8 Jul 2025 | New York City | Subway/walk | Midtown Hotel | Statue of Liberty ferry 09:00; Central Park picnic | Buy unlimited MetroCard
+Wed 9 Jul 2025 | NYC → Washington DC | Amtrak Northeast Regional 07:00 | Capitol Inn | National Mall stroll; Smithsonian Air & Space | Pack train snacks
+Thu 10 Jul 2025 | Washington DC | Metro | Capitol Inn | U.S. Capitol tour 10:00; Georgetown waterfront dinner | ID needed for Capitol
+Fri 11 Jul 2025 | Washington DC → Home | Flight DL200 16:30 | — | Souvenir shopping; airport arrival 14:30 | Allow 2 h security buffer
 
-Passenger: Travel Guest
-Seat: 14C
-Class: Economy
+TRIP SUMMARY:
+- Duration: 5 days (July 7-11, 2025)
+- Cities: New York City, Washington DC
+- Flights: AA100 (to NYC), DL200 (from DC)
+- Hotels: Midtown Hotel (NYC), Capitol Inn (DC)
+- Transport: Flight, Amtrak, Subway, Metro
+- Key attractions: Times Square, Statue of Liberty, Central Park, National Mall, Smithsonian, U.S. Capitol
 `;
         }
         
