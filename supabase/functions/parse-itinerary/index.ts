@@ -86,7 +86,7 @@ Guidelines:
             content: `Please parse this document and extract travel information:\n\n${pdfText}`
           }
         ],
-        temperature: 0.3,
+        temperature: 0.6,
         max_tokens: 600,
       }),
     });
