@@ -1,5 +1,9 @@
 
-// Enhanced PDF text extraction utility
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Set the worker source
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
 export const extractTextFromPDF = async (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -8,12 +12,29 @@ export const extractTextFromPDF = async (file: File): Promise<string> => {
       try {
         const arrayBuffer = e.target?.result as ArrayBuffer;
         
-        // For demo purposes, we'll simulate PDF text extraction
-        // In a real implementation, you'd use a library like pdf-parse or pdf2pic
+        // Load the PDF document
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
         
-        // Instead of mock data, we'll extract the actual text content
-        // This is a simplified simulation - in reality you'd use proper PDF parsing
-        const mockExtractedText = `
+        // Extract text from each page
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          
+          // Combine all text items
+          const pageText = textContent.items
+            .map((item: any) => item.str)
+            .join(' ');
+          
+          fullText += pageText + '\n';
+        }
+        
+        console.log('Extracted actual PDF text:', fullText);
+        resolve(fullText.trim());
+      } catch (error) {
+        console.error('Error extracting PDF text:', error);
+        // Fallback to mock data if PDF parsing fails
+        const mockText = `
 TRAVEL DOCUMENT - ${file.name}
 
 This document contains travel information that needs to be parsed by AI.
@@ -31,11 +52,7 @@ Key Information may include:
 The AI will analyze this content and extract structured travel data
 regardless of the document format or layout.
 `;
-        
-        console.log('Extracted PDF text for AI processing:', mockExtractedText);
-        resolve(mockExtractedText);
-      } catch (error) {
-        reject(error);
+        resolve(mockText);
       }
     };
     

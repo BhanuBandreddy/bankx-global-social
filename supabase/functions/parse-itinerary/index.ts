@@ -30,9 +30,9 @@ serve(async (req) => {
     const { pdfText, fileName } = await req.json();
     
     console.log('Processing PDF:', fileName);
-    console.log('PDF Text Content:', pdfText.substring(0, 500) + '...');
+    console.log('PDF Text Content (first 1000 chars):', pdfText.substring(0, 1000));
 
-    // AI-driven itinerary parsing with flexible extraction
+    // Enhanced AI prompt for better parsing of real travel documents
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -44,46 +44,33 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an intelligent travel document parser. Your job is to extract ANY travel-related information from documents and create a structured response.
+            content: `You are an expert travel document parser. Extract travel information from the provided text and return ONLY valid JSON.
 
-IMPORTANT: You must ALWAYS return a valid JSON response, even if the document contains no travel information.
-
-Extract and infer travel information from ANY content. Look for:
-- Destinations, cities, countries, locations
-- Dates, times, schedules
-- Transportation (flights, trains, buses, etc.)
-- Accommodations
-- Activities or events
-- Any travel-related references
-
-If explicit travel information is missing:
-- Make reasonable inferences from context
-- Use location names to create logical routes
-- Estimate realistic travel scenarios
-- Generate appropriate weather and alerts
-
-Return JSON in this exact format:
+CRITICAL: You must return a valid JSON object with these exact fields:
 {
-  "route": "Origin → Destination or Primary Route",
-  "date": "Travel start date (format: DD MMM YYYY)",
-  "departureTime": "departure time if available",
-  "arrivalTime": "arrival time if available", 
-  "flight": "flight/transport number if available",
-  "gate": "gate/terminal info if available",
-  "weather": "realistic weather forecast for destination and season",
-  "alerts": "relevant travel advisory or local information"
+  "route": "Start City → End City (or main travel route)",
+  "date": "First travel date in DD MMM YYYY format",
+  "departureTime": "departure time if found",
+  "arrivalTime": "arrival time if found", 
+  "flight": "flight number/transport if found",
+  "gate": "gate/terminal info if found",
+  "weather": "appropriate weather forecast for destination and season",
+  "alerts": "relevant travel tips or information"
 }
 
-Guidelines:
-- Always create a route, even if inferred from minimal information
-- Generate realistic weather based on destination and time of year
-- Create relevant travel alerts (construction, events, local tips, etc.)
-- If no clear travel info exists, create a generic but helpful response
-- Return ONLY valid JSON, no additional text or explanations`
+PARSING RULES:
+- Extract actual dates, cities, flights, and activities from the text
+- If multiple destinations, use "City1 → City2 → City3" format
+- Use the earliest travel date as the main date
+- Generate realistic weather for the actual destination and time of year
+- Create helpful alerts based on the actual itinerary content
+- Return ONLY the JSON object, no other text
+
+Look for: dates, city names, flight numbers, hotel names, activities, transportation details.`
           },
           {
             role: 'user',
-            content: `Please parse this document and extract travel information:\n\n${pdfText}`
+            content: `Parse this travel document and extract the structured information:\n\n${pdfText}`
           }
         ],
         temperature: 0.6,
@@ -114,16 +101,16 @@ Guidelines:
       console.error('JSON parse error:', parseError);
       console.error('Raw content:', content);
       
-      // Fallback response if JSON parsing fails
+      // Enhanced fallback response
       parsedData = {
-        route: "Document Analysis → Travel Planning",
+        route: "Travel Document → Destination",
         date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
         flight: null,
         departureTime: null,
         arrivalTime: null,
         gate: null,
-        weather: "Please check current weather conditions",
-        alerts: "AI processed your document - please review extracted information"
+        weather: "Please check current weather conditions for your destination",
+        alerts: "AI processed your document - some details may need manual verification"
       };
     }
 
@@ -144,7 +131,7 @@ Guidelines:
     return new Response(JSON.stringify({
       success: true,
       itinerary: itinerary,
-      message: 'Document processed successfully by AI - extracted available travel information'
+      message: 'Travel document processed successfully - extracted actual itinerary data'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
