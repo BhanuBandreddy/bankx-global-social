@@ -47,27 +47,29 @@ export const BlinkConcierge = ({
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random()}`);
   const [isExpanded, setIsExpanded] = useState(!isFloating);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [hasAutoProcessed, setHasAutoProcessed] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const { profile } = useUserProfile();
 
-  // Auto-process feed context when component mounts
+  // Auto-process feed context when component mounts - but only once
   useEffect(() => {
-    if (contextType === 'feed' && feedContext && user && !loading && conversation.length === 0) {
+    if (contextType === 'feed' && feedContext && user && !loading && !hasAutoProcessed) {
       const contextualQuery = getContextualQuery();
       if (contextualQuery) {
         setQuery(contextualQuery);
-        // Auto-submit the contextual query
+        setHasAutoProcessed(true);
+        // Auto-submit the contextual query after a short delay
         setTimeout(() => {
           handleSubmitWithQuery(contextualQuery);
-        }, 500);
+        }, 800);
       }
     }
-  }, [contextType, feedContext, user]);
+  }, [contextType, feedContext, user, hasAutoProcessed]);
 
-  // Only load conversation history for generic mode
+  // Only load conversation history for generic mode (not feed mode)
   useEffect(() => {
-    if (user && isExpanded && contextType === 'generic') {
+    if (user && isExpanded && contextType === 'generic' && !hasAutoProcessed) {
       loadConversationHistory();
     }
   }, [user, isExpanded, contextType]);
@@ -145,9 +147,11 @@ export const BlinkConcierge = ({
   };
 
   const handleSubmitWithQuery = async (queryText: string) => {
-    if (!queryText.trim() || !user) return;
+    if (!queryText.trim() || !user || loading) return;
 
     setLoading(true);
+    
+    // Add user message to conversation
     const userMessage = { speaker: "User", content: queryText.trim(), emoji: "👤" };
     setConversation(prev => [...prev, userMessage]);
 
@@ -166,8 +170,10 @@ export const BlinkConcierge = ({
 
       const response: BlinkResponse = data;
       
-      if (response.success) {
-        setConversation(prev => [...prev, ...response.conversation.slice(1)]);
+      if (response.success && response.conversation) {
+        // Add only the agent responses (skip the user message since we already added it)
+        const agentMessages = response.conversation.filter(msg => msg.speaker !== 'User');
+        setConversation(prev => [...prev, ...agentMessages]);
         setQuery("");
         
         toast({
@@ -305,18 +311,18 @@ export const BlinkConcierge = ({
 
       {/* Conversation Display */}
       <div className={`${isFloating ? 'h-96' : isDrawer ? 'h-[calc(100vh-280px)]' : 'h-80'} overflow-y-auto p-4 space-y-3 bg-gray-50`}>
-        {conversation.length === 0 && (
+        {conversation.length === 0 && !loading && (
           <div className="text-center py-8">
             <Sparkles className="w-12 h-12 mx-auto text-purple-400 mb-4" />
             <p className="text-gray-600 font-medium">
-              {contextType === 'feed' ? 'Processing your request...' : 'Your conversation history will appear here'}
+              {contextType === 'feed' ? 'Ready to help with your request...' : 'Your conversation history will appear here'}
             </p>
           </div>
         )}
 
         {conversation.map((message, idx) => (
           <div
-            key={idx}
+            key={`${message.speaker}-${idx}-${message.content.slice(0, 20)}`}
             className={`p-3 border-2 border-black ${
               message.speaker === 'User' 
                 ? 'bg-blue-100 border-blue-400' 
@@ -338,6 +344,13 @@ export const BlinkConcierge = ({
             <p className="text-black text-sm leading-relaxed">{message.content}</p>
           </div>
         ))}
+
+        {loading && (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="w-6 h-6 animate-spin text-purple-500 mr-2" />
+            <span className="text-gray-600 font-medium">Processing your request...</span>
+          </div>
+        )}
       </div>
 
       {/* Input Section */}
