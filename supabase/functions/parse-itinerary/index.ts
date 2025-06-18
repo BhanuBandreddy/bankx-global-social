@@ -32,7 +32,7 @@ serve(async (req) => {
     console.log('Processing PDF:', fileName);
     console.log('PDF Text Content:', pdfText.substring(0, 500) + '...');
 
-    // Enhanced OpenAI prompt for better table and structured data parsing
+    // AI-driven itinerary parsing with flexible extraction
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -44,44 +44,50 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a travel itinerary parser that handles both traditional itineraries and structured table data. Extract key information and return a JSON object with this structure:
+            content: `You are an intelligent travel document parser. Your job is to extract ANY travel-related information from documents and create a structured response.
 
+IMPORTANT: You must ALWAYS return a valid JSON response, even if the document contains no travel information.
+
+Extract and infer travel information from ANY content. Look for:
+- Destinations, cities, countries, locations
+- Dates, times, schedules
+- Transportation (flights, trains, buses, etc.)
+- Accommodations
+- Activities or events
+- Any travel-related references
+
+If explicit travel information is missing:
+- Make reasonable inferences from context
+- Use location names to create logical routes
+- Estimate realistic travel scenarios
+- Generate appropriate weather and alerts
+
+Return JSON in this exact format:
 {
-  "route": "Origin → Destination (or Primary Cities)",
-  "date": "Start date in DD MMM YYYY format", 
-  "departureTime": "First departure time",
-  "arrivalTime": "Final arrival time",
-  "flight": "Primary flight number",
+  "route": "Origin → Destination or Primary Route",
+  "date": "Travel start date (format: DD MMM YYYY)",
+  "departureTime": "departure time if available",
+  "arrivalTime": "arrival time if available", 
+  "flight": "flight/transport number if available",
   "gate": "gate/terminal info if available",
-  "weather": "realistic weather for destination and season",
-  "alerts": "relevant travel alert for the destination"
+  "weather": "realistic weather forecast for destination and season",
+  "alerts": "relevant travel advisory or local information"
 }
 
-For table-based itineraries:
-- Extract the primary route from multiple cities (e.g., "New York → Washington DC")
-- Use the start date from the trip
-- Get the first outbound flight/transport
-- Focus on the main journey
-
-For traditional itineraries:
-- Extract direct flight information
-- Use specific departure/arrival times
-- Include gate and terminal details
-
-Rules:
-- Extract actual information from the text when available
-- For multi-city trips, summarize the main route
+Guidelines:
+- Always create a route, even if inferred from minimal information
 - Generate realistic weather based on destination and time of year
-- Create relevant travel alerts (construction, strikes, events, etc.)
-- Return ONLY valid JSON, no additional text`
+- Create relevant travel alerts (construction, events, local tips, etc.)
+- If no clear travel info exists, create a generic but helpful response
+- Return ONLY valid JSON, no additional text or explanations`
           },
           {
             role: 'user',
-            content: `Parse this travel itinerary and extract the key information:\n\n${pdfText}`
+            content: `Please parse this document and extract travel information:\n\n${pdfText}`
           }
         ],
-        temperature: 0.1,
-        max_tokens: 500,
+        temperature: 0.3,
+        max_tokens: 600,
       }),
     });
 
@@ -108,34 +114,16 @@ Rules:
       console.error('JSON parse error:', parseError);
       console.error('Raw content:', content);
       
-      // Enhanced fallback parsing for table-based data
-      const cityMatches = pdfText.match(/New York|Washington DC|NYC|Times Square|Capitol/gi);
-      const flightMatches = pdfText.match(/([A-Z]{1,3}\d{2,4})|Flight\s+([A-Z]{1,3}\d{2,4})/gi);
-      const dateMatches = pdfText.match(/(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})/gi);
-      const timeMatches = pdfText.match(/(\d{1,2}:\d{2})/g);
-      
-      // Determine route based on cities found
-      let route = "Unknown Route";
-      if (cityMatches && cityMatches.length > 0) {
-        const uniqueCities = [...new Set(cityMatches.map(city => 
-          city.replace(/NYC/i, 'New York').replace(/Capitol/i, 'Washington DC')
-        ))];
-        if (uniqueCities.length >= 2) {
-          route = uniqueCities.slice(0, 2).join(' → ');
-        } else {
-          route = uniqueCities[0] + " Trip";
-        }
-      }
-      
+      // Fallback response if JSON parsing fails
       parsedData = {
-        route: route,
-        date: dateMatches && dateMatches[0] ? dateMatches[0] : "Date not found",
-        flight: flightMatches && flightMatches[0] ? flightMatches[0].replace(/Flight\s+/i, '') : null,
-        departureTime: timeMatches && timeMatches[0] ? timeMatches[0] : null,
-        arrivalTime: timeMatches && timeMatches[1] ? timeMatches[1] : null,
+        route: "Document Analysis → Travel Planning",
+        date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        flight: null,
+        departureTime: null,
+        arrivalTime: null,
         gate: null,
-        weather: "Pleasant weather expected",
-        alerts: "Check local travel updates before departure"
+        weather: "Please check current weather conditions",
+        alerts: "AI processed your document - please review extracted information"
       };
     }
 
@@ -143,8 +131,8 @@ Rules:
     const itinerary: ItineraryData = {
       route: parsedData.route || "Travel Route",
       date: parsedData.date || "Travel Date", 
-      weather: parsedData.weather || "Please check weather",
-      alerts: parsedData.alerts || "No alerts",
+      weather: parsedData.weather || "Weather information unavailable",
+      alerts: parsedData.alerts || "No specific alerts",
       departureTime: parsedData.departureTime,
       arrivalTime: parsedData.arrivalTime,
       flight: parsedData.flight,
@@ -156,7 +144,7 @@ Rules:
     return new Response(JSON.stringify({
       success: true,
       itinerary: itinerary,
-      message: 'Itinerary parsed successfully by GlobeGuides™'
+      message: 'Document processed successfully by AI - extracted available travel information'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
