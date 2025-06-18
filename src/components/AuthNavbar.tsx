@@ -11,7 +11,7 @@ export const AuthNavbar = () => {
   if (loading) {
     return (
       <div className="flex items-center space-x-4">
-        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+        <div className="w-8 h-8 bg-gold/20 rounded-full animate-pulse"></div>
       </div>
     );
   }
@@ -21,7 +21,7 @@ export const AuthNavbar = () => {
       <div className="flex items-center space-x-4">
         <Button
           onClick={() => navigate('/auth')}
-          className="bg-lime-400 text-black border-4 border-black font-black hover:bg-lime-300 shadow-[4px_4px_0px_0px_#000] hover:shadow-[6px_6px_0px_0px_#000] transition-all"
+          className="bg-gold text-charcoal border-4 border-gold font-black hover:bg-gold/90 shadow-[4px_4px_0px_0px_#D4AF37] hover:shadow-gold transition-all"
         >
           LOGIN
         </Button>
@@ -32,9 +32,9 @@ export const AuthNavbar = () => {
   return (
     <div className="flex items-center space-x-4">
       <div className="flex items-center space-x-2">
-        <Avatar className="w-8 h-8 border-2 border-black">
+        <Avatar className="w-8 h-8 border-2 border-gold">
           <AvatarImage src="/placeholder.svg" />
-          <AvatarFallback className="bg-lime-400 text-black font-bold">
+          <AvatarFallback className="bg-gold text-charcoal font-bold">
             {user.email?.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
@@ -45,7 +45,7 @@ export const AuthNavbar = () => {
       <Button
         onClick={signOut}
         variant="outline"
-        className="border-2 border-white text-white hover:bg-white hover:text-black font-bold"
+        className="border-2 border-gold text-gold hover:bg-gold hover:text-charcoal font-bold"
       >
         LOGOUT
       </Button>
