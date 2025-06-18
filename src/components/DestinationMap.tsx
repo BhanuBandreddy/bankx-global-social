@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -27,8 +26,29 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Paris coordinates (default for demo)
-  const destinationCoords: [number, number] = [2.3522, 48.8566];
+  // Get destination coordinates based on destination name
+  const getDestinationCoords = (dest: string): [number, number] => {
+    const destLower = dest.toLowerCase();
+    
+    if (destLower.includes('new york') || destLower.includes('nyc')) {
+      return [-74.0060, 40.7128]; // New York City
+    } else if (destLower.includes('washington') || destLower.includes(' dc')) {
+      return [-77.0369, 38.9072]; // Washington DC
+    } else if (destLower.includes('paris')) {
+      return [2.3522, 48.8566]; // Paris
+    } else if (destLower.includes('london')) {
+      return [-0.1276, 51.5074]; // London
+    } else if (destLower.includes('tokyo')) {
+      return [139.6917, 35.6895]; // Tokyo
+    } else if (destLower.includes('chennai')) {
+      return [80.2707, 13.0827]; // Chennai
+    }
+    
+    // Default to Paris if destination not recognized
+    return [2.3522, 48.8566];
+  };
+
+  const destinationCoords = getDestinationCoords(destination);
 
   useEffect(() => {
     fetchMapboxToken();

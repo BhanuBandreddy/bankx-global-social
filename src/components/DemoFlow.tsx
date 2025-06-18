@@ -146,6 +146,16 @@ export const DemoFlow = () => {
     setCurrentStep(1);
   };
 
+  const extractDestinationFromRoute = (route: string): string => {
+    if (!route) return "Unknown Destination";
+    
+    const parts = route.split(' → ');
+    if (parts.length > 1) {
+      return parts[1].trim();
+    }
+    return route;
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Demo Progress Header */}
@@ -292,7 +302,12 @@ export const DemoFlow = () => {
 
       {/* Step 2: LocaleLens - Product Discovery */}
       {currentStep === 1 && (
-        <SharedProductDiscovery onProductSelect={handleProductSelect} isDemo={true} />
+        <SharedProductDiscovery 
+          onProductSelect={handleProductSelect} 
+          isDemo={true}
+          destination={itinerary ? extractDestinationFromRoute(itinerary.route) : "Paris"}
+          userRoute={itinerary?.route || ""}
+        />
       )}
 
       {/* Step 3: TrustPay - Secure Payment */}
@@ -314,7 +329,7 @@ export const DemoFlow = () => {
             date: itinerary.date,
             isActive: true
           } : undefined}
-          productLocation={selectedProduct?.name.includes('Chennai') ? 'Chennai' : 'Paris'}
+          productLocation={selectedProduct?.name.includes('Chennai') ? 'Chennai' : extractDestinationFromRoute(itinerary?.route || '')}
         />
       )}
 

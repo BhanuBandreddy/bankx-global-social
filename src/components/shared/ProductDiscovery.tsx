@@ -25,70 +25,196 @@ interface SharedProductDiscoveryProps {
   onProductSelect: (product: Product) => void;
   isDemo?: boolean;
   destination?: string;
+  userRoute?: string;
 }
 
-const parisProducts: Product[] = [
-  {
-    id: "1",
-    name: "Chanel No. 19",
-    location: "CDG Terminal 2E, Duty Free",
-    coordinates: [2.5479, 49.0097],
-    price: "€200",
-    priceInr: "₹18,160",
-    rating: 4.9,
-    description: "Authentic Chanel perfume, 30% cheaper than city stores",
-    type: "duty-free",
-    timeFromAirport: "At airport",
-    crowdLevel: "medium"
-  },
-  {
-    id: "2", 
-    name: "L'As du Fallafel",
-    location: "34 Rue des Rosiers, Le Marais",
-    coordinates: [2.3590, 48.8571],
-    price: "€12",
-    priceInr: "₹1,090",
-    rating: 4.7,
-    description: "Legendary falafel spot, zero tourist traps detected",
-    type: "restaurant",
-    timeFromAirport: "45 min by RER",
-    crowdLevel: "high"
-  },
-  {
-    id: "3",
-    name: "Pierre Hermé Macarons",
-    location: "72 Rue Bonaparte, Saint-Germain",
-    coordinates: [2.3344, 48.8533],
-    price: "€24",
-    priceInr: "₹2,180",
-    rating: 4.8,
-    description: "World's best macarons, limited edition flavors",
-    type: "local",
-    timeFromAirport: "50 min by Metro",
-    crowdLevel: "medium"
-  },
-  {
-    id: "4",
-    name: "Vintage Hermès Scarf",
-    location: "Marché aux Puces, Saint-Ouen",
-    coordinates: [2.3317, 48.9014],
-    price: "€180",
-    priceInr: "₹16,340",
-    rating: 4.6,
-    description: "Authentic vintage piece, verified by LocaleLens AI",
-    type: "local",
-    timeFromAirport: "1 hr by Metro",
-    crowdLevel: "low"
+// Dynamic product generation based on destination
+const generateProductsForDestination = (destination: string, route: string): Product[] => {
+  // Default to New York products if destination contains NYC/New York
+  if (destination?.toLowerCase().includes('new york') || destination?.toLowerCase().includes('nyc') || 
+      route?.toLowerCase().includes('new york') || route?.toLowerCase().includes('nyc')) {
+    return [
+      {
+        id: "1",
+        name: "Apple Watch Series 9",
+        location: "JFK Terminal 4, Duty Free",
+        coordinates: [-73.7781, 40.6413], // JFK Airport coordinates
+        price: "$350",
+        priceInr: "₹29,120",
+        rating: 4.8,
+        description: "Latest Apple Watch, 25% cheaper than city stores",
+        type: "duty-free",
+        timeFromAirport: "At airport",
+        crowdLevel: "medium"
+      },
+      {
+        id: "2", 
+        name: "Joe's Pizza Slice",
+        location: "150 E 14th St, Greenwich Village",
+        coordinates: [-73.9876, 40.7323], // Greenwich Village
+        price: "$3",
+        priceInr: "₹250",
+        rating: 4.7,
+        description: "Authentic NYC pizza, local favorite since 1975",
+        type: "restaurant",
+        timeFromAirport: "45 min by AirTrain + Subway",
+        crowdLevel: "high"
+      },
+      {
+        id: "3",
+        name: "Yankees Championship Cap",
+        location: "Yankee Stadium Store, Bronx",
+        coordinates: [-73.9265, 40.8296], // Yankee Stadium
+        price: "$35",
+        priceInr: "₹2,910",
+        rating: 4.6,
+        description: "Official MLB merchandise, limited edition design",
+        type: "local",
+        timeFromAirport: "1 hr by subway",
+        crowdLevel: "medium"
+      },
+      {
+        id: "4",
+        name: "Levain Bakery Cookies",
+        location: "1484 3rd Ave, Upper East Side",
+        coordinates: [-73.9568, 40.7829], // Upper East Side
+        price: "$12",
+        priceInr: "₹998",
+        rating: 4.9,
+        description: "World-famous 6oz cookies, warm and gooey",
+        type: "local",
+        timeFromAirport: "50 min by subway",
+        crowdLevel: "low"
+      }
+    ];
   }
-];
+  
+  // Default to Washington DC products if destination contains DC/Washington
+  if (destination?.toLowerCase().includes('washington') || destination?.toLowerCase().includes(' dc') || 
+      route?.toLowerCase().includes('washington') || route?.toLowerCase().includes(' dc')) {
+    return [
+      {
+        id: "1",
+        name: "Smithsonian Merchandise",
+        location: "Ronald Reagan Airport, Terminal B",
+        coordinates: [-77.0365, 38.8512], // DCA Airport coordinates
+        price: "$25",
+        priceInr: "₹2,080",
+        rating: 4.7,
+        description: "Official Smithsonian museum collection items",
+        type: "duty-free",
+        timeFromAirport: "At airport",
+        crowdLevel: "medium"
+      },
+      {
+        id: "2", 
+        name: "Ben's Chili Bowl Half-Smoke",
+        location: "1213 U Street NW, U Street Corridor",
+        coordinates: [-77.0297, 38.9169], // U Street
+        price: "$8",
+        priceInr: "₹665",
+        rating: 4.8,
+        description: "DC institution since 1958, famous half-smoke sausage",
+        type: "restaurant",
+        timeFromAirport: "30 min by Metro",
+        crowdLevel: "high"
+      },
+      {
+        id: "3",
+        name: "Washington Nationals Jersey",
+        location: "Nationals Park Team Store",
+        coordinates: [-77.0074, 38.8730], // Nationals Park
+        price: "$85",
+        priceInr: "₹7,070",
+        rating: 4.5,
+        description: "Official MLB team merchandise, home jersey",
+        type: "local",
+        timeFromAirport: "25 min by Metro",
+        crowdLevel: "medium"
+      },
+      {
+        id: "4",
+        name: "Georgetown Cupcakes",
+        location: "3301 M Street NW, Georgetown",
+        coordinates: [-77.0651, 38.9051], // Georgetown
+        price: "$18",
+        priceInr: "₹1,498",
+        rating: 4.6,
+        description: "Famous DC cupcakes, as seen on TLC show",
+        type: "local",
+        timeFromAirport: "35 min by Metro + walk",
+        crowdLevel: "low"
+      }
+    ];
+  }
 
-export const SharedProductDiscovery = ({ onProductSelect, isDemo = false, destination = "Paris" }: SharedProductDiscoveryProps) => {
+  // Fallback to Paris products for any other destination
+  return [
+    {
+      id: "1",
+      name: "Chanel No. 19",
+      location: "CDG Terminal 2E, Duty Free",
+      coordinates: [2.5479, 49.0097],
+      price: "€200",
+      priceInr: "₹18,160",
+      rating: 4.9,
+      description: "Authentic Chanel perfume, 30% cheaper than city stores",
+      type: "duty-free",
+      timeFromAirport: "At airport",
+      crowdLevel: "medium"
+    },
+    {
+      id: "2", 
+      name: "L'As du Fallafel",
+      location: "34 Rue des Rosiers, Le Marais",
+      coordinates: [2.3590, 48.8571],
+      price: "€12",
+      priceInr: "₹1,090",
+      rating: 4.7,
+      description: "Legendary falafel spot, zero tourist traps detected",
+      type: "restaurant",
+      timeFromAirport: "45 min by RER",
+      crowdLevel: "high"
+    },
+    {
+      id: "3",
+      name: "Pierre Hermé Macarons",
+      location: "72 Rue Bonaparte, Saint-Germain",
+      coordinates: [2.3344, 48.8533],
+      price: "€24",
+      priceInr: "₹2,180",
+      rating: 4.8,
+      description: "World's best macarons, limited edition flavors",
+      type: "local",
+      timeFromAirport: "50 min by Metro",
+      crowdLevel: "medium"
+    },
+    {
+      id: "4",
+      name: "Vintage Hermès Scarf",
+      location: "Marché aux Puces, Saint-Ouen",
+      coordinates: [2.3317, 48.9014],
+      price: "€180",
+      priceInr: "₹16,340",
+      rating: 4.6,
+      description: "Authentic vintage piece, verified by LocaleLens AI",
+      type: "local",
+      timeFromAirport: "1 hr by Metro",
+      crowdLevel: "low"
+    }
+  ];
+};
+
+export const SharedProductDiscovery = ({ onProductSelect, isDemo = false, destination = "Paris", userRoute = "" }: SharedProductDiscoveryProps) => {
   const { toast } = useToast();
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'duty-free' | 'local' | 'restaurant'>('all');
 
+  // Generate products based on the actual destination
+  const allProducts = generateProductsForDestination(destination, userRoute);
+  
   const filteredProducts = selectedFilter === 'all' 
-    ? parisProducts 
-    : parisProducts.filter(p => p.type === selectedFilter);
+    ? allProducts 
+    : allProducts.filter(p => p.type === selectedFilter);
 
   const handleReserve = (product: Product) => {
     onProductSelect(product);
@@ -132,7 +258,7 @@ export const SharedProductDiscovery = ({ onProductSelect, isDemo = false, destin
           <h3 className="text-lg font-bold mb-3">🗺️ Destination Map</h3>
           <DestinationMap 
             destination={destination} 
-            products={parisProducts}
+            products={allProducts}
             onProductClick={handleMapProductClick}
           />
         </div>
@@ -140,10 +266,10 @@ export const SharedProductDiscovery = ({ onProductSelect, isDemo = false, destin
         {/* Filter Buttons */}
         <div className="flex space-x-2 flex-wrap">
           {[
-            { key: 'all', label: 'All Products', count: parisProducts.length },
-            { key: 'duty-free', label: 'Duty-Free', count: parisProducts.filter(p => p.type === 'duty-free').length },
-            { key: 'local', label: 'Local Gems', count: parisProducts.filter(p => p.type === 'local').length },
-            { key: 'restaurant', label: 'Food', count: parisProducts.filter(p => p.type === 'restaurant').length }
+            { key: 'all', label: 'All Products', count: allProducts.length },
+            { key: 'duty-free', label: 'Duty-Free', count: allProducts.filter(p => p.type === 'duty-free').length },
+            { key: 'local', label: 'Local Gems', count: allProducts.filter(p => p.type === 'local').length },
+            { key: 'restaurant', label: 'Food', count: allProducts.filter(p => p.type === 'restaurant').length }
           ].map(filter => (
             <button
               key={filter.key}

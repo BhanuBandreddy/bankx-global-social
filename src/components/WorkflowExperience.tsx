@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -145,6 +144,16 @@ export const WorkflowExperience = () => {
   const handlePaymentCancel = () => {
     setSelectedProduct(null);
     setCurrentStep(1);
+  };
+
+  const extractDestinationFromRoute = (route: string): string => {
+    if (!route) return "Unknown Destination";
+    
+    const parts = route.split(' → ');
+    if (parts.length > 1) {
+      return parts[1].trim();
+    }
+    return route;
   };
 
   return (
@@ -294,7 +303,12 @@ export const WorkflowExperience = () => {
 
       {/* Step 2: LocaleLens - Product Discovery */}
       {currentStep === 1 && (
-        <SharedProductDiscovery onProductSelect={handleProductSelect} isDemo={false} />
+        <SharedProductDiscovery 
+          onProductSelect={handleProductSelect} 
+          isDemo={false}
+          destination={itinerary ? extractDestinationFromRoute(itinerary.route) : "Paris"}
+          userRoute={itinerary?.route || ""}
+        />
       )}
 
       {/* Step 3: TrustPay - Secure Payment */}
@@ -316,7 +330,7 @@ export const WorkflowExperience = () => {
             date: itinerary.date,
             isActive: true
           } : undefined}
-          productLocation={selectedProduct?.name.includes('Chennai') ? 'Chennai' : 'Paris'}
+          productLocation={selectedProduct?.name.includes('Chennai') ? 'Chennai' : extractDestinationFromRoute(itinerary?.route || '')}
         />
       )}
 
