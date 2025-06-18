@@ -35,6 +35,24 @@ const convertFileToBase64 = (file: File): Promise<string> => {
   });
 };
 
+// Helper function to safely render data
+const renderValue = (value: any): string => {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return value.toString();
+  if (Array.isArray(value)) return value.join(', ');
+  if (typeof value === 'object' && value !== null) {
+    // Handle weather object specifically
+    if (value.departure && value.arrival) {
+      return `Departure: ${value.departure}, Arrival: ${value.arrival}`;
+    }
+    // Handle other objects by stringifying key-value pairs
+    return Object.entries(value)
+      .map(([key, val]) => `${key}: ${val}`)
+      .join(', ');
+  }
+  return String(value);
+};
+
 export const DemoFlow = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [itinerary, setItinerary] = useState<ItineraryData | null>(null);
@@ -300,19 +318,19 @@ export const DemoFlow = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="p-4 bg-gray-50 border-2 border-gray-300">
                 <div className="font-bold">Route</div>
-                <div>{itinerary.route}</div>
+                <div>{renderValue(itinerary.route)}</div>
               </div>
               <div className="p-4 bg-gray-50 border-2 border-gray-300">
                 <div className="font-bold">Date</div>
-                <div>{itinerary.date}</div>
+                <div>{renderValue(itinerary.date)}</div>
               </div>
               <div className="p-4 bg-gray-50 border-2 border-gray-300">
                 <div className="font-bold">Weather</div>
-                <div>{itinerary.weather}</div>
+                <div>{renderValue(itinerary.weather)}</div>
               </div>
               <div className="p-4 bg-yellow-100 border-2 border-yellow-400">
                 <div className="font-bold">Alert</div>
-                <div>{itinerary.alerts}</div>
+                <div>{renderValue(itinerary.alerts)}</div>
               </div>
             </div>
             
@@ -321,13 +339,13 @@ export const DemoFlow = () => {
                 {itinerary.flight && (
                   <div className="p-4 bg-green-50 border-2 border-green-300">
                     <div className="font-bold">Flight</div>
-                    <div>{itinerary.flight}</div>
+                    <div>{renderValue(itinerary.flight)}</div>
                   </div>
                 )}
                 {itinerary.gate && (
                   <div className="p-4 bg-green-50 border-2 border-green-300">
                     <div className="font-bold">Gate/Terminal</div>
-                    <div>{itinerary.gate}</div>
+                    <div>{renderValue(itinerary.gate)}</div>
                   </div>
                 )}
               </div>
