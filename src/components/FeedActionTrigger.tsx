@@ -31,13 +31,13 @@ export const FeedActionTrigger = ({
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen}>
       <DrawerTrigger asChild>
-        <Button className={`${className} flex items-center space-x-2`}>
+        <Button className={`${className} flex items-center space-x-2 border-4 border-black font-bold shadow-[2px_2px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] transition-all duration-200`}>
           <Sparkles className="w-4 h-4" />
           <span>{label}</span>
         </Button>
       </DrawerTrigger>
       
-      <DrawerContent className="h-[80vh] bg-white border-4 border-black">
+      <DrawerContent className="h-[80vh] bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000]">
         <BlinkConcierge
           contextType="feed"
           feedContext={{
