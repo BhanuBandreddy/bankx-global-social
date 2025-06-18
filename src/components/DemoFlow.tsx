@@ -72,7 +72,7 @@ export const DemoFlow = () => {
       
       // Convert PDF to base64
       const base64PDF = await convertFileToBase64(file);
-      console.log('Converted PDF to base64');
+      console.log('Converted PDF to base64, length:', base64PDF.length);
       
       // Send PDF directly to OpenAI via Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('parse-itinerary', {
@@ -83,14 +83,18 @@ export const DemoFlow = () => {
         }
       });
       
+      console.log('Supabase function response:', { data, error });
+      
       if (error) {
         console.error('Supabase function error:', error);
-        throw new Error(error.message);
+        throw new Error(error.message || 'Failed to process PDF');
       }
       
-      console.log('Parse response:', data);
+      if (!data) {
+        throw new Error('No response data received');
+      }
       
-      if (data.success) {
+      if (data.success && data.itinerary) {
         setItinerary(data.itinerary);
         setCurrentStep(1);
         
@@ -121,7 +125,7 @@ export const DemoFlow = () => {
       console.error('Error processing PDF:', error);
       toast({
         title: "Processing Error",
-        description: "Failed to parse itinerary. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to parse itinerary. Please try again.",
         variant: "destructive"
       });
     } finally {

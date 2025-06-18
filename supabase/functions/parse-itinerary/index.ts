@@ -15,9 +15,19 @@ serve(async (req) => {
   }
 
   try {
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key not configured');
+    }
+
     const { pdfBase64, fileName, fileType } = await req.json();
     
     console.log(`Processing PDF: ${fileName}`);
+    console.log(`File type: ${fileType}`);
+    console.log(`PDF base64 length: ${pdfBase64?.length || 'undefined'}`);
+    
+    if (!pdfBase64) {
+      throw new Error('No PDF data received');
+    }
     
     // Use OpenAI's text completion with document analysis instead of vision
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -47,13 +57,18 @@ Please return ONLY a valid JSON object with the extracted information.`
       })
     });
     
+    console.log(`OpenAI response status: ${response.status}`);
+    
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('OpenAI API error:', errorData);
       throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
     }
     
     const openAIResponse = await response.json();
     const content = openAIResponse.choices[0]?.message?.content;
+    
+    console.log('OpenAI raw response:', content);
     
     if (!content) {
       throw new Error('No content received from OpenAI');
@@ -88,6 +103,8 @@ Please return ONLY a valid JSON object with the extracted information.`
       };
     }
     
+    console.log('Final itinerary:', itinerary);
+    
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -101,11 +118,11 @@ Please return ONLY a valid JSON object with the extracted information.`
     );
     
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in parse-itinerary function:', error);
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: error.message || 'Unknown error occurred'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
