@@ -23,12 +23,6 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  // Add a check to ensure React is available
-  if (!React || !React.useEffect) {
-    console.error('React is not properly available');
-    return <div>Loading...</div>;
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
