@@ -3,19 +3,20 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, MessageCircle, X, Minimize2, Bell } from "lucide-react";
+import { Loader2, Sparkles, MessageCircle, X, Minimize2, Send } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
-interface ConversationMessage {
-  speaker: string;
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
   content: string;
-  emoji?: string;
+  timestamp: Date;
 }
 
 interface BlinkResponse {
   finalAnswer: string;
-  conversation: ConversationMessage[];
+  conversation: any[];
   workflow?: string;
   success: boolean;
   error?: string;
@@ -43,84 +44,97 @@ export const BlinkConcierge = ({
 }: BlinkConciergeProps) => {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [conversation, setConversation] = useState<ConversationMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random()}`);
   const [isExpanded, setIsExpanded] = useState(!isFloating);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [hasAutoProcessed, setHasAutoProcessed] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const { profile } = useUserProfile();
 
-  // Auto-process feed context when component mounts - but only once
+  // Initialize with contextual query for feed actions
   useEffect(() => {
-    if (contextType === 'feed' && feedContext && user && !loading && !hasAutoProcessed) {
+    if (contextType === 'feed' && feedContext && !hasInitialized) {
       const contextualQuery = getContextualQuery();
       if (contextualQuery) {
         setQuery(contextualQuery);
-        setHasAutoProcessed(true);
-        // Auto-submit the contextual query after a short delay
+        setHasInitialized(true);
+        // Auto-submit after a brief moment
         setTimeout(() => {
           handleSubmitWithQuery(contextualQuery);
-        }, 800);
+        }, 1000);
       }
+    } else if (contextType === 'generic' && user && !hasInitialized && isExpanded) {
+      loadChatHistory();
+      setHasInitialized(true);
     }
-  }, [contextType, feedContext, user, hasAutoProcessed]);
+  }, [contextType, feedContext, user, isExpanded, hasInitialized]);
 
-  // Only load conversation history for generic mode (not feed mode)
-  useEffect(() => {
-    if (user && isExpanded && contextType === 'generic' && !hasAutoProcessed) {
-      loadConversationHistory();
-    }
-  }, [user, isExpanded, contextType]);
-
-  const loadConversationHistory = async () => {
-    if (!user) return;
+  const loadChatHistory = async () => {
+    if (!user || contextType === 'feed') return;
 
     try {
       const { data, error } = await supabase
         .from('blink_conversations')
         .select('*')
         .eq('user_id', user.id)
+        .eq('message_type', 'user')
         .order('created_at', { ascending: true })
-        .limit(20);
+        .limit(10);
 
       if (error) throw error;
 
       if (data && data.length > 0) {
-        const history = data.map(msg => ({
-          speaker: msg.speaker,
-          content: msg.content,
-          emoji: msg.speaker === 'User' ? '👤' : getAgentEmoji(msg.speaker)
-        }));
-        setConversation(history);
+        const chatMessages: ChatMessage[] = [];
+        
+        for (const userMsg of data) {
+          // Add user message
+          chatMessages.push({
+            id: `user-${userMsg.id}`,
+            role: 'user',
+            content: userMsg.content,
+            timestamp: new Date(userMsg.created_at)
+          });
+
+          // Find corresponding assistant response
+          const { data: assistantData } = await supabase
+            .from('blink_conversations')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('session_id', userMsg.session_id)
+            .eq('speaker', 'PathSync')
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (assistantData && assistantData.length > 0) {
+            chatMessages.push({
+              id: `assistant-${assistantData[0].id}`,
+              role: 'assistant',
+              content: assistantData[0].content,
+              timestamp: new Date(assistantData[0].created_at)
+            });
+          }
+        }
+        
+        setMessages(chatMessages);
       }
     } catch (error) {
-      console.error('Error loading conversation history:', error);
+      console.error('Error loading chat history:', error);
     }
-  };
-
-  const getAgentEmoji = (speaker: string) => {
-    const emojiMap: { [key: string]: string } = {
-      'TrustPay': '🔐',
-      'GlobeGuides': '🌍',
-      'LocaleLens': '📍',
-      'PathSync': '⚡'
-    };
-    return emojiMap[speaker] || '🤖';
   };
 
   const getContextualQuery = () => {
     if (contextType === 'feed' && feedContext) {
       switch (feedContext.action) {
         case 'purchase':
-          return `I want to buy ${feedContext.productData?.name || 'this item'}. Can you help me with the purchase process?`;
+          return `I want to purchase ${feedContext.productData?.name || 'this item'}. Can you help me with the buying process and payment options?`;
         case 'inquire':
-          return `I have questions about ${feedContext.productData?.name || 'this item'}. Can you provide more details?`;
+          return `I need more information about ${feedContext.productData?.name || 'this item'}. Can you provide details, pricing, and availability?`;
         case 'travel':
-          return "I need help with travel arrangements and logistics for this destination.";
+          return "I need help planning travel arrangements for this destination. Can you assist with logistics, requirements, and recommendations?";
         case 'sell':
-          return "I want to sell similar products. Can you guide me through the process?";
+          return "I'm interested in selling similar products. Can you guide me through the selling process and marketplace options?";
         default:
           return `Can you help me with ${feedContext.productData?.name || 'this item'}?`;
       }
@@ -143,7 +157,7 @@ export const BlinkConcierge = ({
           return "How can I help with this item?";
       }
     }
-    return `Hi ${profile?.username || 'there'}! I'm your AI concierge. How can I assist you today?`;
+    return `Hi ${profile?.username || 'there'}! How can I assist you today?`;
   };
 
   const handleSubmitWithQuery = async (queryText: string) => {
@@ -151,9 +165,15 @@ export const BlinkConcierge = ({
 
     setLoading(true);
     
-    // Add user message to conversation
-    const userMessage = { speaker: "User", content: queryText.trim(), emoji: "👤" };
-    setConversation(prev => [...prev, userMessage]);
+    // Add user message to chat
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: queryText.trim(),
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
 
     try {
       const { data, error } = await supabase.functions.invoke('multi-agent-orchestrator', {
@@ -170,21 +190,27 @@ export const BlinkConcierge = ({
 
       const response: BlinkResponse = data;
       
-      if (response.success && response.conversation) {
-        // Add only the agent responses (skip the user message since we already added it)
-        const agentMessages = response.conversation.filter(msg => msg.speaker !== 'User');
-        setConversation(prev => [...prev, ...agentMessages]);
+      if (response.success && response.finalAnswer) {
+        // Add assistant response
+        const assistantMessage: ChatMessage = {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: response.finalAnswer,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
         setQuery("");
         
         toast({
-          title: "⚡ Blink Complete",
+          title: "✨ Response Ready",
           description: "Your request has been processed successfully",
         });
 
         if (response.workflow) {
           toast({
-            title: "🔔 Workflow Created",
-            description: "You'll be notified when actions are complete",
+            title: "🔔 Action Initiated",
+            description: "You'll be notified when complete",
           });
         }
       } else {
@@ -193,7 +219,7 @@ export const BlinkConcierge = ({
     } catch (error) {
       console.error('Blink error:', error);
       toast({
-        title: "❌ Blink Error",
+        title: "❌ Error",
         description: error.message || "Failed to process request",
         variant: "destructive",
       });
@@ -244,7 +270,7 @@ export const BlinkConcierge = ({
           className="flex items-center space-x-2 bg-purple-500 text-white border-2 border-black font-bold shadow-[4px_4px_0px_0px_#000] hover:shadow-[6px_6px_0px_0px_#000] transition-all duration-200"
         >
           <Sparkles className="w-5 h-5" />
-          <span>Blink Concierge</span>
+          <span>Blink Assistant</span>
         </Button>
       </div>
     );
@@ -266,21 +292,21 @@ export const BlinkConcierge = ({
   const containerClasses = isDrawer 
     ? 'w-full h-full' 
     : isFloating 
-      ? 'fixed bottom-6 right-6 w-96 h-[600px] z-50 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000]'
-      : 'w-full max-w-4xl mx-auto bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000]';
+      ? 'fixed bottom-6 right-6 w-96 h-[600px] z-50 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] rounded-lg overflow-hidden'
+      : 'w-full max-w-4xl mx-auto bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] rounded-lg overflow-hidden';
 
   return (
     <div className={containerClasses}>
-      {/* Header with minimize/close controls */}
-      <div className="p-4 border-b-4 border-black bg-purple-100 flex items-center justify-between">
+      {/* Header */}
+      <div className="p-4 border-b-2 border-black bg-gradient-to-r from-purple-100 to-blue-100 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Sparkles className="w-6 h-6 text-purple-600" />
           <div>
             <h3 className="text-lg font-black text-black uppercase tracking-tight">
-              Blink Concierge
+              Blink Assistant
             </h3>
             <p className="text-xs text-gray-700 font-medium">
-              {contextType === 'feed' ? 'Context-Aware Assistant' : 'Your AI Concierge'}
+              {contextType === 'feed' ? 'Contextual AI Helper' : 'Your AI Assistant'}
             </p>
           </div>
         </div>
@@ -291,7 +317,7 @@ export const BlinkConcierge = ({
               onClick={handleMinimize}
               variant="ghost"
               size="sm"
-              className="p-2 hover:bg-purple-200 border-2 border-transparent hover:border-black transition-all"
+              className="p-2 hover:bg-purple-200 border-2 border-transparent hover:border-black transition-all rounded"
               title="Minimize"
             >
               <Minimize2 className="w-4 h-4" />
@@ -300,7 +326,7 @@ export const BlinkConcierge = ({
               onClick={handleClose}
               variant="ghost"
               size="sm"
-              className="p-2 hover:bg-red-200 border-2 border-transparent hover:border-black transition-all"
+              className="p-2 hover:bg-red-200 border-2 border-transparent hover:border-black transition-all rounded"
               title="Close"
             >
               <X className="w-4 h-4" />
@@ -309,77 +335,68 @@ export const BlinkConcierge = ({
         )}
       </div>
 
-      {/* Conversation Display */}
-      <div className={`${isFloating ? 'h-96' : isDrawer ? 'h-[calc(100vh-280px)]' : 'h-80'} overflow-y-auto p-4 space-y-3 bg-gray-50`}>
-        {conversation.length === 0 && !loading && (
+      {/* Chat Messages */}
+      <div className={`${isFloating ? 'h-96' : isDrawer ? 'h-[calc(100vh-280px)]' : 'h-80'} overflow-y-auto p-4 space-y-4 bg-gray-50`}>
+        {messages.length === 0 && !loading && (
           <div className="text-center py-8">
             <Sparkles className="w-12 h-12 mx-auto text-purple-400 mb-4" />
             <p className="text-gray-600 font-medium">
-              {contextType === 'feed' ? 'Ready to help with your request...' : 'Your conversation history will appear here'}
+              {contextType === 'feed' ? 'Ready to help with your request...' : 'Start a conversation with your AI assistant'}
             </p>
           </div>
         )}
 
-        {conversation.map((message, idx) => (
+        {messages.map((message) => (
           <div
-            key={`${message.speaker}-${idx}-${message.content.slice(0, 20)}`}
-            className={`p-3 border-2 border-black ${
-              message.speaker === 'User' 
-                ? 'bg-blue-100 border-blue-400' 
-                : message.speaker === 'TrustPay'
-                ? 'bg-green-100 border-green-400'
-                : message.speaker === 'GlobeGuides'
-                ? 'bg-yellow-100 border-yellow-400'
-                : message.speaker === 'LocaleLens'
-                ? 'bg-orange-100 border-orange-400'
-                : 'bg-purple-100 border-purple-400'
-            }`}
+            key={message.id}
+            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div className="flex items-center space-x-2 mb-2">
-              {message.emoji && <span className="text-sm">{message.emoji}</span>}
-              <span className="font-bold text-black uppercase text-xs">
-                {message.speaker}
-              </span>
+            <div
+              className={`max-w-[80%] p-3 rounded-lg border-2 border-black ${
+                message.role === 'user'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white text-black shadow-[2px_2px_0px_0px_#000]'
+              }`}
+            >
+              <p className="text-sm leading-relaxed">{message.content}</p>
+              <p className={`text-xs mt-1 ${message.role === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
+                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
             </div>
-            <p className="text-black text-sm leading-relaxed">{message.content}</p>
           </div>
         ))}
 
         {loading && (
-          <div className="flex items-center justify-center py-4">
-            <Loader2 className="w-6 h-6 animate-spin text-purple-500 mr-2" />
-            <span className="text-gray-600 font-medium">Processing your request...</span>
+          <div className="flex justify-start">
+            <div className="bg-white p-3 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_#000] flex items-center space-x-2">
+              <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
+              <span className="text-sm text-gray-600">Thinking...</span>
+            </div>
           </div>
         )}
       </div>
 
       {/* Input Section */}
-      <div className="p-4 border-t-4 border-black bg-white">
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <textarea
+      <div className="p-4 border-t-2 border-black bg-white">
+        <form onSubmit={handleSubmit} className="flex space-x-2">
+          <input
+            type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={getContextualPlaceholder()}
-            className="w-full p-3 border-2 border-black text-black placeholder-gray-500 resize-none text-sm"
-            rows={2}
+            className="flex-1 p-3 border-2 border-black rounded text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
             disabled={loading}
           />
           
           <Button
             type="submit"
             disabled={loading || !query.trim()}
-            className="w-full bg-purple-500 text-white border-2 border-black font-bold py-2 hover:bg-purple-600 shadow-[2px_2px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-1px] hover:translate-y-[-1px]"
+            className="bg-purple-500 text-white border-2 border-black font-bold px-4 py-3 hover:bg-purple-600 shadow-[2px_2px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-1px] hover:translate-y-[-1px] rounded"
           >
             {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Processing...
-              </>
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <>
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Send to Blink
-              </>
+              <Send className="w-4 h-4" />
             )}
           </Button>
         </form>
