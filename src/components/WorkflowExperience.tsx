@@ -20,6 +20,21 @@ interface ItineraryData {
   flight?: string;
 }
 
+// Helper function to convert file to base64
+const convertFileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove data:application/pdf;base64, prefix
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
 export const WorkflowExperience = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [itinerary, setItinerary] = useState<ItineraryData | null>(null);
@@ -50,41 +65,58 @@ export const WorkflowExperience = () => {
 
   const processFile = async (file: File) => {
     if (!validateFile(file)) return;
-
     setIsProcessing(true);
     
     try {
       console.log('Processing file:', file.name);
       
-      const pdfText = await extractTextFromPDF(file);
-      console.log('Extracted PDF text:', pdfText);
-
+      // Convert PDF to base64
+      const base64PDF = await convertFileToBase64(file);
+      console.log('Converted PDF to base64');
+      
+      // Send PDF directly to OpenAI via Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('parse-itinerary', {
         body: {
-          pdfText,
-          fileName: file.name
+          pdfBase64: base64PDF,
+          fileName: file.name,
+          fileType: file.type
         }
       });
-
+      
       if (error) {
         console.error('Supabase function error:', error);
         throw new Error(error.message);
       }
-
+      
       console.log('Parse response:', data);
-
+      
       if (data.success) {
         setItinerary(data.itinerary);
         setCurrentStep(1);
         
+        // More flexible toast message that works with any data structure
+        const destination = data.itinerary.destination || 
+                           data.itinerary.route?.split(' → ')[1] || 
+                           data.itinerary.arrivalLocation || 
+                           'your destination';
+        
+        const travelDate = data.itinerary.date || 
+                          data.itinerary.departureDate || 
+                          data.itinerary.travelDate || 
+                          'your travel date';
+        
+        const alerts = data.itinerary.alerts || 
+                      data.itinerary.notes || 
+                      data.itinerary.importantInfo || 
+                      'Have a great trip!';
+        
         toast({
-          title: `🛬 Welcome to ${data.itinerary.route.split(' → ')[1]}!`,
-          description: `${data.itinerary.date}, ${data.itinerary.weather}. ${data.itinerary.alerts}. 3 local pick-ups available.`,
+          title: `🛬 Welcome to ${destination}!`,
+          description: `${travelDate}. ${alerts}. 3 local pick-ups available.`,
         });
       } else {
-        throw new Error('Failed to parse itinerary');
+        throw new Error(data.error || 'Failed to parse itinerary');
       }
-
     } catch (error) {
       console.error('Error processing PDF:', error);
       toast({
