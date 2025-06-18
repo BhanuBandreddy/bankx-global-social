@@ -31,13 +31,15 @@ interface BlinkConciergeProps {
   };
   onClose?: () => void;
   isFloating?: boolean;
+  isDrawer?: boolean;
 }
 
 export const BlinkConcierge = ({ 
   contextType = 'generic', 
   feedContext, 
   onClose,
-  isFloating = false 
+  isFloating = false,
+  isDrawer = false
 }: BlinkConciergeProps) => {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -49,11 +51,26 @@ export const BlinkConcierge = ({
   const { user } = useAuth();
   const { profile } = useUserProfile();
 
+  // Auto-process feed context when component mounts
   useEffect(() => {
-    if (user && isExpanded) {
+    if (contextType === 'feed' && feedContext && user && !loading && conversation.length === 0) {
+      const contextualQuery = getContextualQuery();
+      if (contextualQuery) {
+        setQuery(contextualQuery);
+        // Auto-submit the contextual query
+        setTimeout(() => {
+          handleSubmitWithQuery(contextualQuery);
+        }, 500);
+      }
+    }
+  }, [contextType, feedContext, user]);
+
+  // Only load conversation history for generic mode
+  useEffect(() => {
+    if (user && isExpanded && contextType === 'generic') {
       loadConversationHistory();
     }
-  }, [user, isExpanded]);
+  }, [user, isExpanded, contextType]);
 
   const loadConversationHistory = async () => {
     if (!user) return;
@@ -91,11 +108,31 @@ export const BlinkConcierge = ({
     return emojiMap[speaker] || '🤖';
   };
 
+  const getContextualQuery = () => {
+    if (contextType === 'feed' && feedContext) {
+      switch (feedContext.action) {
+        case 'purchase':
+          return `I want to buy ${feedContext.productData?.name || 'this item'}. Can you help me with the purchase process?`;
+        case 'inquire':
+          return `I have questions about ${feedContext.productData?.name || 'this item'}. Can you provide more details?`;
+        case 'travel':
+          return "I need help with travel arrangements and logistics for this destination.";
+        case 'sell':
+          return "I want to sell similar products. Can you guide me through the process?";
+        default:
+          return `Can you help me with ${feedContext.productData?.name || 'this item'}?`;
+      }
+    }
+    return "";
+  };
+
   const getContextualPlaceholder = () => {
     if (contextType === 'feed' && feedContext) {
       switch (feedContext.action) {
         case 'purchase':
           return `Ask about purchasing ${feedContext.productData?.name || 'this item'}...`;
+        case 'inquire':
+          return `Ask questions about ${feedContext.productData?.name || 'this item'}...`;
         case 'travel':
           return "Ask about travel arrangements, logistics, or requirements...";
         case 'sell':
@@ -107,18 +144,17 @@ export const BlinkConcierge = ({
     return `Hi ${profile?.username || 'there'}! I'm your AI concierge. How can I assist you today?`;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim() || !user) return;
+  const handleSubmitWithQuery = async (queryText: string) => {
+    if (!queryText.trim() || !user) return;
 
     setLoading(true);
-    const userMessage = { speaker: "User", content: query.trim(), emoji: "👤" };
+    const userMessage = { speaker: "User", content: queryText.trim(), emoji: "👤" };
     setConversation(prev => [...prev, userMessage]);
 
     try {
       const { data, error } = await supabase.functions.invoke('multi-agent-orchestrator', {
         body: { 
-          query: query.trim(),
+          query: queryText.trim(),
           userId: user.id,
           sessionId,
           contextType,
@@ -160,8 +196,15 @@ export const BlinkConcierge = ({
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleSubmitWithQuery(query);
+  };
+
   const handleMinimize = () => {
-    if (isFloating) {
+    if (onClose) {
+      onClose();
+    } else if (isFloating) {
       setIsExpanded(false);
     } else {
       setIsMinimized(true);
@@ -187,7 +230,7 @@ export const BlinkConcierge = ({
   };
 
   // Show minimized state for non-floating version
-  if (!isFloating && isMinimized) {
+  if (!isFloating && !isDrawer && isMinimized) {
     return (
       <div className="fixed bottom-6 right-6 z-50">
         <Button
@@ -214,8 +257,14 @@ export const BlinkConcierge = ({
     );
   }
 
+  const containerClasses = isDrawer 
+    ? 'w-full h-full' 
+    : isFloating 
+      ? 'fixed bottom-6 right-6 w-96 h-[600px] z-50 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000]'
+      : 'w-full max-w-4xl mx-auto bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000]';
+
   return (
-    <div className={`${isFloating ? 'fixed bottom-6 right-6 w-96 h-[600px] z-50' : 'w-full max-w-4xl mx-auto'} bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000]`}>
+    <div className={containerClasses}>
       {/* Header with minimize/close controls */}
       <div className="p-4 border-b-4 border-black bg-purple-100 flex items-center justify-between">
         <div className="flex items-center space-x-3">
@@ -230,35 +279,37 @@ export const BlinkConcierge = ({
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
-          <Button
-            onClick={handleMinimize}
-            variant="ghost"
-            size="sm"
-            className="p-2 hover:bg-purple-200 border-2 border-transparent hover:border-black transition-all"
-            title="Minimize"
-          >
-            <Minimize2 className="w-4 h-4" />
-          </Button>
-          <Button
-            onClick={handleClose}
-            variant="ghost"
-            size="sm"
-            className="p-2 hover:bg-red-200 border-2 border-transparent hover:border-black transition-all"
-            title="Close"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
+        {!isDrawer && (
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={handleMinimize}
+              variant="ghost"
+              size="sm"
+              className="p-2 hover:bg-purple-200 border-2 border-transparent hover:border-black transition-all"
+              title="Minimize"
+            >
+              <Minimize2 className="w-4 h-4" />
+            </Button>
+            <Button
+              onClick={handleClose}
+              variant="ghost"
+              size="sm"
+              className="p-2 hover:bg-red-200 border-2 border-transparent hover:border-black transition-all"
+              title="Close"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Conversation Display */}
-      <div className={`${isFloating ? 'h-96' : 'h-80'} overflow-y-auto p-4 space-y-3 bg-gray-50`}>
+      <div className={`${isFloating ? 'h-96' : isDrawer ? 'h-[calc(100vh-280px)]' : 'h-80'} overflow-y-auto p-4 space-y-3 bg-gray-50`}>
         {conversation.length === 0 && (
           <div className="text-center py-8">
             <Sparkles className="w-12 h-12 mx-auto text-purple-400 mb-4" />
             <p className="text-gray-600 font-medium">
-              {contextType === 'feed' ? 'Ready to help with this item!' : 'Your conversation history will appear here'}
+              {contextType === 'feed' ? 'Processing your request...' : 'Your conversation history will appear here'}
             </p>
           </div>
         )}
