@@ -22,7 +22,6 @@ export default {
 			colors: {
 				ink: "#0E0E0E",
 				charcoal: "#1A1A1A",
-				gold: "#D4AF37",
 				accent: "#12973E",
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -94,10 +93,6 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out'
-			},
-			boxShadow: {
-				'gold': '0 4px 0 rgba(212,175,55,0.6)',
-				'gold-lg': '0 6px 0 rgba(212,175,55,0.6)'
 			}
 		}
 	},

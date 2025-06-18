@@ -213,13 +213,13 @@ export const DemoFlow = () => {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Demo Progress Header */}
-      <Card className="border-4 border-charcoal">
-        <CardHeader className="bg-gold border-b-4 border-charcoal">
-          <CardTitle className="text-2xl font-bold text-charcoal uppercase">
+      <Card className="border-4 border-black">
+        <CardHeader className="bg-lime-400 border-b-4 border-black">
+          <CardTitle className="text-2xl font-bold text-black uppercase">
             Global Socials Demo Flow
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6 bg-charcoal/5">
+        <CardContent className="p-6">
           <div className="flex justify-between items-center">
             {steps.map((step, index) => {
               const IconComponent = step.icon;
@@ -230,15 +230,15 @@ export const DemoFlow = () => {
                     index <= currentStep ? 'opacity-100' : 'opacity-40'
                   }`}
                 >
-                  <div className={`w-12 h-12 border-4 border-charcoal flex items-center justify-center ${
-                    index === currentStep ? 'bg-gold' : 
-                    index < currentStep ? 'bg-gold/70' : 'bg-gray-100'
+                  <div className={`w-12 h-12 border-4 border-black flex items-center justify-center ${
+                    index === currentStep ? 'bg-lime-400' : 
+                    index < currentStep ? 'bg-green-300' : 'bg-gray-100'
                   }`}>
-                    <IconComponent className="w-6 h-6 text-charcoal" />
+                    <IconComponent className="w-6 h-6 text-black" />
                   </div>
                   <div className="text-center">
                     <div className="font-bold text-sm">{step.name}</div>
-                    <div className="text-xs text-gold">{step.agent}</div>
+                    <div className="text-xs text-gray-600">{step.agent}</div>
                   </div>
                 </div>
               );
@@ -249,14 +249,14 @@ export const DemoFlow = () => {
 
       {/* Step 1: GlobeGuides - File Upload */}
       {currentStep === 0 && (
-        <Card className="border-4 border-charcoal border-t-4 border-t-gold">
-          <CardHeader className="bg-purple-100 border-b-4 border-charcoal">
+        <Card className="border-4 border-black">
+          <CardHeader className="bg-purple-100 border-b-4 border-black">
             <CardTitle className="flex items-center space-x-2">
               <Upload className="w-6 h-6" />
               <span>Step 1: Upload Travel Itinerary</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6 bg-charcoal/5">
+          <CardContent className="p-6">
             <div 
               className={`border-4 border-dashed p-8 text-center transition-colors ${
                 isDragOver 
@@ -310,26 +310,26 @@ export const DemoFlow = () => {
 
       {/* Parsed Itinerary Display */}
       {itinerary && (
-        <Card className="border-4 border-charcoal border-t-4 border-t-gold">
-          <CardHeader className="bg-blue-100 border-b-4 border-charcoal">
+        <Card className="border-4 border-black">
+          <CardHeader className="bg-blue-100 border-b-4 border-black">
             <CardTitle>📋 Parsed Itinerary (GlobeGuides™)</CardTitle>
           </CardHeader>
-          <CardContent className="p-6 bg-charcoal/5">
+          <CardContent className="p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-white border-2 border-charcoal">
-                <div className="font-bold text-gold">Route</div>
+              <div className="p-4 bg-gray-50 border-2 border-gray-300">
+                <div className="font-bold">Route</div>
                 <div>{renderValue(itinerary.route)}</div>
               </div>
-              <div className="p-4 bg-white border-2 border-charcoal">
-                <div className="font-bold text-gold">Date</div>
+              <div className="p-4 bg-gray-50 border-2 border-gray-300">
+                <div className="font-bold">Date</div>
                 <div>{renderValue(itinerary.date)}</div>
               </div>
-              <div className="p-4 bg-white border-2 border-charcoal">
-                <div className="font-bold text-gold">Weather</div>
+              <div className="p-4 bg-gray-50 border-2 border-gray-300">
+                <div className="font-bold">Weather</div>
                 <div>{renderValue(itinerary.weather)}</div>
               </div>
-              <div className="p-4 bg-gold/20 border-2 border-gold">
-                <div className="font-bold text-charcoal">Alert</div>
+              <div className="p-4 bg-yellow-100 border-2 border-yellow-400">
+                <div className="font-bold">Alert</div>
                 <div>{renderValue(itinerary.alerts)}</div>
               </div>
             </div>
@@ -337,14 +337,14 @@ export const DemoFlow = () => {
             {(itinerary.flight || itinerary.gate) && (
               <div className="mt-4 grid grid-cols-2 gap-4">
                 {itinerary.flight && (
-                  <div className="p-4 bg-gold/10 border-2 border-gold">
-                    <div className="font-bold text-charcoal">Flight</div>
+                  <div className="p-4 bg-green-50 border-2 border-green-300">
+                    <div className="font-bold">Flight</div>
                     <div>{renderValue(itinerary.flight)}</div>
                   </div>
                 )}
                 {itinerary.gate && (
-                  <div className="p-4 bg-gold/10 border-2 border-gold">
-                    <div className="font-bold text-charcoal">Gate/Terminal</div>
+                  <div className="p-4 bg-green-50 border-2 border-green-300">
+                    <div className="font-bold">Gate/Terminal</div>
                     <div>{renderValue(itinerary.gate)}</div>
                   </div>
                 )}
@@ -388,8 +388,8 @@ export const DemoFlow = () => {
       )}
 
       {/* Demo Controls */}
-      <Card className="border-4 border-charcoal">
-        <CardHeader className="bg-charcoal/10 border-b-4 border-charcoal">
+      <Card className="border-4 border-black">
+        <CardHeader className="bg-gray-100 border-b-4 border-black">
           <CardTitle>Demo Controls</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -398,14 +398,14 @@ export const DemoFlow = () => {
               onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
               disabled={currentStep === 0}
               variant="outline"
-              className="border-4 border-charcoal hover:bg-charcoal/10"
+              className="border-4 border-black"
             >
               Previous Step
             </Button>
             <Button 
               onClick={() => setCurrentStep(Math.min(3, currentStep + 1))}
               disabled={currentStep === 3}
-              className="bg-gold text-charcoal border-4 border-gold hover:bg-gold/90 hover:shadow-gold"
+              className="bg-black text-white border-4 border-black hover:bg-gray-800"
             >
               Next Step
             </Button>

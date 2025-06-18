@@ -25,8 +25,8 @@ const Index = () => {
   // Show loading while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen bg-charcoal flex items-center justify-center">
-        <div className="text-gold text-2xl font-bold">Loading...</div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-2xl font-bold">Loading...</div>
       </div>
     );
   }
@@ -37,7 +37,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-charcoal">
+    <div className="min-h-screen bg-black">
       <Navbar />
       
       {/* Hero Section */}
@@ -56,8 +56,8 @@ const Index = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`px-8 py-4 font-black text-lg border-4 transition-all duration-200 transform ${
                 activeTab === tab.id
-                  ? "bg-gold text-charcoal border-charcoal shadow-[8px_8px_0px_0px_#1A1A1A] hover:shadow-[12px_12px_0px_0px_#1A1A1A] translate-x-[-4px] translate-y-[-4px]"
-                  : "bg-white text-charcoal border-charcoal shadow-[4px_4px_0px_0px_#1A1A1A] hover:shadow-gold hover:translate-x-[-2px] hover:translate-y-[-2px]"
+                  ? "bg-lime-400 text-black border-black shadow-[8px_8px_0px_0px_#000] hover:shadow-[12px_12px_0px_0px_#000] translate-x-[-4px] translate-y-[-4px]"
+                  : "bg-white text-black border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[8px_8px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px]"
               }`}
             >
               <span className="mr-3 flex items-center">

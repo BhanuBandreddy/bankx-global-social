@@ -7,12 +7,12 @@ export const Navbar = () => {
   const navigate = useNavigate();
 
   return (
-    <nav className="border-b-4 border-white bg-charcoal">
+    <nav className="border-b-4 border-white bg-black">
       <div className="container mx-auto px-4 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <h1 
-              className="text-2xl font-black text-white uppercase tracking-tight cursor-pointer focus-ring border-b-2 border-gold pb-1"
+              className="text-2xl font-black text-white uppercase tracking-tight cursor-pointer focus-ring"
               onClick={() => navigate("/")}
               tabIndex={0}
               onKeyDown={(e) => e.key === 'Enter' && navigate("/")}
@@ -22,7 +22,7 @@ export const Navbar = () => {
             <div className="flex space-x-2">
               <Button
                 onClick={() => navigate("/logistics")}
-                className="bg-gold text-charcoal border-4 border-gold hover:bg-gold/90 hover:shadow-gold font-bold focus-ring transition-all duration-150"
+                className="bg-orange-400 text-black border-4 border-orange-400 hover:bg-orange-500 font-bold focus-ring"
               >
                 PATHSYNC
               </Button>
