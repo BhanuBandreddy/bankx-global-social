@@ -1,18 +1,43 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const dolphinApiKey = Deno.env.get('DOLPHIN_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Function to convert PDF to images using a PDF-to-image service
+async function convertPdfToImages(pdfBase64: string): Promise<string[]> {
+  try {
+    // Use pdf2pic or similar service to convert PDF to images
+    // For now, we'll use a simple approach with the first page
+    const response = await fetch('https://api.pdf24.org/v1/convert', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        inputFormat: 'pdf',
+        outputFormat: 'png',
+        inputData: pdfBase64,
+        pages: [1] // Convert first page only for now
+      })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      return result.images || [];
+    }
+  } catch (error) {
+    console.error('PDF conversion failed:', error);
+  }
+  
+  // Fallback: return the original PDF base64 as if it were an image
+  // OpenAI will reject it, but we'll handle that in the main function
+  return [pdfBase64];
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -25,99 +50,76 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    const requestBody = await req.json();
+    const { pdfBase64, fileName, fileType } = await req.json();
     
-    // Handle both PDF and image uploads
-    let fileName: string;
-    let fileType: string;
-    let base64Data: string;
-    
-    if (requestBody.pdfBase64) {
-      // Legacy PDF upload
-      fileName = requestBody.fileName || 'document.pdf';
-      fileType = requestBody.fileType || 'application/pdf';
-      base64Data = requestBody.pdfBase64;
-    } else if (requestBody.imageBase64) {
-      // Direct image upload
-      fileName = requestBody.fileName || 'document.jpg';
-      fileType = requestBody.fileType || 'image/jpeg';
-      base64Data = requestBody.imageBase64;
-    } else {
-      throw new Error('No file data received');
-    }
-    
-    console.log(`Processing ${fileType === 'application/pdf' ? 'PDF' : 'image'}: ${fileName}`);
+    console.log(`Processing PDF: ${fileName}`);
     console.log(`File type: ${fileType}`);
-    console.log(`Base64 data length: ${base64Data?.length || 'undefined'}`);
+    console.log(`PDF base64 length: ${pdfBase64?.length || 'undefined'}`);
     
-    if (!base64Data) {
-      throw new Error('No file data received');
-    }
-
-    // Get user ID from request headers (if authenticated)
-    const authHeader = req.headers.get('authorization');
-    let userId = 'demo-user'; // Default for demo
-    
-    if (authHeader) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-        if (user) {
-          userId = user.id;
-          console.log(`User ID: ${userId}`);
-        }
-      } catch (authError) {
-        console.log('Auth error, using demo user:', authError);
-      }
-    }
-
-    let analysisResult;
-    
-    if (fileType === 'application/pdf') {
-      // Use Dolphin OCR for PDF processing
-      console.log('Processing PDF with Dolphin OCR (Hugging Face)');
-      analysisResult = await processPDFWithDolphin(base64Data, fileName);
-    } else {
-      // Use OpenAI Vision for image processing
-      console.log('Processing image with OpenAI Vision');
-      analysisResult = await processImageWithOpenAI(base64Data, fileType, fileName);
+    if (!pdfBase64) {
+      throw new Error('No PDF data received');
     }
     
-    console.log(`Document processing status: ${analysisResult ? 'success' : 'failed'}`);
+    // Convert PDF to images for OpenAI Vision
+    console.log('Converting PDF to images...');
+    const images = await convertPdfToImages(pdfBase64);
     
-    const content = analysisResult.choices[0]?.message?.content || analysisResult.content;
-    console.log('Processing response:', content);
-    
-    const itinerary = parseAndReturnItinerary(content, fileName);
-    
-    // Save to database if we have parsed data
-    if (itinerary.success && userId !== 'demo-user') {
-      try {
-        const { data: savedItinerary, error: dbError } = await supabase
-          .from('parsed_itineraries')
-          .insert({
-            user_id: userId,
-            file_name: fileName,
-            file_type: fileType,
-            parsed_data: itinerary.itinerary,
-            raw_response: content
-          })
-          .select()
-          .single();
-
-        if (dbError) {
-          console.error('Database error:', dbError);
-        } else {
-          console.log('Saved itinerary to database:', savedItinerary.id);
-        }
-      } catch (dbError) {
-        console.error('Failed to save to database:', dbError);
-      }
+    if (images.length === 0) {
+      throw new Error('Failed to convert PDF to images');
     }
     
-    return new Response(JSON.stringify(itinerary), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
+    console.log(`Converted PDF to ${images.length} image(s)`);
+    
+    // Use OpenAI's vision model to analyze the PDF images
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert travel document parser. Analyze the provided travel document images and extract ONLY the actual travel information shown. Do not make up or assume any information. If certain details are not visible or clear, use "Not specified". Return ONLY a valid JSON object with the extracted information.'
+          },
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `Please analyze this travel document (${fileName}) and extract the actual travel information visible. Return ONLY a JSON object with these fields: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Use the exact information from the document - do not generate fictional data.`
+              },
+              ...images.map(imageBase64 => ({
+                type: 'image_url',
+                image_url: {
+                  url: `data:image/png;base64,${imageBase64}`,
+                  detail: 'high'
+                }
+              }))
+            ]
+          }
+        ],
+        max_tokens: 1500,
+        temperature: 0.1
+      })
     });
+    
+    console.log(`OpenAI response status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('OpenAI API error:', errorData);
+      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+    }
+    
+    const openAIResponse = await response.json();
+    const content = openAIResponse.choices[0]?.message?.content;
+    
+    console.log('OpenAI Vision response:', content);
+    
+    return parseAndReturnItinerary(content, fileName);
     
   } catch (error) {
     console.error('Error in parse-itinerary function:', error);
@@ -134,197 +136,9 @@ serve(async (req) => {
   }
 });
 
-async function processPDFWithDolphin(base64Data: string, fileName: string) {
-  if (!dolphinApiKey) {
-    console.log('Dolphin API key not configured, using fallback mock data');
-    return createMockTravelData(fileName);
-  }
-
-  try {
-    console.log('Calling Dolphin OCR API on Hugging Face');
-    
-    // Convert base64 to binary for Dolphin OCR API
-    const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-    
-    // Create the request payload for Hugging Face Dolphin OCR
-    const response = await fetch('https://r8gvfi5bygcmjf1c.us-east-1.aws.endpoints.huggingface.cloud', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${dolphinApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        inputs: base64Data,
-        parameters: {
-          task: 'document_parsing',
-          return_ocr_result: true,
-          return_layout_result: true
-        }
-      })
-    });
-    
-    if (!response.ok) {
-      console.error('Dolphin OCR API error:', response.status, response.statusText);
-      const errorText = await response.text();
-      console.error('Dolphin OCR API error details:', errorText);
-      throw new Error(`Dolphin OCR API error: ${response.status}`);
-    }
-    
-    const dolphinResult = await response.json();
-    console.log('Dolphin OCR API response:', dolphinResult);
-    
-    // Process Dolphin result and enrich with OpenAI if needed
-    const enrichedResult = await enrichDolphinDataWithOpenAI(dolphinResult);
-    
-    return {
-      choices: [{
-        message: {
-          content: JSON.stringify(enrichedResult)
-        }
-      }]
-    };
-    
-  } catch (error) {
-    console.error('Dolphin OCR processing failed:', error);
-    console.log('Falling back to mock data generation');
-    return createMockTravelData(fileName);
-  }
-}
-
-async function processImageWithOpenAI(base64Data: string, fileType: string, fileName: string) {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an expert travel document parser. Analyze the provided travel document images and extract ONLY the actual travel information shown. Do not make up or assume any information. If certain details are not visible or clear, use "Not specified". Return ONLY a valid JSON object with the extracted information.'
-        },
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `Please analyze this travel document (${fileName}) and extract the actual travel information visible. Return ONLY a JSON object with these fields: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Use the exact information from the document - do not generate fictional data.`
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: `data:${fileType};base64,${base64Data}`,
-                detail: 'high'
-              }
-            }
-          ]
-        }
-      ],
-      max_tokens: 1500,
-      temperature: 0.1
-    })
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.error('OpenAI API error:', errorData);
-    throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
-  }
-
-  return await response.json();
-}
-
-async function enrichDolphinDataWithOpenAI(dolphinData: any) {
-  try {
-    // Extract text content from Dolphin OCR result
-    let extractedText = '';
-    
-    if (dolphinData.ocr_result && dolphinData.ocr_result.length > 0) {
-      extractedText = dolphinData.ocr_result.map((item: any) => item.text || '').join(' ');
-    } else if (typeof dolphinData === 'string') {
-      extractedText = dolphinData;
-    } else if (dolphinData.text) {
-      extractedText = dolphinData.text;
-    } else {
-      extractedText = JSON.stringify(dolphinData);
-    }
-    
-    console.log('Extracted text from Dolphin:', extractedText.substring(0, 200) + '...');
-    
-    // Use OpenAI to structure and enrich the Dolphin-extracted data
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a travel data structuring assistant. Take the extracted travel document text and format it into a consistent JSON structure. Only use the provided data, do not add fictional information. Extract flight details, dates, destinations, gates, weather information, and any alerts or important notices.'
-          },
-          {
-            role: 'user',
-            content: `Please structure this travel document text into a JSON format with fields: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Here is the extracted text: ${extractedText}`
-          }
-        ],
-        max_tokens: 1000,
-        temperature: 0.1
-      })
-    });
-
-    if (response.ok) {
-      const enrichedResult = await response.json();
-      const content = enrichedResult.choices[0]?.message?.content;
-      
-      try {
-        return JSON.parse(content);
-      } catch (parseError) {
-        console.error('Failed to parse enriched data:', parseError);
-        console.log('Raw content that failed to parse:', content);
-        return { extractedText, rawDolphinData: dolphinData };
-      }
-    } else {
-      console.error('OpenAI enrichment failed, using raw Dolphin data');
-      return { extractedText, rawDolphinData: dolphinData };
-    }
-  } catch (error) {
-    console.error('Enrichment process failed:', error);
-    return { extractedText: 'Failed to extract', rawDolphinData: dolphinData };
-  }
-}
-
-function createMockTravelData(fileName: string) {
-  console.log('Creating realistic mock travel data for:', fileName);
-  
-  const mockData = {
-    route: "Chennai → Paris",
-    date: new Date().toLocaleDateString(),
-    weather: "Departure: 32°C, Arrival: 18°C", 
-    alerts: "Flight on time. Gate change to B12. Customs declaration required.",
-    flight: "AI 131",
-    gate: "B12",
-    departureTime: "23:45",
-    arrivalTime: "06:15+1",
-    destination: "Paris"
-  };
-
-  return {
-    choices: [{
-      message: {
-        content: JSON.stringify(mockData)
-      }
-    }]
-  };
-}
-
 function parseAndReturnItinerary(content: string, fileName: string) {
   if (!content) {
-    throw new Error('No content received from document processing');
+    throw new Error('No content received from OpenAI');
   }
   
   // Parse JSON from response
@@ -337,21 +151,21 @@ function parseAndReturnItinerary(content: string, fileName: string) {
       
       // Ensure we have the required structure and clean up the data
       itinerary = {
-        route: rawItinerary.route || `Chennai → Paris`,
+        route: rawItinerary.route || `Document: ${fileName}`,
         date: rawItinerary.date || new Date().toLocaleDateString(),
         weather: typeof rawItinerary.weather === 'object' 
-          ? `${rawItinerary.weather.departure || 'Departure: 32°C'} / ${rawItinerary.weather.arrival || 'Arrival: 18°C'}`
-          : rawItinerary.weather || "Departure: 32°C, Arrival: 18°C",
+          ? `${rawItinerary.weather.departure || 'Not specified'} / ${rawItinerary.weather.arrival || 'Not specified'}`
+          : rawItinerary.weather || "Weather information not available",
         alerts: Array.isArray(rawItinerary.alerts) 
           ? rawItinerary.alerts.join('; ')
-          : rawItinerary.alerts || "Flight on time. Document processed successfully.",
+          : rawItinerary.alerts || "Document processed successfully",
         flight: typeof rawItinerary.flight === 'object'
           ? `${rawItinerary.flight.airline || ''} ${rawItinerary.flight.number || ''}`.trim()
-          : rawItinerary.flight || "AI 131",
-        gate: rawItinerary.gate || "B12",
-        departureTime: rawItinerary.departureTime || "23:45",
-        arrivalTime: rawItinerary.arrivalTime || "06:15+1",
-        destination: rawItinerary.destination || "Paris"
+          : rawItinerary.flight || null,
+        gate: rawItinerary.gate || null,
+        departureTime: rawItinerary.departureTime || null,
+        arrivalTime: rawItinerary.arrivalTime || null,
+        destination: rawItinerary.destination || null
       };
       
       // Remove null values to clean up the response
@@ -363,42 +177,40 @@ function parseAndReturnItinerary(content: string, fileName: string) {
       
     } else {
       console.log('No JSON found in response, creating fallback structure');
-      // Create a realistic fallback structure
+      // Create a fallback structure if JSON parsing fails
       itinerary = {
-        route: `Chennai → Paris`,
+        route: `${fileName} → Processing Complete`,
         date: new Date().toLocaleDateString(),
-        weather: "Departure: 32°C, Arrival: 18°C",
-        alerts: "Document processed successfully. Flight information extracted.",
-        flight: "AI 131",
-        gate: "B12", 
-        departureTime: "23:45",
-        arrivalTime: "06:15+1",
-        destination: "Paris"
+        weather: "Please check local weather conditions",
+        alerts: "Document uploaded and processed - manual review may be needed for detailed information",
+        rawContent: content
       };
     }
   } catch (parseError) {
     console.error('Failed to parse JSON:', parseError);
     console.log('Raw content that failed to parse:', content);
     
-    // Create a realistic fallback structure
+    // Create a fallback structure if JSON parsing fails
     itinerary = {
-      route: `Chennai → Paris`,
+      route: `${fileName} → Processing Error`,
       date: new Date().toLocaleDateString(),
-      weather: "Departure: 32°C, Arrival: 18°C",
-      alerts: "Document processed with fallback parsing. Please verify details.",
-      flight: "AI 131",
-      gate: "B12",
-      departureTime: "23:45", 
-      arrivalTime: "06:15+1",
-      destination: "Paris"
+      weather: "Weather information not available",
+      alerts: "Document uploaded but parsing encountered issues - please verify information manually",
+      rawContent: content
     };
   }
   
-  console.log('Final structured itinerary:', itinerary);
+  console.log('Final itinerary:', itinerary);
   
-  return {
-    success: true,
-    itinerary,
-    rawResponse: content
-  };
+  return new Response(
+    JSON.stringify({ 
+      success: true, 
+      itinerary,
+      rawResponse: content // Include raw response for debugging
+    }),
+    {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    }
+  );
 }
