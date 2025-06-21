@@ -29,8 +29,8 @@ serve(async (req) => {
       throw new Error('No PDF data received');
     }
     
-    // Send PDF directly to OpenAI without pre-processing
-    console.log('Sending PDF directly to OpenAI...');
+    // Send PDF using the correct file format as per OpenAI docs
+    console.log('Sending PDF to OpenAI using file format...');
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -39,7 +39,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           {
             role: 'system',
@@ -53,10 +53,10 @@ serve(async (req) => {
                 text: `Please analyze this travel document (${fileName}) and extract the actual travel information visible. Return ONLY a JSON object with these fields: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Use the exact information from the document - do not generate fictional data.`
               },
               {
-                type: 'image_url',
-                image_url: {
-                  url: `data:application/pdf;base64,${pdfBase64}`,
-                  detail: 'high'
+                type: 'file',
+                file: {
+                  filename: fileName,
+                  file_data: pdfBase64
                 }
               }
             ]
