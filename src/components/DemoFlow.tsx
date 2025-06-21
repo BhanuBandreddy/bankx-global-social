@@ -10,14 +10,15 @@ import { extractTextFromPDF } from "@/utils/pdfUtils";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ItineraryData {
-  route: string;
-  date: string;
+  route: string | string[];
+  date: string | string[];
   weather: string;
   alerts: string;
-  departureTime?: string;
-  arrivalTime?: string;
+  departureTime?: string | string[];
+  arrivalTime?: string | string[];
   gate?: string;
-  flight?: string;
+  flight?: string | string[];
+  destination?: string | string[];
 }
 
 // Helper function to convert file to base64
@@ -39,7 +40,7 @@ const convertFileToBase64 = (file: File): Promise<string> => {
 const renderValue = (value: any): string => {
   if (typeof value === 'string') return value;
   if (typeof value === 'number') return value.toString();
-  if (Array.isArray(value)) return value.join(', ');
+  if (Array.isArray(value)) return value.join(' | ');
   if (typeof value === 'object' && value !== null) {
     // Handle weather object specifically
     if (value.departure && value.arrival) {
@@ -118,8 +119,7 @@ export const DemoFlow = () => {
         
         // More flexible toast message that works with any data structure
         const destination = data.itinerary.destination || 
-                           data.itinerary.route?.split(' → ')[1] || 
-                           data.itinerary.arrivalLocation || 
+                           extractDestinationFromRoute(data.itinerary.route) || 
                            'your destination';
         
         const travelDate = data.itinerary.date || 
@@ -133,8 +133,8 @@ export const DemoFlow = () => {
                       'Have a great trip!';
         
         toast({
-          title: `🛬 Welcome to ${destination}!`,
-          description: `${travelDate}. ${alerts}. 3 local pick-ups available.`,
+          title: `🛬 Welcome to ${renderValue(destination)}!`,
+          description: `${renderValue(travelDate)}. ${renderValue(alerts)}. 3 local pick-ups available.`,
         });
       } else {
         throw new Error(data.error || 'Failed to parse itinerary');
@@ -200,14 +200,33 @@ export const DemoFlow = () => {
     setCurrentStep(1);
   };
 
-  const extractDestinationFromRoute = (route: string): string => {
+  const extractDestinationFromRoute = (route: string | string[] | undefined): string => {
     if (!route) return "Unknown Destination";
     
-    const parts = route.split(' → ');
-    if (parts.length > 1) {
-      return parts[1].trim();
+    // Handle array of routes
+    if (Array.isArray(route)) {
+      // For multi-leg trips, get the final destination from the last route
+      const lastRoute = route[route.length - 1];
+      if (typeof lastRoute === 'string') {
+        const parts = lastRoute.split(' → ').map(part => part.trim());
+        if (parts.length > 1) {
+          return parts[1];
+        }
+        return parts[0];
+      }
+      return "Unknown Destination";
     }
-    return route;
+    
+    // Handle string route
+    if (typeof route === 'string') {
+      const parts = route.split(' → ').map(part => part.trim());
+      if (parts.length > 1) {
+        return parts[1];
+      }
+      return parts[0];
+    }
+    
+    return "Unknown Destination";
   };
 
   return (
@@ -360,7 +379,7 @@ export const DemoFlow = () => {
           onProductSelect={handleProductSelect} 
           isDemo={true}
           destination={itinerary ? extractDestinationFromRoute(itinerary.route) : "Paris"}
-          userRoute={itinerary?.route || ""}
+          userRoute={itinerary?.route ? renderValue(itinerary.route) : ""}
         />
       )}
 
@@ -379,8 +398,8 @@ export const DemoFlow = () => {
         <PathSyncLogistics
           escrowTransactionId={escrowTransactionId}
           userItinerary={itinerary ? {
-            route: itinerary.route,
-            date: itinerary.date,
+            route: renderValue(itinerary.route),
+            date: renderValue(itinerary.date),
             isActive: true
           } : undefined}
           productLocation={selectedProduct?.name.includes('Chennai') ? 'Chennai' : extractDestinationFromRoute(itinerary?.route || '')}
