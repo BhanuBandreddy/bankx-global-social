@@ -1,4 +1,3 @@
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -56,7 +55,7 @@ serve(async (req) => {
                 type: 'file',
                 file: {
                   filename: fileName,
-                  file_data: pdfBase64
+                  file_data: `data:application/pdf;base64,${pdfBase64}`
                 }
               }
             ]
