@@ -22,6 +22,12 @@ interface ItineraryData {
   destination?: string;
 }
 
+interface AgentResponse {
+  speaker: string;
+  content: string;
+  emoji: string;
+}
+
 // Helper function to convert file to base64
 const convertFileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -59,6 +65,8 @@ export const DemoFlow = () => {
   const [escrowTransactionId, setEscrowTransactionId] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [agentResponses, setAgentResponses] = useState<AgentResponse[]>([]);
+  const [isProcessingAgents, setIsProcessingAgents] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -90,6 +98,48 @@ export const DemoFlow = () => {
     }
     
     return true;
+  };
+
+  const triggerAgentOrchestrator = async (parsedItinerary: ItineraryData, userId: string) => {
+    setIsProcessingAgents(true);
+    try {
+      console.log('Triggering multi-agent orchestrator...');
+      
+      const { data, error } = await supabase.functions.invoke('multi-agent-orchestrator', {
+        body: {
+          query: `I just uploaded my travel itinerary for ${parsedItinerary.destination || parsedItinerary.route}. Please provide insights and recommendations for my trip.`,
+          userId: userId,
+          sessionId: `demo-session-${Date.now()}`,
+          contextType: 'generic'
+        }
+      });
+
+      console.log('Multi-agent orchestrator response:', { data, error });
+
+      if (error) {
+        console.error('Agent orchestrator error:', error);
+        toast({
+          title: "Agent Processing Error",
+          description: "Failed to get AI insights. Continuing with demo flow.",
+          variant: "destructive"
+        });
+      } else if (data && data.conversation) {
+        setAgentResponses(data.conversation);
+        toast({
+          title: "🤖 AI Agents Activated",
+          description: `${data.conversation.length} agents have analyzed your itinerary!`,
+        });
+      }
+    } catch (error) {
+      console.error('Error calling multi-agent orchestrator:', error);
+      toast({
+        title: "Agent Processing Error",
+        description: "Failed to connect to AI agents. Continuing with demo flow.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessingAgents(false);
+    }
   };
 
   const processFile = async (file: File) => {
@@ -149,6 +199,9 @@ export const DemoFlow = () => {
           title: `🛬 Welcome to ${destination}!`,
           description: `${travelDate}. ${alerts}. 3 local pick-ups available.`,
         });
+
+        // Trigger AI agent analysis
+        await triggerAgentOrchestrator(data.itinerary, userId);
       } else {
         throw new Error(data.error || 'Failed to parse itinerary');
       }
@@ -376,6 +429,40 @@ export const DemoFlow = () => {
         </Card>
       )}
 
+      {/* AI Agent Responses */}
+      {agentResponses.length > 0 && (
+        <Card className="border-4 border-black">
+          <CardHeader className="bg-green-100 border-b-4 border-black">
+            <CardTitle>🤖 AI Agent Analysis</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              {agentResponses.map((response, index) => (
+                <div key={index} className="p-4 border-2 border-gray-300 bg-white rounded">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <span className="text-2xl">{response.emoji}</span>
+                    <span className="font-bold text-lg">{response.speaker}</span>
+                  </div>
+                  <p className="text-gray-700">{response.content}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Processing Agents Indicator */}
+      {isProcessingAgents && (
+        <Card className="border-4 border-black">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center space-x-4">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              <p className="text-lg font-medium">AI Agents are analyzing your itinerary...</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {currentStep === 1 && (
         <SharedProductDiscovery 
           onProductSelect={handleProductSelect} 
@@ -433,6 +520,7 @@ export const DemoFlow = () => {
                 setItinerary(null);
                 setSelectedProduct(null);
                 setEscrowTransactionId('');
+                setAgentResponses([]);
               }}
               variant="outline"
               className="border-4 border-red-500 text-red-500 hover:bg-red-50"
