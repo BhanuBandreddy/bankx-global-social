@@ -64,6 +64,20 @@ const agents: Agent[] = [
 ];
 
 async function getUserContext(userId: string): Promise<UserContext> {
+  // Check if this is a valid UUID format
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
+  
+  if (!isValidUUID) {
+    console.log('Demo mode - using fallback data for user:', userId);
+    return {
+      profile: { trust_score: 85, level: 'Demo User', location: 'Demo Location' },
+      recentTransactions: [],
+      trustScore: 85,
+      conversationHistory: [],
+      latestItinerary: null
+    };
+  }
+
   // Get user profile
   const { data: profile } = await supabase
     .from('profiles')
@@ -106,6 +120,14 @@ async function getUserContext(userId: string): Promise<UserContext> {
 }
 
 async function saveConversation(userId: string, sessionId: string, speaker: string, content: string, contextData: any = {}) {
+  // Only save if valid UUID
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
+  
+  if (!isValidUUID) {
+    console.log('Demo mode - skipping conversation save');
+    return;
+  }
+
   await supabase
     .from('blink_conversations')
     .insert({
@@ -119,6 +141,14 @@ async function saveConversation(userId: string, sessionId: string, speaker: stri
 }
 
 async function createWorkflow(userId: string, workflowType: string, contextData: any, feedPostId?: string) {
+  // Only create workflow if valid UUID
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
+  
+  if (!isValidUUID) {
+    console.log('Demo mode - skipping workflow creation');
+    return { id: 'demo-workflow' };
+  }
+
   const { data, error } = await supabase
     .from('blink_workflows')
     .insert({
@@ -134,6 +164,14 @@ async function createWorkflow(userId: string, workflowType: string, contextData:
 }
 
 async function createNotification(userId: string, workflowId: string, title: string, message: string, type: string = 'info') {
+  // Only create notification if valid UUID
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
+  
+  if (!isValidUUID) {
+    console.log('Demo mode - skipping notification creation');
+    return;
+  }
+
   await supabase
     .from('blink_notifications')
     .insert({
@@ -154,7 +192,6 @@ User Context:
 - Recent Activity: ${userContext.recentTransactions.length} transactions
 `;
 
-  // Add travel itinerary context if available
   if (userContext.latestItinerary) {
     const itinerary = userContext.latestItinerary.parsed_data;
     contextPrompt += `
@@ -240,6 +277,8 @@ serve(async (req) => {
       });
     }
 
+    console.log('Processing request for user:', userId);
+
     // Get user context (now includes latest itinerary)
     const userContext = await getUserContext(userId);
     
@@ -288,7 +327,7 @@ serve(async (req) => {
     const finalAnswer = conversation[conversation.length - 1].content;
 
     // Create notification if workflow was created
-    if (workflow) {
+    if (workflow && workflow.id !== 'demo-workflow') {
       await createNotification(
         userId,
         workflow.id,

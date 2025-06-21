@@ -14,7 +14,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -113,12 +112,10 @@ async function parseAndStoreItinerary(content: string, fileName: string, fileTyp
   // Parse JSON from response
   let itinerary;
   try {
-    // Try to extract JSON from the response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const rawItinerary = JSON.parse(jsonMatch[0]);
       
-      // Ensure we have the required structure and clean up the data
       itinerary = {
         route: rawItinerary.route || `Document: ${fileName}`,
         date: rawItinerary.date || new Date().toLocaleDateString(),
@@ -137,7 +134,6 @@ async function parseAndStoreItinerary(content: string, fileName: string, fileTyp
         destination: rawItinerary.destination || null
       };
       
-      // Remove null values to clean up the response
       Object.keys(itinerary).forEach(key => {
         if (itinerary[key] === null || itinerary[key] === undefined || itinerary[key] === '') {
           delete itinerary[key];
@@ -146,7 +142,6 @@ async function parseAndStoreItinerary(content: string, fileName: string, fileTyp
       
     } else {
       console.log('No JSON found in response, creating fallback structure');
-      // Create a fallback structure if JSON parsing fails
       itinerary = {
         route: `${fileName} → Processing Complete`,
         date: new Date().toLocaleDateString(),
@@ -159,10 +154,9 @@ async function parseAndStoreItinerary(content: string, fileName: string, fileTyp
     console.error('Failed to parse JSON:', parseError);
     console.log('Raw content that failed to parse:', content);
     
-    // Create a fallback structure if JSON parsing fails
     itinerary = {
       route: `${fileName} → Processing Error`,
-      date: new Date().toLocaleDateValue(),
+      date: new Date().toLocaleDateString(),
       weather: "Weather information not available",
       alerts: "Document uploaded but parsing encountered issues - please verify information manually",
       rawContent: content
@@ -171,36 +165,42 @@ async function parseAndStoreItinerary(content: string, fileName: string, fileTyp
   
   console.log('Final itinerary:', itinerary);
   
-  // Store the parsed itinerary in the database
-  try {
-    const { data: savedItinerary, error: dbError } = await supabase
-      .from('parsed_itineraries')
-      .insert({
-        user_id: userId,
-        file_name: fileName,
-        file_type: fileType,
-        parsed_data: itinerary,
-        raw_response: content
-      })
-      .select()
-      .single();
-    
-    if (dbError) {
-      console.error('Database error:', dbError);
-      // Still return success for the parsing, but log the database error
-    } else {
-      console.log('Saved itinerary to database:', savedItinerary.id);
+  // Only try to store in database if we have a valid UUID format
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
+  
+  if (isValidUUID) {
+    try {
+      const { data: savedItinerary, error: dbError } = await supabase
+        .from('parsed_itineraries')
+        .insert({
+          user_id: userId,
+          file_name: fileName,
+          file_type: fileType,
+          parsed_data: itinerary,
+          raw_response: content
+        })
+        .select()
+        .single();
+      
+      if (dbError) {
+        console.error('Database error:', dbError);
+        // Still return success for the parsing, but log the database error
+      } else {
+        console.log('Saved itinerary to database:', savedItinerary.id);
+      }
+    } catch (dbError) {
+      console.error('Failed to save to database:', dbError);
+      // Continue with response even if database save fails
     }
-  } catch (dbError) {
-    console.error('Failed to save to database:', dbError);
-    // Continue with response even if database save fails
+  } else {
+    console.log('Demo mode - skipping database save for non-UUID user ID:', userId);
   }
   
   return new Response(
     JSON.stringify({ 
       success: true, 
       itinerary,
-      rawResponse: content // Include raw response for debugging
+      rawResponse: content
     }),
     {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

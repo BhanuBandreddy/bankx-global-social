@@ -8,6 +8,7 @@ import { SharedProductDiscovery } from "./shared/ProductDiscovery";
 import { SharedTrustPayment } from "./shared/TrustPayment";
 import { PathSyncLogistics } from "./PathSyncLogistics";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ItineraryData {
   route: string;
@@ -18,6 +19,7 @@ interface ItineraryData {
   arrivalTime?: string;
   gate?: string;
   flight?: string;
+  destination?: string;
 }
 
 // Helper function to convert file to base64
@@ -26,7 +28,6 @@ const convertFileToBase64 = (file: File): Promise<string> => {
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
-      // Remove data:image/...;base64, prefix
       const base64 = result.split(',')[1];
       resolve(base64);
     };
@@ -41,11 +42,9 @@ const renderValue = (value: any): string => {
   if (typeof value === 'number') return value.toString();
   if (Array.isArray(value)) return value.join(', ');
   if (typeof value === 'object' && value !== null) {
-    // Handle weather object specifically
     if (value.departure && value.arrival) {
       return `Departure: ${value.departure}, Arrival: ${value.arrival}`;
     }
-    // Handle other objects by stringifying key-value pairs
     return Object.entries(value)
       .map(([key, val]) => `${key}: ${val}`)
       .join(', ');
@@ -61,6 +60,7 @@ export const DemoFlow = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const steps = [
     { id: 'upload', name: 'Upload Itinerary', agent: 'GlobeGuides™ Concierge', icon: Upload },
@@ -80,7 +80,6 @@ export const DemoFlow = () => {
       return false;
     }
     
-    // Check file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       toast({
         title: "File too large",
@@ -100,20 +99,19 @@ export const DemoFlow = () => {
     try {
       console.log('Processing file:', file.name);
       
-      // Get current user for demo (using a demo user ID)
-      const demoUserId = 'demo-user-' + Date.now();
+      // Use authenticated user ID or create a proper demo UUID
+      const userId = user?.id || crypto.randomUUID();
+      console.log('Using user ID:', userId);
       
-      // Convert image to base64
       const base64Image = await convertFileToBase64(file);
       console.log('Converted image to base64, length:', base64Image.length);
       
-      // Send image to parse-itinerary function with userId
       const { data, error } = await supabase.functions.invoke('parse-itinerary', {
         body: {
           imageBase64: base64Image,
           fileName: file.name,
           fileType: file.type,
-          userId: demoUserId
+          userId: userId
         }
       });
       
@@ -132,7 +130,6 @@ export const DemoFlow = () => {
         setItinerary(data.itinerary);
         setCurrentStep(1);
         
-        // More flexible toast message that works with any data structure
         const destination = data.itinerary.destination || 
                            data.itinerary.route?.split(' → ')[1] || 
                            data.itinerary.arrivalLocation || 
@@ -224,6 +221,12 @@ export const DemoFlow = () => {
       return parts[1].trim();
     }
     return route;
+  };
+
+  // Extract destination for map and product discovery
+  const getDestinationName = (): string => {
+    if (!itinerary) return "Paris";
+    return itinerary.destination || extractDestinationFromRoute(itinerary.route) || "Paris";
   };
 
   return (
@@ -377,7 +380,7 @@ export const DemoFlow = () => {
         <SharedProductDiscovery 
           onProductSelect={handleProductSelect} 
           isDemo={true}
-          destination={itinerary ? extractDestinationFromRoute(itinerary.route) : "Paris"}
+          destination={getDestinationName()}
           userRoute={itinerary?.route || ""}
         />
       )}
@@ -399,7 +402,7 @@ export const DemoFlow = () => {
             date: itinerary.date,
             isActive: true
           } : undefined}
-          productLocation={selectedProduct?.name.includes('Chennai') ? 'Chennai' : extractDestinationFromRoute(itinerary?.route || '')}
+          productLocation={selectedProduct?.name.includes('Chennai') ? 'Chennai' : getDestinationName()}
         />
       )}
 
