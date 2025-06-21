@@ -73,8 +73,8 @@ serve(async (req) => {
     let analysisResult;
     
     if (fileType === 'application/pdf') {
-      // Use Dolphin for PDF processing
-      console.log('Processing PDF with Dolphin API');
+      // Use Dolphin OCR for PDF processing
+      console.log('Processing PDF with Dolphin OCR (Hugging Face)');
       analysisResult = await processPDFWithDolphin(base64Data, fileName);
     } else {
       // Use OpenAI Vision for image processing
@@ -141,35 +141,37 @@ async function processPDFWithDolphin(base64Data: string, fileName: string) {
   }
 
   try {
-    console.log('Calling Dolphin API for PDF processing');
+    console.log('Calling Dolphin OCR API on Hugging Face');
     
-    // Convert base64 to binary for Dolphin API
+    // Convert base64 to binary for Dolphin OCR API
     const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
     
-    // Create form data for Dolphin API
-    const formData = new FormData();
-    formData.append('file', new Blob([binaryData], { type: 'application/pdf' }), fileName);
-    formData.append('extract_type', 'travel_document');
-    formData.append('output_format', 'json');
-    
-    const response = await fetch('https://api.dolphin.bytedance.com/v1/extract', {
+    // Create the request payload for Hugging Face Dolphin OCR
+    const response = await fetch('https://r8gvfi5bygcmjf1c.us-east-1.aws.endpoints.huggingface.cloud', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${dolphinApiKey}`,
-        'User-Agent': 'Global-Socials-Parser/1.0'
+        'Content-Type': 'application/json'
       },
-      body: formData
+      body: JSON.stringify({
+        inputs: base64Data,
+        parameters: {
+          task: 'document_parsing',
+          return_ocr_result: true,
+          return_layout_result: true
+        }
+      })
     });
     
     if (!response.ok) {
-      console.error('Dolphin API error:', response.status, response.statusText);
+      console.error('Dolphin OCR API error:', response.status, response.statusText);
       const errorText = await response.text();
-      console.error('Dolphin API error details:', errorText);
-      throw new Error(`Dolphin API error: ${response.status}`);
+      console.error('Dolphin OCR API error details:', errorText);
+      throw new Error(`Dolphin OCR API error: ${response.status}`);
     }
     
     const dolphinResult = await response.json();
-    console.log('Dolphin API response:', dolphinResult);
+    console.log('Dolphin OCR API response:', dolphinResult);
     
     // Process Dolphin result and enrich with OpenAI if needed
     const enrichedResult = await enrichDolphinDataWithOpenAI(dolphinResult);
@@ -183,7 +185,7 @@ async function processPDFWithDolphin(base64Data: string, fileName: string) {
     };
     
   } catch (error) {
-    console.error('Dolphin processing failed:', error);
+    console.error('Dolphin OCR processing failed:', error);
     console.log('Falling back to mock data generation');
     return createMockTravelData(fileName);
   }
@@ -236,6 +238,21 @@ async function processImageWithOpenAI(base64Data: string, fileType: string, file
 
 async function enrichDolphinDataWithOpenAI(dolphinData: any) {
   try {
+    // Extract text content from Dolphin OCR result
+    let extractedText = '';
+    
+    if (dolphinData.ocr_result && dolphinData.ocr_result.length > 0) {
+      extractedText = dolphinData.ocr_result.map((item: any) => item.text || '').join(' ');
+    } else if (typeof dolphinData === 'string') {
+      extractedText = dolphinData;
+    } else if (dolphinData.text) {
+      extractedText = dolphinData.text;
+    } else {
+      extractedText = JSON.stringify(dolphinData);
+    }
+    
+    console.log('Extracted text from Dolphin:', extractedText.substring(0, 200) + '...');
+    
     // Use OpenAI to structure and enrich the Dolphin-extracted data
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -248,11 +265,11 @@ async function enrichDolphinDataWithOpenAI(dolphinData: any) {
         messages: [
           {
             role: 'system',
-            content: 'You are a travel data structuring assistant. Take the extracted travel document data and format it into a consistent JSON structure. Only use the provided data, do not add fictional information.'
+            content: 'You are a travel data structuring assistant. Take the extracted travel document text and format it into a consistent JSON structure. Only use the provided data, do not add fictional information. Extract flight details, dates, destinations, gates, weather information, and any alerts or important notices.'
           },
           {
             role: 'user',
-            content: `Please structure this travel document data into a consistent JSON format with fields: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Here is the extracted data: ${JSON.stringify(dolphinData)}`
+            content: `Please structure this travel document text into a JSON format with fields: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Here is the extracted text: ${extractedText}`
           }
         ],
         max_tokens: 1000,
@@ -268,15 +285,16 @@ async function enrichDolphinDataWithOpenAI(dolphinData: any) {
         return JSON.parse(content);
       } catch (parseError) {
         console.error('Failed to parse enriched data:', parseError);
-        return dolphinData;
+        console.log('Raw content that failed to parse:', content);
+        return { extractedText, rawDolphinData: dolphinData };
       }
     } else {
       console.error('OpenAI enrichment failed, using raw Dolphin data');
-      return dolphinData;
+      return { extractedText, rawDolphinData: dolphinData };
     }
   } catch (error) {
     console.error('Enrichment process failed:', error);
-    return dolphinData;
+    return { extractedText: 'Failed to extract', rawDolphinData: dolphinData };
   }
 }
 
