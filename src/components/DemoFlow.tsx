@@ -114,8 +114,8 @@ export const DemoFlow = () => {
       }
       
       if (data.success && data.itinerary) {
+        console.log('Setting itinerary and advancing to step 1:', data.itinerary);
         setItinerary(data.itinerary);
-        setCurrentStep(1);
         
         // More flexible toast message that works with any data structure
         const destination = data.itinerary.destination || 
@@ -136,6 +136,13 @@ export const DemoFlow = () => {
           title: `🛬 Welcome to ${renderValue(destination)}!`,
           description: `${renderValue(travelDate)}. ${renderValue(alerts)}. 3 local pick-ups available.`,
         });
+
+        // Advance to product discovery step after a short delay to ensure state is set
+        setTimeout(() => {
+          console.log('Advancing to step 1 (Product Discovery)');
+          setCurrentStep(1);
+        }, 100);
+        
       } else {
         throw new Error(data.error || 'Failed to parse itinerary');
       }
@@ -181,11 +188,13 @@ export const DemoFlow = () => {
   };
 
   const handleProductSelect = (product: any) => {
+    console.log('Product selected, advancing to payment step:', product);
     setSelectedProduct(product);
     setCurrentStep(2);
   };
 
   const handlePaymentSuccess = (transactionId: string) => {
+    console.log('Payment successful, advancing to logistics step:', transactionId);
     setEscrowTransactionId(transactionId);
     setCurrentStep(3);
     
@@ -196,6 +205,7 @@ export const DemoFlow = () => {
   };
 
   const handlePaymentCancel = () => {
+    console.log('Payment cancelled, returning to product discovery');
     setSelectedProduct(null);
     setCurrentStep(1);
   };
@@ -430,6 +440,7 @@ export const DemoFlow = () => {
             </Button>
             <Button 
               onClick={() => {
+                console.log('Resetting demo to initial state');
                 setCurrentStep(0);
                 setItinerary(null);
                 setSelectedProduct(null);
@@ -440,6 +451,14 @@ export const DemoFlow = () => {
             >
               Reset Demo
             </Button>
+          </div>
+          
+          {/* Debug Info */}
+          <div className="mt-4 p-3 bg-gray-50 border rounded text-xs">
+            <div><strong>Current Step:</strong> {currentStep}</div>
+            <div><strong>Has Itinerary:</strong> {itinerary ? 'Yes' : 'No'}</div>
+            <div><strong>Selected Product:</strong> {selectedProduct ? 'Yes' : 'No'}</div>
+            <div><strong>Escrow ID:</strong> {escrowTransactionId || 'None'}</div>
           </div>
         </CardContent>
       </Card>
