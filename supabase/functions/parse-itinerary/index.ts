@@ -1,3 +1,4 @@
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -101,31 +102,43 @@ function parseAndReturnItinerary(content: string, fileName: string) {
     throw new Error('No content received from OpenAI');
   }
   
-  // Parse JSON from response
+  // Parse JSON from response - handle both plain JSON and markdown code blocks
   let itinerary;
   try {
-    // Try to extract JSON from the response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    let jsonContent = content.trim();
+    
+    // Remove markdown code block formatting if present
+    if (jsonContent.startsWith('```json')) {
+      jsonContent = jsonContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (jsonContent.startsWith('```')) {
+      jsonContent = jsonContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    
+    // Try to find JSON content within the response
+    const jsonMatch = jsonContent.match(/[\{\[][\s\S]*[\}\]]/);
     if (jsonMatch) {
       const rawItinerary = JSON.parse(jsonMatch[0]);
       
+      // Handle array of itineraries (multi-leg trips) by taking the first one
+      const itineraryData = Array.isArray(rawItinerary) ? rawItinerary[0] : rawItinerary;
+      
       // Ensure we have the required structure and clean up the data
       itinerary = {
-        route: rawItinerary.route || `Document: ${fileName}`,
-        date: rawItinerary.date || new Date().toLocaleDateString(),
-        weather: typeof rawItinerary.weather === 'object' 
-          ? `${rawItinerary.weather.departure || 'Not specified'} / ${rawItinerary.weather.arrival || 'Not specified'}`
-          : rawItinerary.weather || "Weather information not available",
-        alerts: Array.isArray(rawItinerary.alerts) 
-          ? rawItinerary.alerts.join('; ')
-          : rawItinerary.alerts || "Document processed successfully",
-        flight: typeof rawItinerary.flight === 'object'
-          ? `${rawItinerary.flight.airline || ''} ${rawItinerary.flight.number || ''}`.trim()
-          : rawItinerary.flight || null,
-        gate: rawItinerary.gate || null,
-        departureTime: rawItinerary.departureTime || null,
-        arrivalTime: rawItinerary.arrivalTime || null,
-        destination: rawItinerary.destination || null
+        route: itineraryData.route || `Document: ${fileName}`,
+        date: itineraryData.date || new Date().toLocaleDateString(),
+        weather: typeof itineraryData.weather === 'object' 
+          ? `${itineraryData.weather.departure || 'Not specified'} / ${itineraryData.weather.arrival || 'Not specified'}`
+          : itineraryData.weather || "Weather information not available",
+        alerts: Array.isArray(itineraryData.alerts) 
+          ? itineraryData.alerts.join('; ')
+          : itineraryData.alerts || "Document processed successfully",
+        flight: typeof itineraryData.flight === 'object'
+          ? `${itineraryData.flight.airline || ''} ${itineraryData.flight.number || ''}`.trim()
+          : itineraryData.flight || null,
+        gate: itineraryData.gate || null,
+        departureTime: itineraryData.departureTime || null,
+        arrivalTime: itineraryData.arrivalTime || null,
+        destination: itineraryData.destination || null
       };
       
       // Remove null values to clean up the response
