@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { SharedProductDiscovery } from "./shared/ProductDiscovery";
 import { SharedTrustPayment } from "./shared/TrustPayment";
 import { PathSyncLogistics } from "./PathSyncLogistics";
-import { extractTextFromPDF } from "@/utils/pdfUtils";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ItineraryData {
@@ -26,7 +26,7 @@ const convertFileToBase64 = (file: File): Promise<string> => {
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
-      // Remove data:application/pdf;base64, prefix
+      // Remove data:image/...;base64, prefix
       const base64 = result.split(',')[1];
       resolve(base64);
     };
@@ -52,14 +52,26 @@ export const WorkflowExperience = () => {
   ];
 
   const validateFile = (file: File) => {
-    if (file.type !== 'application/pdf') {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
       toast({
         title: "Invalid file type",
-        description: "Please upload a PDF file",
+        description: "Please upload an image file (JPEG, PNG, or WebP)",
         variant: "destructive"
       });
       return false;
     }
+    
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 10MB",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
     return true;
   };
 
@@ -70,14 +82,14 @@ export const WorkflowExperience = () => {
     try {
       console.log('Processing file:', file.name);
       
-      // Convert PDF to base64
-      const base64PDF = await convertFileToBase64(file);
-      console.log('Converted PDF to base64');
+      // Convert image to base64
+      const base64Image = await convertFileToBase64(file);
+      console.log('Converted image to base64');
       
-      // Send PDF directly to OpenAI via Supabase Edge Function
+      // Send image directly to OpenAI via Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('parse-itinerary', {
         body: {
-          pdfBase64: base64PDF,
+          imageBase64: base64Image,
           fileName: file.name,
           fileType: file.type
         }
@@ -118,7 +130,7 @@ export const WorkflowExperience = () => {
         throw new Error(data.error || 'Failed to parse itinerary');
       }
     } catch (error) {
-      console.error('Error processing PDF:', error);
+      console.error('Error processing image:', error);
       toast({
         title: "Processing Error",
         description: "Failed to parse itinerary. Please try again.",
@@ -226,13 +238,13 @@ export const WorkflowExperience = () => {
         </CardContent>
       </Card>
 
-      {/* Step 1: GlobeGuides - File Upload */}
+      {/* Step 1: GlobeGuides - Image Upload */}
       {currentStep === 0 && (
         <Card className="border-4 border-black">
           <CardHeader className="bg-purple-100 border-b-4 border-black">
             <CardTitle className="flex items-center space-x-2">
               <Upload className="w-6 h-6" />
-              <span>Step 1: Upload Travel Itinerary</span>
+              <span>Step 1: Upload Travel Itinerary Image</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
@@ -249,21 +261,24 @@ export const WorkflowExperience = () => {
               {isProcessing ? (
                 <div className="flex flex-col items-center space-y-4">
                   <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
-                  <p className="text-lg font-medium">GlobeGuides™ is parsing your itinerary...</p>
+                  <p className="text-lg font-medium">GlobeGuides™ is analyzing your itinerary image...</p>
                   <p className="text-sm text-gray-600">Extracting travel details, weather, and local insights</p>
                 </div>
               ) : (
                 <>
                   <Upload className={`w-12 h-12 mx-auto mb-4 ${isDragOver ? 'text-purple-600' : 'text-gray-400'}`} />
                   <p className="text-lg font-medium mb-4">
-                    {isDragOver ? 'Drop your PDF here!' : 'Drag & drop your PDF itinerary here'}
+                    {isDragOver ? 'Drop your image here!' : 'Drag & drop your itinerary image here'}
                   </p>
                   <p className="text-sm text-gray-600 mb-4">
-                    GlobeGuides™ will parse your travel details and provide smart insights
+                    GlobeGuides™ will analyze your travel image and provide smart insights
+                  </p>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Supported formats: JPEG, PNG, WebP (max 10MB)
                   </p>
                   <input
                     type="file"
-                    accept=".pdf"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
                     onChange={handleFileUpload}
                     className="hidden"
                     id="file-upload"
@@ -276,7 +291,7 @@ export const WorkflowExperience = () => {
                       asChild
                     >
                       <span className="cursor-pointer">
-                        Choose PDF File
+                        Choose Image File
                       </span>
                     </Button>
                   </label>
@@ -333,7 +348,6 @@ export const WorkflowExperience = () => {
         </Card>
       )}
 
-      {/* Step 2: LocaleLens - Product Discovery */}
       {currentStep === 1 && (
         <SharedProductDiscovery 
           onProductSelect={handleProductSelect} 
@@ -343,7 +357,6 @@ export const WorkflowExperience = () => {
         />
       )}
 
-      {/* Step 3: TrustPay - Secure Payment */}
       {currentStep === 2 && selectedProduct && (
         <SharedTrustPayment
           product={selectedProduct}
@@ -353,7 +366,6 @@ export const WorkflowExperience = () => {
         />
       )}
 
-      {/* Step 4: PathSync - Enhanced Peer Logistics */}
       {currentStep === 3 && (
         <PathSyncLogistics
           escrowTransactionId={escrowTransactionId}
@@ -366,7 +378,6 @@ export const WorkflowExperience = () => {
         />
       )}
 
-      {/* Experience Controls */}
       <Card className="border-4 border-black">
         <CardHeader className="bg-gray-100 border-b-4 border-black">
           <CardTitle>Experience Controls</CardTitle>

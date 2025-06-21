@@ -8,37 +8,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Function to convert PDF to images using a PDF-to-image service
-async function convertPdfToImages(pdfBase64: string): Promise<string[]> {
-  try {
-    // Use pdf2pic or similar service to convert PDF to images
-    // For now, we'll use a simple approach with the first page
-    const response = await fetch('https://api.pdf24.org/v1/convert', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        inputFormat: 'pdf',
-        outputFormat: 'png',
-        inputData: pdfBase64,
-        pages: [1] // Convert first page only for now
-      })
-    });
-    
-    if (response.ok) {
-      const result = await response.json();
-      return result.images || [];
-    }
-  } catch (error) {
-    console.error('PDF conversion failed:', error);
-  }
-  
-  // Fallback: return the original PDF base64 as if it were an image
-  // OpenAI will reject it, but we'll handle that in the main function
-  return [pdfBase64];
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -50,27 +19,17 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    const { pdfBase64, fileName, fileType } = await req.json();
+    const { imageBase64, fileName, fileType } = await req.json();
     
-    console.log(`Processing PDF: ${fileName}`);
+    console.log(`Processing image: ${fileName}`);
     console.log(`File type: ${fileType}`);
-    console.log(`PDF base64 length: ${pdfBase64?.length || 'undefined'}`);
+    console.log(`Image base64 length: ${imageBase64?.length || 'undefined'}`);
     
-    if (!pdfBase64) {
-      throw new Error('No PDF data received');
+    if (!imageBase64) {
+      throw new Error('No image data received');
     }
     
-    // Convert PDF to images for OpenAI Vision
-    console.log('Converting PDF to images...');
-    const images = await convertPdfToImages(pdfBase64);
-    
-    if (images.length === 0) {
-      throw new Error('Failed to convert PDF to images');
-    }
-    
-    console.log(`Converted PDF to ${images.length} image(s)`);
-    
-    // Use OpenAI's vision model to analyze the PDF images
+    // Use OpenAI's vision model to analyze the image
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -82,22 +41,22 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are an expert travel document parser. Analyze the provided travel document images and extract ONLY the actual travel information shown. Do not make up or assume any information. If certain details are not visible or clear, use "Not specified". Return ONLY a valid JSON object with the extracted information.'
+            content: 'You are an expert travel document parser. Analyze the provided travel document image and extract ONLY the actual travel information shown. Do not make up or assume any information. If certain details are not visible or clear, use "Not specified". Return ONLY a valid JSON object with the extracted information.'
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: `Please analyze this travel document (${fileName}) and extract the actual travel information visible. Return ONLY a JSON object with these fields: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Use the exact information from the document - do not generate fictional data.`
+                text: `Please analyze this travel document image (${fileName}) and extract the actual travel information visible. Return ONLY a JSON object with these fields: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Use the exact information from the document - do not generate fictional data.`
               },
-              ...images.map(imageBase64 => ({
+              {
                 type: 'image_url',
                 image_url: {
-                  url: `data:image/png;base64,${imageBase64}`,
+                  url: `data:${fileType};base64,${imageBase64}`,
                   detail: 'high'
                 }
-              }))
+              }
             ]
           }
         ],
