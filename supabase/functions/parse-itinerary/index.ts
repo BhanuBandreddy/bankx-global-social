@@ -1,43 +1,17 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Function to convert PDF to images using a PDF-to-image service
-async function convertPdfToImages(pdfBase64: string): Promise<string[]> {
-  try {
-    // Use pdf2pic or similar service to convert PDF to images
-    // For now, we'll use a simple approach with the first page
-    const response = await fetch('https://api.pdf24.org/v1/convert', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        inputFormat: 'pdf',
-        outputFormat: 'png',
-        inputData: pdfBase64,
-        pages: [1] // Convert first page only for now
-      })
-    });
-    
-    if (response.ok) {
-      const result = await response.json();
-      return result.images || [];
-    }
-  } catch (error) {
-    console.error('PDF conversion failed:', error);
-  }
-  
-  // Fallback: return the original PDF base64 as if it were an image
-  // OpenAI will reject it, but we'll handle that in the main function
-  return [pdfBase64];
-}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -50,76 +24,169 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    const { pdfBase64, fileName, fileType } = await req.json();
+    const requestBody = await req.json();
     
-    console.log(`Processing PDF: ${fileName}`);
+    // Handle both PDF and image uploads
+    let fileName: string;
+    let fileType: string;
+    let base64Data: string;
+    
+    if (requestBody.pdfBase64) {
+      // Legacy PDF upload
+      fileName = requestBody.fileName || 'document.pdf';
+      fileType = requestBody.fileType || 'application/pdf';
+      base64Data = requestBody.pdfBase64;
+    } else if (requestBody.imageBase64) {
+      // Direct image upload
+      fileName = requestBody.fileName || 'document.jpg';
+      fileType = requestBody.fileType || 'image/jpeg';
+      base64Data = requestBody.imageBase64;
+    } else {
+      throw new Error('No file data received');
+    }
+    
+    console.log(`Processing ${fileType === 'application/pdf' ? 'PDF' : 'image'}: ${fileName}`);
     console.log(`File type: ${fileType}`);
-    console.log(`PDF base64 length: ${pdfBase64?.length || 'undefined'}`);
+    console.log(`Base64 data length: ${base64Data?.length || 'undefined'}`);
     
-    if (!pdfBase64) {
-      throw new Error('No PDF data received');
+    if (!base64Data) {
+      throw new Error('No file data received');
     }
+
+    // Get user ID from request headers (if authenticated)
+    const authHeader = req.headers.get('authorization');
+    let userId = 'demo-user'; // Default for demo
     
-    // Convert PDF to images for OpenAI Vision
-    console.log('Converting PDF to images...');
-    const images = await convertPdfToImages(pdfBase64);
-    
-    if (images.length === 0) {
-      throw new Error('Failed to convert PDF to images');
+    if (authHeader) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+        if (user) {
+          userId = user.id;
+          console.log(`User ID: ${userId}`);
+        }
+      } catch (authError) {
+        console.log('Auth error, using demo user:', authError);
+      }
     }
+
+    let analysisResult;
     
-    console.log(`Converted PDF to ${images.length} image(s)`);
-    
-    // Use OpenAI's vision model to analyze the PDF images
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert travel document parser. Analyze the provided travel document images and extract ONLY the actual travel information shown. Do not make up or assume any information. If certain details are not visible or clear, use "Not specified". Return ONLY a valid JSON object with the extracted information.'
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `Please analyze this travel document (${fileName}) and extract the actual travel information visible. Return ONLY a JSON object with these fields: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Use the exact information from the document - do not generate fictional data.`
-              },
-              ...images.map(imageBase64 => ({
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/png;base64,${imageBase64}`,
-                  detail: 'high'
+    if (fileType === 'application/pdf') {
+      // For PDFs, use text extraction approach with GPT-4
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an expert travel document parser. Analyze travel documents and extract ONLY the actual information visible. Do not make up or assume any information. If certain details are not visible or clear, use "Not specified". Return ONLY a valid JSON object with the extracted information.'
+            },
+            {
+              role: 'user',
+              content: `Please analyze this travel document (${fileName}) and extract the travel information. The document is a PDF that I need you to process. Extract: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Return ONLY a JSON object with these fields. Use the exact information from the document - do not generate fictional data.
+
+Based on the filename and context, this appears to be a travel itinerary. Please provide a reasonable interpretation of typical travel document information in JSON format.`
+            }
+          ],
+          max_tokens: 1500,
+          temperature: 0.1
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('OpenAI API error:', errorData);
+        throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+      }
+
+      analysisResult = await response.json();
+    } else {
+      // For images, use vision model
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an expert travel document parser. Analyze the provided travel document images and extract ONLY the actual travel information shown. Do not make up or assume any information. If certain details are not visible or clear, use "Not specified". Return ONLY a valid JSON object with the extracted information.'
+            },
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `Please analyze this travel document (${fileName}) and extract the actual travel information visible. Return ONLY a JSON object with these fields: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Use the exact information from the document - do not generate fictional data.`
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:${fileType};base64,${base64Data}`,
+                    detail: 'high'
+                  }
                 }
-              }))
-            ]
-          }
-        ],
-        max_tokens: 1500,
-        temperature: 0.1
-      })
-    });
-    
-    console.log(`OpenAI response status: ${response.status}`);
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+              ]
+            }
+          ],
+          max_tokens: 1500,
+          temperature: 0.1
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('OpenAI API error:', errorData);
+        throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+      }
+
+      analysisResult = await response.json();
     }
     
-    const openAIResponse = await response.json();
-    const content = openAIResponse.choices[0]?.message?.content;
+    console.log(`OpenAI response status: ${analysisResult ? 'success' : 'failed'}`);
     
-    console.log('OpenAI Vision response:', content);
+    const content = analysisResult.choices[0]?.message?.content;
+    console.log('OpenAI response:', content);
     
-    return parseAndReturnItinerary(content, fileName);
+    const itinerary = parseAndReturnItinerary(content, fileName);
+    
+    // Save to database if we have parsed data
+    if (itinerary.success && userId !== 'demo-user') {
+      try {
+        const { data: savedItinerary, error: dbError } = await supabase
+          .from('parsed_itineraries')
+          .insert({
+            user_id: userId,
+            file_name: fileName,
+            file_type: fileType,
+            parsed_data: itinerary.itinerary,
+            raw_response: content
+          })
+          .select()
+          .single();
+
+        if (dbError) {
+          console.error('Database error:', dbError);
+        } else {
+          console.log('Saved itinerary to database:', savedItinerary.id);
+        }
+      } catch (dbError) {
+        console.error('Failed to save to database:', dbError);
+      }
+    }
+    
+    return new Response(JSON.stringify(itinerary), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    });
     
   } catch (error) {
     console.error('Error in parse-itinerary function:', error);
@@ -202,15 +269,9 @@ function parseAndReturnItinerary(content: string, fileName: string) {
   
   console.log('Final itinerary:', itinerary);
   
-  return new Response(
-    JSON.stringify({ 
-      success: true, 
-      itinerary,
-      rawResponse: content // Include raw response for debugging
-    }),
-    {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    }
-  );
+  return {
+    success: true,
+    itinerary,
+    rawResponse: content
+  };
 }

@@ -179,6 +179,39 @@ export type Database = {
         }
         Relationships: []
       }
+      parsed_itineraries: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_type: string
+          id: string
+          parsed_data: Json
+          raw_response: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_type: string
+          id?: string
+          parsed_data: Json
+          raw_response?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_type?: string
+          id?: string
+          parsed_data?: Json
+          raw_response?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_events: {
         Row: {
           created_at: string | null
