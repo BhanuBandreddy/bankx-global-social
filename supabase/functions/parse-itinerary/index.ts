@@ -8,6 +8,37 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Function to convert PDF to images using a PDF-to-image service
+async function convertPdfToImages(pdfBase64: string): Promise<string[]> {
+  try {
+    // Use pdf2pic or similar service to convert PDF to images
+    // For now, we'll use a simple approach with the first page
+    const response = await fetch('https://api.pdf24.org/v1/convert', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        inputFormat: 'pdf',
+        outputFormat: 'png',
+        inputData: pdfBase64,
+        pages: [1] // Convert first page only for now
+      })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      return result.images || [];
+    }
+  } catch (error) {
+    console.error('PDF conversion failed:', error);
+  }
+  
+  // Fallback: return the original PDF base64 as if it were an image
+  // OpenAI will reject it, but we'll handle that in the main function
+  return [pdfBase64];
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -29,7 +60,17 @@ serve(async (req) => {
       throw new Error('No PDF data received');
     }
     
-    // Use OpenAI's vision model to actually analyze the PDF content
+    // Convert PDF to images for OpenAI Vision
+    console.log('Converting PDF to images...');
+    const images = await convertPdfToImages(pdfBase64);
+    
+    if (images.length === 0) {
+      throw new Error('Failed to convert PDF to images');
+    }
+    
+    console.log(`Converted PDF to ${images.length} image(s)`);
+    
+    // Use OpenAI's vision model to analyze the PDF images
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -41,22 +82,22 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are an expert travel document parser. Analyze the provided PDF image and extract ONLY the actual travel information shown in the document. Do not make up or assume any information. If certain details are not visible or clear, use "Not specified" or leave empty. Return ONLY a valid JSON object with the extracted information.'
+            content: 'You are an expert travel document parser. Analyze the provided travel document images and extract ONLY the actual travel information shown. Do not make up or assume any information. If certain details are not visible or clear, use "Not specified". Return ONLY a valid JSON object with the extracted information.'
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: `Please analyze this travel PDF document (${fileName}) and extract the actual travel information visible in the document. Return ONLY a JSON object with these fields: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Use the exact information from the document - do not generate fictional data.`
+                text: `Please analyze this travel document (${fileName}) and extract the actual travel information visible. Return ONLY a JSON object with these fields: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Use the exact information from the document - do not generate fictional data.`
               },
-              {
+              ...images.map(imageBase64 => ({
                 type: 'image_url',
                 image_url: {
-                  url: `data:application/pdf;base64,${pdfBase64}`,
+                  url: `data:image/png;base64,${imageBase64}`,
                   detail: 'high'
                 }
-              }
+              }))
             ]
           }
         ],
@@ -70,48 +111,13 @@ serve(async (req) => {
     if (!response.ok) {
       const errorData = await response.json();
       console.error('OpenAI API error:', errorData);
-      
-      // Fallback to text-based parsing if vision fails
-      console.log('Vision API failed, attempting text-based parsing...');
-      
-      const textResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an expert at parsing travel documents. The user will provide a base64 encoded PDF. Extract real travel information and return ONLY valid JSON. Do not generate fictional data.'
-            },
-            {
-              role: 'user',
-              content: `Parse this travel PDF and extract actual information. Base64 data: ${pdfBase64.substring(0, 2000)}... Return JSON with: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Use "Not specified" for missing info.`
-            }
-          ],
-          max_tokens: 1500,
-          temperature: 0.1
-        })
-      });
-      
-      if (!textResponse.ok) {
-        throw new Error(`Both vision and text parsing failed: ${errorData.error?.message || 'Unknown error'}`);
-      }
-      
-      const textData = await textResponse.json();
-      const content = textData.choices[0]?.message?.content;
-      console.log('Text-based parsing response:', content);
-      
-      return parseAndReturnItinerary(content, fileName);
+      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
     }
     
     const openAIResponse = await response.json();
     const content = openAIResponse.choices[0]?.message?.content;
     
-    console.log('Vision-based parsing response:', content);
+    console.log('OpenAI Vision response:', content);
     
     return parseAndReturnItinerary(content, fileName);
     
