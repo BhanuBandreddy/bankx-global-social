@@ -100,16 +100,20 @@ export const DemoFlow = () => {
     try {
       console.log('Processing file:', file.name);
       
+      // Get current user for demo (using a demo user ID)
+      const demoUserId = 'demo-user-' + Date.now();
+      
       // Convert image to base64
       const base64Image = await convertFileToBase64(file);
       console.log('Converted image to base64, length:', base64Image.length);
       
-      // Send image directly to OpenAI via Supabase Edge Function
+      // Send image to parse-itinerary function with userId
       const { data, error } = await supabase.functions.invoke('parse-itinerary', {
         body: {
           imageBase64: base64Image,
           fileName: file.name,
-          fileType: file.type
+          fileType: file.type,
+          userId: demoUserId
         }
       });
       
@@ -437,4 +441,63 @@ export const DemoFlow = () => {
       </Card>
     </div>
   );
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      await processFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    const file = files[0];
+    
+    if (file) {
+      await processFile(file);
+    }
+  };
+
+  const handleProductSelect = (product: any) => {
+    setSelectedProduct(product);
+    setCurrentStep(2);
+  };
+
+  const handlePaymentSuccess = (transactionId: string) => {
+    setEscrowTransactionId(transactionId);
+    setCurrentStep(3);
+    
+    toast({
+      title: "🚀 Proceeding to Logistics",
+      description: "Payment secured! PathSync is matching you with optimal logistics partners.",
+    });
+  };
+
+  const handlePaymentCancel = () => {
+    setSelectedProduct(null);
+    setCurrentStep(1);
+  };
+
+  const extractDestinationFromRoute = (route: string): string => {
+    if (!route) return "Unknown Destination";
+    
+    const parts = route.split(' → ');
+    if (parts.length > 1) {
+      return parts[1].trim();
+    }
+    return route;
+  };
 };

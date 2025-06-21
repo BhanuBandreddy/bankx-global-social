@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -25,6 +24,7 @@ interface UserContext {
   recentTransactions: any[];
   trustScore: number;
   conversationHistory: any[];
+  latestItinerary?: any;
 }
 
 interface BlinkRequest {
@@ -44,22 +44,22 @@ const agents: Agent[] = [
   {
     name: "TrustPay",
     emoji: "🔐",
-    instructions: "You are TrustPay, an AI expert in secure banking and payments. You have access to user's transaction history, trust score, and payment patterns. Focus on financial security, payment methods, fraud prevention, and compliance aspects. Consider user's trust level and past transactions when making recommendations. Keep responses concise and practical."
+    instructions: "You are TrustPay, an AI expert in secure banking and payments. You have access to user's transaction history, trust score, payment patterns, and travel itinerary. Focus on financial security, payment methods, fraud prevention, and compliance aspects. Consider user's trust level, past transactions, and travel destination when making recommendations. Keep responses concise and practical."
   },
   {
     name: "GlobeGuides", 
     emoji: "🌍",
-    instructions: "You are GlobeGuides, an AI expert in international information and travel regulations. You understand user's location, travel history, and preferences. Provide geopolitical context, cultural insights, currency exchange, and cross-border considerations. Keep responses informative and relevant to user's travel patterns."
+    instructions: "You are GlobeGuides, an AI expert in international information and travel regulations. You understand user's location, travel history, preferences, and current itinerary details. Provide geopolitical context, cultural insights, currency exchange, and cross-border considerations based on their specific travel plans. Keep responses informative and relevant to user's current travel itinerary."
   },
   {
     name: "LocaleLens",
     emoji: "📍", 
-    instructions: "You are LocaleLens, an AI with deep local knowledge. You know user's current location and local preferences. Provide specific regional insights, local regulations, cultural nuances, and on-ground practical details for specific locations. Focus on actionable local information based on user's context."
+    instructions: "You are LocaleLens, an AI with deep local knowledge. You know user's current location, local preferences, and their travel destination from their itinerary. Provide specific regional insights, local regulations, cultural nuances, and on-ground practical details for their specific destination. Focus on actionable local information based on user's travel context and itinerary."
   },
   {
     name: "PathSync",
     emoji: "⚡",
-    instructions: "You are PathSync, an AI coordinator that synthesizes information from other agents and user context. You understand user's complete profile, trust score, transaction history, and current situation. Create comprehensive action plans, summarize key points, and provide final recommendations with specific next steps tailored to the user."
+    instructions: "You are PathSync, an AI coordinator that synthesizes information from other agents and user context including their travel itinerary. You understand user's complete profile, trust score, transaction history, current situation, and travel plans. Create comprehensive action plans, summarize key points, and provide final recommendations with specific next steps tailored to the user's travel itinerary and context."
   }
 ];
 
@@ -87,11 +87,21 @@ async function getUserContext(userId: string): Promise<UserContext> {
     .order('created_at', { ascending: false })
     .limit(10);
 
+  // Get latest parsed itinerary
+  const { data: latestItinerary } = await supabase
+    .from('parsed_itineraries')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
   return {
     profile: profile || {},
     recentTransactions: transactions || [],
     trustScore: profile?.trust_score || 0,
-    conversationHistory: history || []
+    conversationHistory: history || [],
+    latestItinerary: latestItinerary || null
   };
 }
 
@@ -143,6 +153,24 @@ User Context:
 - Location: ${userContext.profile?.location || 'Unknown'}
 - Recent Activity: ${userContext.recentTransactions.length} transactions
 `;
+
+  // Add travel itinerary context if available
+  if (userContext.latestItinerary) {
+    const itinerary = userContext.latestItinerary.parsed_data;
+    contextPrompt += `
+
+Current Travel Itinerary:
+- Route: ${itinerary.route || 'Not specified'}
+- Date: ${itinerary.date || 'Not specified'}
+- Flight: ${itinerary.flight || 'Not specified'}
+- Destination: ${itinerary.destination || 'Not specified'}
+- Weather: ${itinerary.weather || 'Not specified'}
+- Alerts: ${itinerary.alerts || 'None'}
+- Departure Time: ${itinerary.departureTime || 'Not specified'}
+- Arrival Time: ${itinerary.arrivalTime || 'Not specified'}
+- Gate: ${itinerary.gate || 'Not specified'}
+`;
+  }
 
   if (userContext.conversationHistory.length > 0) {
     contextPrompt += `
@@ -212,7 +240,7 @@ serve(async (req) => {
       });
     }
 
-    // Get user context
+    // Get user context (now includes latest itinerary)
     const userContext = await getUserContext(userId);
     
     // Save user message
@@ -224,7 +252,7 @@ serve(async (req) => {
       workflow = await createWorkflow(userId, feedContext.action, { query, feedContext }, feedContext.postId);
     }
 
-    // Build context for agents
+    // Build context for agents (now includes itinerary data)
     const contextPrompt = buildContextPrompt(userContext, feedContext);
     
     const conversation = [

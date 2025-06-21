@@ -1,7 +1,12 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,14 +24,19 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    const { imageBase64, fileName, fileType } = await req.json();
+    const { imageBase64, fileName, fileType, userId } = await req.json();
     
     console.log(`Processing image: ${fileName}`);
     console.log(`File type: ${fileType}`);
+    console.log(`User ID: ${userId}`);
     console.log(`Image base64 length: ${imageBase64?.length || 'undefined'}`);
     
     if (!imageBase64) {
       throw new Error('No image data received');
+    }
+    
+    if (!userId) {
+      throw new Error('User ID is required');
     }
     
     // Use OpenAI's vision model to analyze the image
@@ -78,7 +88,7 @@ serve(async (req) => {
     
     console.log('OpenAI Vision response:', content);
     
-    return parseAndReturnItinerary(content, fileName);
+    return await parseAndStoreItinerary(content, fileName, fileType, userId);
     
   } catch (error) {
     console.error('Error in parse-itinerary function:', error);
@@ -95,7 +105,7 @@ serve(async (req) => {
   }
 });
 
-function parseAndReturnItinerary(content: string, fileName: string) {
+async function parseAndStoreItinerary(content: string, fileName: string, fileType: string, userId: string) {
   if (!content) {
     throw new Error('No content received from OpenAI');
   }
@@ -152,7 +162,7 @@ function parseAndReturnItinerary(content: string, fileName: string) {
     // Create a fallback structure if JSON parsing fails
     itinerary = {
       route: `${fileName} → Processing Error`,
-      date: new Date().toLocaleDateString(),
+      date: new Date().toLocaleDateValue(),
       weather: "Weather information not available",
       alerts: "Document uploaded but parsing encountered issues - please verify information manually",
       rawContent: content
@@ -160,6 +170,31 @@ function parseAndReturnItinerary(content: string, fileName: string) {
   }
   
   console.log('Final itinerary:', itinerary);
+  
+  // Store the parsed itinerary in the database
+  try {
+    const { data: savedItinerary, error: dbError } = await supabase
+      .from('parsed_itineraries')
+      .insert({
+        user_id: userId,
+        file_name: fileName,
+        file_type: fileType,
+        parsed_data: itinerary,
+        raw_response: content
+      })
+      .select()
+      .single();
+    
+    if (dbError) {
+      console.error('Database error:', dbError);
+      // Still return success for the parsing, but log the database error
+    } else {
+      console.log('Saved itinerary to database:', savedItinerary.id);
+    }
+  } catch (dbError) {
+    console.error('Failed to save to database:', dbError);
+    // Continue with response even if database save fails
+  }
   
   return new Response(
     JSON.stringify({ 
