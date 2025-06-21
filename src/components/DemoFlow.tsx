@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { SharedProductDiscovery } from "./shared/ProductDiscovery";
 import { SharedTrustPayment } from "./shared/TrustPayment";
 import { PathSyncLogistics } from "./PathSyncLogistics";
+import { extractTextFromPDF } from "@/utils/pdfUtils";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface ItineraryData {
   route: string;
@@ -19,7 +18,6 @@ interface ItineraryData {
   arrivalTime?: string;
   gate?: string;
   flight?: string;
-  destination?: string;
 }
 
 // Helper function to convert file to base64
@@ -28,6 +26,7 @@ const convertFileToBase64 = (file: File): Promise<string> => {
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
+      // Remove data:application/pdf;base64, prefix
       const base64 = result.split(',')[1];
       resolve(base64);
     };
@@ -42,9 +41,11 @@ const renderValue = (value: any): string => {
   if (typeof value === 'number') return value.toString();
   if (Array.isArray(value)) return value.join(', ');
   if (typeof value === 'object' && value !== null) {
+    // Handle weather object specifically
     if (value.departure && value.arrival) {
       return `Departure: ${value.departure}, Arrival: ${value.arrival}`;
     }
+    // Handle other objects by stringifying key-value pairs
     return Object.entries(value)
       .map(([key, val]) => `${key}: ${val}`)
       .join(', ');
@@ -60,7 +61,6 @@ export const DemoFlow = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
 
   const steps = [
     { id: 'upload', name: 'Upload Itinerary', agent: 'GlobeGuides™ Concierge', icon: Upload },
@@ -70,47 +70,15 @@ export const DemoFlow = () => {
   ];
 
   const validateFile = (file: File) => {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
+    if (file.type !== 'application/pdf') {
       toast({
         title: "Invalid file type",
-        description: "Please upload an image file (JPEG, PNG, or WebP)",
+        description: "Please upload a PDF file",
         variant: "destructive"
       });
       return false;
     }
-    
-    if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please upload an image smaller than 10MB",
-        variant: "destructive"
-      });
-      return false;
-    }
-    
     return true;
-  };
-
-  const triggerAgentOrchestrator = async (parsedItinerary: ItineraryData, userId: string) => {
-    try {
-      console.log('Triggering multi-agent orchestrator in background...');
-      
-      // Trigger agents in background - no UI feedback needed
-      await supabase.functions.invoke('multi-agent-orchestrator', {
-        body: {
-          query: `I just uploaded my travel itinerary for ${parsedItinerary.destination || parsedItinerary.route}. Please provide insights and recommendations for my trip.`,
-          userId: userId,
-          sessionId: `demo-session-${Date.now()}`,
-          contextType: 'generic'
-        }
-      });
-
-      console.log('Multi-agent orchestrator triggered successfully');
-    } catch (error) {
-      console.error('Error calling multi-agent orchestrator:', error);
-      // Silent failure - don't interrupt demo flow
-    }
   };
 
   const processFile = async (file: File) => {
@@ -120,19 +88,16 @@ export const DemoFlow = () => {
     try {
       console.log('Processing file:', file.name);
       
-      // Use authenticated user ID or create a proper demo UUID
-      const userId = user?.id || crypto.randomUUID();
-      console.log('Using user ID:', userId);
+      // Convert PDF to base64
+      const base64PDF = await convertFileToBase64(file);
+      console.log('Converted PDF to base64, length:', base64PDF.length);
       
-      const base64Image = await convertFileToBase64(file);
-      console.log('Converted image to base64, length:', base64Image.length);
-      
+      // Send PDF directly to OpenAI via Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('parse-itinerary', {
         body: {
-          imageBase64: base64Image,
+          pdfBase64: base64PDF,
           fileName: file.name,
-          fileType: file.type,
-          userId: userId
+          fileType: file.type
         }
       });
       
@@ -140,7 +105,7 @@ export const DemoFlow = () => {
       
       if (error) {
         console.error('Supabase function error:', error);
-        throw new Error(error.message || 'Failed to process image');
+        throw new Error(error.message || 'Failed to process PDF');
       }
       
       if (!data) {
@@ -151,6 +116,7 @@ export const DemoFlow = () => {
         setItinerary(data.itinerary);
         setCurrentStep(1);
         
+        // More flexible toast message that works with any data structure
         const destination = data.itinerary.destination || 
                            data.itinerary.route?.split(' → ')[1] || 
                            data.itinerary.arrivalLocation || 
@@ -170,14 +136,11 @@ export const DemoFlow = () => {
           title: `🛬 Welcome to ${destination}!`,
           description: `${travelDate}. ${alerts}. 3 local pick-ups available.`,
         });
-
-        // Trigger AI agents in background to populate LocaleLens suggestions
-        await triggerAgentOrchestrator(data.itinerary, userId);
       } else {
         throw new Error(data.error || 'Failed to parse itinerary');
       }
     } catch (error) {
-      console.error('Error processing image:', error);
+      console.error('Error processing PDF:', error);
       toast({
         title: "Processing Error",
         description: error instanceof Error ? error.message : "Failed to parse itinerary. Please try again.",
@@ -247,12 +210,6 @@ export const DemoFlow = () => {
     return route;
   };
 
-  // Extract destination for map and product discovery
-  const getDestinationName = (): string => {
-    if (!itinerary) return "Paris";
-    return itinerary.destination || extractDestinationFromRoute(itinerary.route) || "Paris";
-  };
-
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Demo Progress Header */}
@@ -290,13 +247,13 @@ export const DemoFlow = () => {
         </CardContent>
       </Card>
 
-      {/* Step 1: GlobeGuides - Image Upload */}
+      {/* Step 1: GlobeGuides - File Upload */}
       {currentStep === 0 && (
         <Card className="border-4 border-black">
           <CardHeader className="bg-purple-100 border-b-4 border-black">
             <CardTitle className="flex items-center space-x-2">
               <Upload className="w-6 h-6" />
-              <span>Step 1: Upload Travel Itinerary Image</span>
+              <span>Step 1: Upload Travel Itinerary</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
@@ -313,24 +270,21 @@ export const DemoFlow = () => {
               {isProcessing ? (
                 <div className="flex flex-col items-center space-y-4">
                   <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
-                  <p className="text-lg font-medium">GlobeGuides™ is analyzing your itinerary image...</p>
+                  <p className="text-lg font-medium">GlobeGuides™ is parsing your itinerary...</p>
                   <p className="text-sm text-gray-600">Extracting travel details, weather, and local insights</p>
                 </div>
               ) : (
                 <>
                   <Upload className={`w-12 h-12 mx-auto mb-4 ${isDragOver ? 'text-purple-600' : 'text-gray-400'}`} />
                   <p className="text-lg font-medium mb-4">
-                    {isDragOver ? 'Drop your image here!' : 'Drag & drop your itinerary image here'}
+                    {isDragOver ? 'Drop your PDF here!' : 'Drag & drop your PDF itinerary here'}
                   </p>
                   <p className="text-sm text-gray-600 mb-4">
-                    GlobeGuides™ will analyze your travel image and provide smart insights
-                  </p>
-                  <p className="text-xs text-gray-500 mb-4">
-                    Supported formats: JPEG, PNG, WebP (max 10MB)
+                    GlobeGuides™ will parse your travel details and provide smart insights
                   </p>
                   <input
                     type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    accept=".pdf"
                     onChange={handleFileUpload}
                     className="hidden"
                     id="file-upload"
@@ -343,7 +297,7 @@ export const DemoFlow = () => {
                       asChild
                     >
                       <span className="cursor-pointer">
-                        Choose Image File
+                        Choose PDF File
                       </span>
                     </Button>
                   </label>
@@ -400,15 +354,17 @@ export const DemoFlow = () => {
         </Card>
       )}
 
+      {/* Step 2: LocaleLens - Product Discovery */}
       {currentStep === 1 && (
         <SharedProductDiscovery 
           onProductSelect={handleProductSelect} 
           isDemo={true}
-          destination={getDestinationName()}
+          destination={itinerary ? extractDestinationFromRoute(itinerary.route) : "Paris"}
           userRoute={itinerary?.route || ""}
         />
       )}
 
+      {/* Step 3: TrustPay - Secure Payment */}
       {currentStep === 2 && selectedProduct && (
         <SharedTrustPayment
           product={selectedProduct}
@@ -418,6 +374,7 @@ export const DemoFlow = () => {
         />
       )}
 
+      {/* Step 4: PathSync - Enhanced Peer Logistics */}
       {currentStep === 3 && (
         <PathSyncLogistics
           escrowTransactionId={escrowTransactionId}
@@ -426,10 +383,11 @@ export const DemoFlow = () => {
             date: itinerary.date,
             isActive: true
           } : undefined}
-          productLocation={selectedProduct?.name.includes('Chennai') ? 'Chennai' : getDestinationName()}
+          productLocation={selectedProduct?.name.includes('Chennai') ? 'Chennai' : extractDestinationFromRoute(itinerary?.route || '')}
         />
       )}
 
+      {/* Demo Controls */}
       <Card className="border-4 border-black">
         <CardHeader className="bg-gray-100 border-b-4 border-black">
           <CardTitle>Demo Controls</CardTitle>

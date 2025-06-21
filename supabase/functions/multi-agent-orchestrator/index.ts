@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -24,7 +25,6 @@ interface UserContext {
   recentTransactions: any[];
   trustScore: number;
   conversationHistory: any[];
-  latestItinerary?: any;
 }
 
 interface BlinkRequest {
@@ -44,40 +44,26 @@ const agents: Agent[] = [
   {
     name: "TrustPay",
     emoji: "🔐",
-    instructions: "You are TrustPay, an AI expert in secure banking and payments. You have access to user's transaction history, trust score, payment patterns, and travel itinerary. Focus on financial security, payment methods, fraud prevention, and compliance aspects. Consider user's trust level, past transactions, and travel destination when making recommendations. Keep responses concise and practical."
+    instructions: "You are TrustPay, an AI expert in secure banking and payments. You have access to user's transaction history, trust score, and payment patterns. Focus on financial security, payment methods, fraud prevention, and compliance aspects. Consider user's trust level and past transactions when making recommendations. Keep responses concise and practical."
   },
   {
     name: "GlobeGuides", 
     emoji: "🌍",
-    instructions: "You are GlobeGuides, an AI expert in international information and travel regulations. You understand user's location, travel history, preferences, and current itinerary details. Provide geopolitical context, cultural insights, currency exchange, and cross-border considerations based on their specific travel plans. Keep responses informative and relevant to user's current travel itinerary."
+    instructions: "You are GlobeGuides, an AI expert in international information and travel regulations. You understand user's location, travel history, and preferences. Provide geopolitical context, cultural insights, currency exchange, and cross-border considerations. Keep responses informative and relevant to user's travel patterns."
   },
   {
     name: "LocaleLens",
     emoji: "📍", 
-    instructions: "You are LocaleLens, an AI with deep local knowledge. You know user's current location, local preferences, and their travel destination from their itinerary. Provide specific regional insights, local regulations, cultural nuances, and on-ground practical details for their specific destination. Focus on actionable local information based on user's travel context and itinerary."
+    instructions: "You are LocaleLens, an AI with deep local knowledge. You know user's current location and local preferences. Provide specific regional insights, local regulations, cultural nuances, and on-ground practical details for specific locations. Focus on actionable local information based on user's context."
   },
   {
     name: "PathSync",
     emoji: "⚡",
-    instructions: "You are PathSync, an AI coordinator that synthesizes information from other agents and user context including their travel itinerary. You understand user's complete profile, trust score, transaction history, current situation, and travel plans. Create comprehensive action plans, summarize key points, and provide final recommendations with specific next steps tailored to the user's travel itinerary and context."
+    instructions: "You are PathSync, an AI coordinator that synthesizes information from other agents and user context. You understand user's complete profile, trust score, transaction history, and current situation. Create comprehensive action plans, summarize key points, and provide final recommendations with specific next steps tailored to the user."
   }
 ];
 
 async function getUserContext(userId: string): Promise<UserContext> {
-  // Check if this is a valid UUID format
-  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
-  
-  if (!isValidUUID) {
-    console.log('Demo mode - using fallback data for user:', userId);
-    return {
-      profile: { trust_score: 85, level: 'Demo User', location: 'Demo Location' },
-      recentTransactions: [],
-      trustScore: 85,
-      conversationHistory: [],
-      latestItinerary: null
-    };
-  }
-
   // Get user profile
   const { data: profile } = await supabase
     .from('profiles')
@@ -101,33 +87,15 @@ async function getUserContext(userId: string): Promise<UserContext> {
     .order('created_at', { ascending: false })
     .limit(10);
 
-  // Get latest parsed itinerary
-  const { data: latestItinerary } = await supabase
-    .from('parsed_itineraries')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
-
   return {
     profile: profile || {},
     recentTransactions: transactions || [],
     trustScore: profile?.trust_score || 0,
-    conversationHistory: history || [],
-    latestItinerary: latestItinerary || null
+    conversationHistory: history || []
   };
 }
 
 async function saveConversation(userId: string, sessionId: string, speaker: string, content: string, contextData: any = {}) {
-  // Only save if valid UUID
-  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
-  
-  if (!isValidUUID) {
-    console.log('Demo mode - skipping conversation save');
-    return;
-  }
-
   await supabase
     .from('blink_conversations')
     .insert({
@@ -141,14 +109,6 @@ async function saveConversation(userId: string, sessionId: string, speaker: stri
 }
 
 async function createWorkflow(userId: string, workflowType: string, contextData: any, feedPostId?: string) {
-  // Only create workflow if valid UUID
-  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
-  
-  if (!isValidUUID) {
-    console.log('Demo mode - skipping workflow creation');
-    return { id: 'demo-workflow' };
-  }
-
   const { data, error } = await supabase
     .from('blink_workflows')
     .insert({
@@ -164,14 +124,6 @@ async function createWorkflow(userId: string, workflowType: string, contextData:
 }
 
 async function createNotification(userId: string, workflowId: string, title: string, message: string, type: string = 'info') {
-  // Only create notification if valid UUID
-  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
-  
-  if (!isValidUUID) {
-    console.log('Demo mode - skipping notification creation');
-    return;
-  }
-
   await supabase
     .from('blink_notifications')
     .insert({
@@ -191,23 +143,6 @@ User Context:
 - Location: ${userContext.profile?.location || 'Unknown'}
 - Recent Activity: ${userContext.recentTransactions.length} transactions
 `;
-
-  if (userContext.latestItinerary) {
-    const itinerary = userContext.latestItinerary.parsed_data;
-    contextPrompt += `
-
-Current Travel Itinerary:
-- Route: ${itinerary.route || 'Not specified'}
-- Date: ${itinerary.date || 'Not specified'}
-- Flight: ${itinerary.flight || 'Not specified'}
-- Destination: ${itinerary.destination || 'Not specified'}
-- Weather: ${itinerary.weather || 'Not specified'}
-- Alerts: ${itinerary.alerts || 'None'}
-- Departure Time: ${itinerary.departureTime || 'Not specified'}
-- Arrival Time: ${itinerary.arrivalTime || 'Not specified'}
-- Gate: ${itinerary.gate || 'Not specified'}
-`;
-  }
 
   if (userContext.conversationHistory.length > 0) {
     contextPrompt += `
@@ -277,9 +212,7 @@ serve(async (req) => {
       });
     }
 
-    console.log('Processing request for user:', userId);
-
-    // Get user context (now includes latest itinerary)
+    // Get user context
     const userContext = await getUserContext(userId);
     
     // Save user message
@@ -291,7 +224,7 @@ serve(async (req) => {
       workflow = await createWorkflow(userId, feedContext.action, { query, feedContext }, feedContext.postId);
     }
 
-    // Build context for agents (now includes itinerary data)
+    // Build context for agents
     const contextPrompt = buildContextPrompt(userContext, feedContext);
     
     const conversation = [
@@ -327,7 +260,7 @@ serve(async (req) => {
     const finalAnswer = conversation[conversation.length - 1].content;
 
     // Create notification if workflow was created
-    if (workflow && workflow.id !== 'demo-workflow') {
+    if (workflow) {
       await createNotification(
         userId,
         workflow.id,
