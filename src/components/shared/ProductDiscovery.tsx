@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,11 +20,20 @@ interface Product {
   crowdLevel?: 'low' | 'medium' | 'high';
 }
 
+interface JourneyContext {
+  isMultiCity: boolean;
+  currentCity?: string;
+  nextCity?: string;
+  totalCities?: number;
+  allCities?: string[];
+}
+
 interface SharedProductDiscoveryProps {
   onProductSelect: (product: Product) => void;
   isDemo?: boolean;
   destination?: string;
   userRoute?: string;
+  journeyContext?: JourneyContext;
 }
 
 // Dynamic product generation based on destination
@@ -205,7 +213,13 @@ const generateProductsForDestination = (destination: string, route: string): Pro
   ];
 };
 
-export const SharedProductDiscovery = ({ onProductSelect, isDemo = false, destination = "Paris", userRoute = "" }: SharedProductDiscoveryProps) => {
+export const SharedProductDiscovery = ({ 
+  onProductSelect, 
+  isDemo = false, 
+  destination = "Paris", 
+  userRoute = "",
+  journeyContext
+}: SharedProductDiscoveryProps) => {
   const { toast } = useToast();
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'duty-free' | 'local' | 'restaurant'>('all');
 
@@ -218,9 +232,12 @@ export const SharedProductDiscovery = ({ onProductSelect, isDemo = false, destin
 
   const handleReserve = (product: Product) => {
     onProductSelect(product);
+    const journeyInfo = journeyContext?.isMultiCity ? 
+      ` (Multi-city journey: ${journeyContext.currentCity} → ${journeyContext.nextCity})` : '';
+    
     toast({
       title: "🎯 LocaleLens AI Discovery",
-      description: `Perfect match found: ${product.name} - ${isDemo ? 'Demo: ' : ''}initiating TrustPay escrow`,
+      description: `Perfect match found: ${product.name}${journeyInfo} - ${isDemo ? 'Demo: ' : ''}initiating TrustPay escrow`,
     });
   };
 
@@ -249,10 +266,33 @@ export const SharedProductDiscovery = ({ onProductSelect, isDemo = false, destin
       <CardHeader className="bg-green-100 border-b-4 border-black">
         <CardTitle className="flex items-center space-x-2">
           <MapPin className="w-6 h-6" />
-          <span>{isDemo ? 'Demo: ' : ''}Local Discovery (LocaleLens AI)</span>
+          <span>
+            {isDemo ? 'Demo: ' : ''}Local Discovery (LocaleLens AI)
+            {journeyContext?.isMultiCity && (
+              <span className="ml-2 text-sm text-green-700">
+                • Multi-city journey ({journeyContext.totalCities} cities)
+              </span>
+            )}
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-6">
+        {/* Journey Context Banner */}
+        {journeyContext?.isMultiCity && (
+          <div className="p-4 bg-blue-50 border-4 border-blue-200 rounded">
+            <h4 className="font-bold text-blue-800 mb-2">🗺️ Your Journey Context</h4>
+            <p className="text-sm text-blue-700">
+              Currently in: <strong>{journeyContext.currentCity}</strong>
+              {journeyContext.nextCity && (
+                <>
+                  {' '} • Next destination: <strong>{journeyContext.nextCity}</strong>
+                </>
+              )}
+              {' '} • Total cities: <strong>{journeyContext.totalCities}</strong>
+            </p>
+          </div>
+        )}
+
         {/* Interactive Map */}
         <div>
           <h3 className="text-lg font-bold mb-3">🗺️ Destination Map</h3>

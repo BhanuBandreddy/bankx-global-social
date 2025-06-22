@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { SharedProductDiscovery } from "./shared/ProductDiscovery";
@@ -190,8 +189,7 @@ export const DemoFlow = () => {
           userItinerary={itinerary ? {
             route: renderValue(itinerary.route),
             date: renderValue(itinerary.date),
-            isActive: true,
-            journey: itinerary.journey
+            isActive: true
           } : undefined}
           productLocation={selectedProduct?.name.includes('Chennai') ? 'Chennai' : getCurrentDestination()}
         />
