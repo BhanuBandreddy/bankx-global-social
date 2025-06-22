@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,179 +37,198 @@ interface SharedProductDiscoveryProps {
   journeyContext?: JourneyContext;
 }
 
-// Dynamic product generation based on destination
-const generateProductsForDestination = (destination: string, route: string): Product[] => {
-  // Default to New York products if destination contains NYC/New York
-  if (destination?.toLowerCase().includes('new york') || destination?.toLowerCase().includes('nyc') || 
-      route?.toLowerCase().includes('new york') || route?.toLowerCase().includes('nyc')) {
-    return [
+// Enhanced product generation with journey-aware recommendations
+const generateProductsForDestination = (destination: string, route: string, journeyContext?: JourneyContext): Product[] => {
+  // London products (enhanced with journey context)
+  if (destination?.toLowerCase().includes('london') || 
+      route?.toLowerCase().includes('london')) {
+    const baseProducts = [
       {
         id: "1",
-        name: "Apple Watch Series 9",
-        location: "JFK Terminal 4, Duty Free",
-        coordinates: [-73.7781, 40.6413], // JFK Airport coordinates
-        price: "$350",
-        priceInr: "₹29,120",
-        rating: 4.8,
-        description: "Latest Apple Watch, 25% cheaper than city stores",
-        type: "duty-free",
-        timeFromAirport: "At airport",
-        crowdLevel: "medium"
+        name: "London Eye Fast Track",
+        location: "Westminster Bridge Road, London",
+        coordinates: [-0.1196, 51.5033] as [number, number],
+        price: "£27",
+        priceInr: "₹2,835",
+        rating: 4.6,
+        description: "Skip the queue at London's iconic observation wheel",
+        type: "local" as const,
+        timeFromAirport: "45 min by Tube",
+        crowdLevel: "high" as const
       },
       {
         id: "2", 
-        name: "Joe's Pizza Slice",
-        location: "150 E 14th St, Greenwich Village",
-        coordinates: [-73.9876, 40.7323], // Greenwich Village
-        price: "$3",
-        priceInr: "₹250",
-        rating: 4.7,
-        description: "Authentic NYC pizza, local favorite since 1975",
-        type: "restaurant",
-        timeFromAirport: "45 min by AirTrain + Subway",
-        crowdLevel: "high"
+        name: "Borough Market Food Tour",
+        location: "Borough Market, London Bridge",
+        coordinates: [-0.0906, 51.5055] as [number, number],
+        price: "£35",
+        priceInr: "₹3,675",
+        rating: 4.8,
+        description: "Taste authentic British foods at historic market",
+        type: "restaurant" as const,
+        timeFromAirport: "30 min by Tube",
+        crowdLevel: "medium" as const
       },
       {
         id: "3",
-        name: "Yankees Championship Cap",
-        location: "Yankee Stadium Store, Bronx",
-        coordinates: [-73.9265, 40.8296], // Yankee Stadium
-        price: "$35",
-        priceInr: "₹2,910",
-        rating: 4.6,
-        description: "Official MLB merchandise, limited edition design",
-        type: "local",
-        timeFromAirport: "1 hr by subway",
-        crowdLevel: "medium"
-      },
-      {
-        id: "4",
-        name: "Levain Bakery Cookies",
-        location: "1484 3rd Ave, Upper East Side",
-        coordinates: [-73.9568, 40.7829], // Upper East Side
-        price: "$12",
-        priceInr: "₹998",
-        rating: 4.9,
-        description: "World-famous 6oz cookies, warm and gooey",
-        type: "local",
-        timeFromAirport: "50 min by subway",
-        crowdLevel: "low"
+        name: "Harrods Tea & Biscuits",
+        location: "Harrods, Knightsbridge",
+        coordinates: [-0.1634, 51.4994] as [number, number],
+        price: "£45",
+        priceInr: "₹4,725",
+        rating: 4.5,
+        description: "Iconic British tea collection from luxury department store",
+        type: "local" as const,
+        timeFromAirport: "40 min by Tube",
+        crowdLevel: "high" as const
       }
     ];
+
+    // Add journey-specific products if traveling to Paris next
+    if (journeyContext?.isMultiCity && journeyContext.nextCity?.toLowerCase().includes('paris')) {
+      baseProducts.push({
+        id: "4",
+        name: "Eurostar Premium Upgrade",
+        location: "St Pancras International",
+        coordinates: [-0.1276, 51.5308] as [number, number],
+        price: "£89",
+        priceInr: "₹9,345",
+        rating: 4.7,
+        description: "⚡ Upgrade for tomorrow's Paris journey - priority boarding & lounge access",
+        type: "local" as const,
+        timeFromAirport: "35 min by Tube",
+        crowdLevel: "low" as const
+      });
+    }
+
+    return baseProducts;
   }
   
-  // Default to Washington DC products if destination contains DC/Washington
-  if (destination?.toLowerCase().includes('washington') || destination?.toLowerCase().includes(' dc') || 
-      route?.toLowerCase().includes('washington') || route?.toLowerCase().includes(' dc')) {
-    return [
+  // Paris products (enhanced with journey context)
+  if (destination?.toLowerCase().includes('paris') || 
+      route?.toLowerCase().includes('paris')) {
+    const baseProducts = [
       {
         id: "1",
-        name: "Smithsonian Merchandise",
-        location: "Ronald Reagan Airport, Terminal B",
-        coordinates: [-77.0365, 38.8512], // DCA Airport coordinates
-        price: "$25",
-        priceInr: "₹2,080",
-        rating: 4.7,
-        description: "Official Smithsonian museum collection items",
-        type: "duty-free",
-        timeFromAirport: "At airport",
-        crowdLevel: "medium"
+        name: "Louvre Skip-the-Line",
+        location: "Louvre Museum, 1st Arrondissement",
+        coordinates: [2.3376, 48.8606] as [number, number],
+        price: "€22",
+        priceInr: "₹2,000",
+        rating: 4.9,
+        description: "Priority access to world's largest art museum",
+        type: "local" as const,
+        timeFromAirport: "45 min by RER",
+        crowdLevel: "high" as const
       },
       {
         id: "2", 
-        name: "Ben's Chili Bowl Half-Smoke",
-        location: "1213 U Street NW, U Street Corridor",
-        coordinates: [-77.0297, 38.9169], // U Street
-        price: "$8",
-        priceInr: "₹665",
-        rating: 4.8,
-        description: "DC institution since 1958, famous half-smoke sausage",
-        type: "restaurant",
-        timeFromAirport: "30 min by Metro",
-        crowdLevel: "high"
+        name: "L'As du Fallafel",
+        location: "34 Rue des Rosiers, Le Marais",
+        coordinates: [2.3590, 48.8571] as [number, number],
+        price: "€12",
+        priceInr: "₹1,090",
+        rating: 4.7,
+        description: "Legendary falafel spot in historic Jewish quarter",
+        type: "restaurant" as const,
+        timeFromAirport: "45 min by RER",
+        crowdLevel: "high" as const
       },
       {
         id: "3",
-        name: "Washington Nationals Jersey",
-        location: "Nationals Park Team Store",
-        coordinates: [-77.0074, 38.8730], // Nationals Park
-        price: "$85",
-        priceInr: "₹7,070",
-        rating: 4.5,
-        description: "Official MLB team merchandise, home jersey",
-        type: "local",
-        timeFromAirport: "25 min by Metro",
-        crowdLevel: "medium"
+        name: "Pierre Hermé Macarons",
+        location: "72 Rue Bonaparte, Saint-Germain",
+        coordinates: [2.3344, 48.8533] as [number, number],
+        price: "€24",
+        priceInr: "₹2,180",
+        rating: 4.8,
+        description: "World's finest macarons, limited edition flavors",
+        type: "local" as const,
+        timeFromAirport: "50 min by Metro",
+        crowdLevel: "medium" as const
+      }
+    ];
+
+    // Add journey-specific products if traveling to Amsterdam next
+    if (journeyContext?.isMultiCity && journeyContext.nextCity?.toLowerCase().includes('amsterdam')) {
+      baseProducts.push({
+        id: "4",
+        name: "Thalys Premium Class",
+        location: "Gare du Nord, Paris",
+        coordinates: [2.3554, 48.8807] as [number, number],
+        price: "€125",
+        priceInr: "₹11,375",
+        rating: 4.6,
+        description: "⚡ Tomorrow's Amsterdam journey - premium comfort + meal included",
+        type: "local" as const,
+        timeFromAirport: "30 min by Metro",
+        crowdLevel: "low" as const
+      });
+    }
+
+    return baseProducts;
+  }
+
+  // Amsterdam products
+  if (destination?.toLowerCase().includes('amsterdam') || 
+      route?.toLowerCase().includes('amsterdam')) {
+    return [
+      {
+        id: "1",
+        name: "Anne Frank House Ticket",
+        location: "Prinsengracht 263-267, Amsterdam",
+        coordinates: [4.8840, 52.3752] as [number, number],
+        price: "€16",
+        priceInr: "₹1,456",
+        rating: 4.8,
+        description: "Pre-booked entry to historic house and museum",
+        type: "local" as const,
+        timeFromAirport: "20 min by train",
+        crowdLevel: "high" as const
       },
       {
-        id: "4",
-        name: "Georgetown Cupcakes",
-        location: "3301 M Street NW, Georgetown",
-        coordinates: [-77.0651, 38.9051], // Georgetown
-        price: "$18",
-        priceInr: "₹1,498",
-        rating: 4.6,
-        description: "Famous DC cupcakes, as seen on TLC show",
-        type: "local",
-        timeFromAirport: "35 min by Metro + walk",
-        crowdLevel: "low"
+        id: "2", 
+        name: "Stroopwafels at Albert Cuyp",
+        location: "Albert Cuyp Market",
+        coordinates: [4.8945, 52.3570] as [number, number],
+        price: "€8",
+        priceInr: "₹728",
+        rating: 4.7,
+        description: "Fresh stroopwafels from century-old market stall",
+        type: "restaurant" as const,
+        timeFromAirport: "25 min by tram",
+        crowdLevel: "medium" as const
+      },
+      {
+        id: "3",
+        name: "Van Gogh Museum Priority",
+        location: "Museumplein 6, Amsterdam",
+        coordinates: [4.8810, 52.3584] as [number, number],
+        price: "€22",
+        priceInr: "₹2,002",
+        rating: 4.9,
+        description: "Skip the line at world's largest Van Gogh collection",
+        type: "local" as const,
+        timeFromAirport: "30 min by train + tram",
+        crowdLevel: "high" as const
       }
     ];
   }
 
-  // Fallback to Paris products for any other destination
+  // Default fallback products
   return [
     {
       id: "1",
-      name: "Chanel No. 19",
-      location: "CDG Terminal 2E, Duty Free",
-      coordinates: [2.5479, 49.0097],
-      price: "€200",
-      priceInr: "₹18,160",
-      rating: 4.9,
-      description: "Authentic Chanel perfume, 30% cheaper than city stores",
-      type: "duty-free",
-      timeFromAirport: "At airport",
-      crowdLevel: "medium"
-    },
-    {
-      id: "2", 
-      name: "L'As du Fallafel",
-      location: "34 Rue des Rosiers, Le Marais",
-      coordinates: [2.3590, 48.8571],
-      price: "€12",
-      priceInr: "₹1,090",
-      rating: 4.7,
-      description: "Legendary falafel spot, zero tourist traps detected",
-      type: "restaurant",
-      timeFromAirport: "45 min by RER",
-      crowdLevel: "high"
-    },
-    {
-      id: "3",
-      name: "Pierre Hermé Macarons",
-      location: "72 Rue Bonaparte, Saint-Germain",
-      coordinates: [2.3344, 48.8533],
-      price: "€24",
-      priceInr: "₹2,180",
-      rating: 4.8,
-      description: "World's best macarons, limited edition flavors",
-      type: "local",
-      timeFromAirport: "50 min by Metro",
-      crowdLevel: "medium"
-    },
-    {
-      id: "4",
-      name: "Vintage Hermès Scarf",
-      location: "Marché aux Puces, Saint-Ouen",
-      coordinates: [2.3317, 48.9014],
-      price: "€180",
-      priceInr: "₹16,340",
-      rating: 4.6,
-      description: "Authentic vintage piece, verified by LocaleLens AI",
-      type: "local",
-      timeFromAirport: "1 hr by Metro",
-      crowdLevel: "low"
+      name: "Local Discovery Pass",
+      location: "City Center",
+      coordinates: [0, 0] as [number, number],
+      price: "$25",
+      priceInr: "₹2,080",
+      rating: 4.5,
+      description: "Curated local experiences in your destination",
+      type: "local" as const,
+      timeFromAirport: "Varies",
+      crowdLevel: "medium" as const
     }
   ];
 };
@@ -216,15 +236,15 @@ const generateProductsForDestination = (destination: string, route: string): Pro
 export const SharedProductDiscovery = ({ 
   onProductSelect, 
   isDemo = false, 
-  destination = "Paris", 
+  destination = "London", 
   userRoute = "",
   journeyContext
 }: SharedProductDiscoveryProps) => {
   const { toast } = useToast();
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'duty-free' | 'local' | 'restaurant'>('all');
 
-  // Generate products based on the actual destination
-  const allProducts = generateProductsForDestination(destination, userRoute);
+  // Generate products based on the actual destination and journey context
+  const allProducts = generateProductsForDestination(destination, userRoute, journeyContext);
   
   const filteredProducts = selectedFilter === 'all' 
     ? allProducts 
@@ -290,6 +310,9 @@ export const SharedProductDiscovery = ({
               )}
               {' '} • Total cities: <strong>{journeyContext.totalCities}</strong>
             </p>
+            <div className="mt-2 text-xs text-blue-600">
+              🚄 Journey-optimized recommendations include cross-city transport options
+            </div>
           </div>
         )}
 
@@ -344,6 +367,12 @@ export const SharedProductDiscovery = ({
                       {product.type === 'duty-free' ? '✈️ DUTY-FREE' : 
                        product.type === 'local' ? '💎 LOCAL' : '🍽️ FOOD'}
                     </span>
+                    {/* Journey-specific indicator */}
+                    {product.description.includes('⚡') && (
+                      <span className="px-2 py-1 text-xs font-bold bg-blue-200 border-2 border-blue-400 text-blue-800">
+                        🚄 JOURNEY
+                      </span>
+                    )}
                   </div>
                   
                   <div className="flex items-center space-x-2 mt-1">
@@ -392,7 +421,11 @@ export const SharedProductDiscovery = ({
           <h4 className="font-bold text-purple-800 mb-2">🎯 LocaleLens AI Insights</h4>
           <p className="text-sm text-purple-700">
             Curated from 47,000+ traveler reviews + real-time crowd data. Zero tourist traps detected.
-            Recommendations optimized for your {destination} route with live FX rates.
+            {journeyContext?.isMultiCity ? (
+              <> Multi-city journey optimization includes cross-destination logistics and transport upgrades.</>
+            ) : (
+              <> Recommendations optimized for your {destination} visit with live FX rates.</>
+            )}
           </p>
         </div>
       </CardContent>
