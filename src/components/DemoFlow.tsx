@@ -9,18 +9,7 @@ import { FileUploadStep } from "./demo/FileUploadStep";
 import { ItineraryDisplay } from "./demo/ItineraryDisplay";
 import { DemoControls } from "./demo/DemoControls";
 import { usePDFProcessor } from "./demo/usePDFProcessor";
-
-interface ItineraryData {
-  route: string | string[];
-  date: string | string[];
-  weather: string;
-  alerts: string;
-  departureTime?: string | string[];
-  arrivalTime?: string | string[];
-  gate?: string;
-  flight?: string | string[];
-  destination?: string | string[];
-}
+import { ItineraryData } from "@/types/journey";
 
 // Helper function to safely render data
 const renderValue = (value: any): string => {
@@ -79,23 +68,25 @@ export const DemoFlow = () => {
       console.log('Setting itinerary and advancing to step 1:', processedItinerary);
       setItinerary(processedItinerary);
       
-      const destination = processedItinerary.destination || 
-                         extractDestinationFromRoute(processedItinerary.route) || 
-                         'your destination';
+      // Enhanced journey context for toast
+      const currentDestination = processedItinerary.journey?.legs[0]?.destination || 
+                                extractDestinationFromRoute(processedItinerary.route) || 
+                                'your destination';
       
-      const travelDate = processedItinerary.date || 
-                        processedItinerary.departureDate || 
-                        processedItinerary.travelDate || 
+      const travelDate = processedItinerary.journey?.legs[0]?.date ||
+                        renderValue(processedItinerary.date) || 
                         'your travel date';
       
-      const alerts = processedItinerary.alerts || 
-                    processedItinerary.notes || 
-                    processedItinerary.importantInfo || 
+      const totalCities = processedItinerary.journey?.cities.length || 1;
+      const journeyInfo = totalCities > 1 ? ` (${totalCities} cities in your journey)` : '';
+      
+      const alerts = processedItinerary.journey?.legs[0]?.alerts ||
+                    processedItinerary.alerts || 
                     'Have a great trip!';
       
       toast({
-        title: `🛬 Welcome to ${renderValue(destination)}!`,
-        description: `${renderValue(travelDate)}. ${renderValue(alerts)}. 3 local pick-ups available.`,
+        title: `🛬 Welcome to ${currentDestination}!${journeyInfo}`,
+        description: `${travelDate}. ${renderValue(alerts)}. 3 local pick-ups available.`,
       });
 
       setTimeout(() => {
@@ -140,6 +131,27 @@ export const DemoFlow = () => {
     setEscrowTransactionId('');
   };
 
+  // Enhanced destination extraction for journey-aware components
+  const getCurrentDestination = () => {
+    if (itinerary?.journey?.legs[0]?.destination) {
+      return itinerary.journey.legs[0].destination;
+    }
+    return extractDestinationFromRoute(itinerary?.route);
+  };
+
+  const getJourneyContext = () => {
+    if (itinerary?.journey && itinerary.journey.legs.length > 1) {
+      return {
+        isMultiCity: true,
+        currentCity: itinerary.journey.legs[0]?.destination,
+        nextCity: itinerary.journey.legs[1]?.destination,
+        totalCities: itinerary.journey.cities.length,
+        allCities: itinerary.journey.cities
+      };
+    }
+    return { isMultiCity: false };
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <DemoProgressHeader currentStep={currentStep} />
@@ -157,8 +169,9 @@ export const DemoFlow = () => {
         <SharedProductDiscovery 
           onProductSelect={handleProductSelect} 
           isDemo={true}
-          destination={itinerary ? extractDestinationFromRoute(itinerary.route) : "Paris"}
+          destination={getCurrentDestination()}
           userRoute={itinerary?.route ? renderValue(itinerary.route) : ""}
+          journeyContext={getJourneyContext()}
         />
       )}
 
@@ -177,9 +190,10 @@ export const DemoFlow = () => {
           userItinerary={itinerary ? {
             route: renderValue(itinerary.route),
             date: renderValue(itinerary.date),
-            isActive: true
+            isActive: true,
+            journey: itinerary.journey
           } : undefined}
-          productLocation={selectedProduct?.name.includes('Chennai') ? 'Chennai' : extractDestinationFromRoute(itinerary?.route || '')}
+          productLocation={selectedProduct?.name.includes('Chennai') ? 'Chennai' : getCurrentDestination()}
         />
       )}
 
