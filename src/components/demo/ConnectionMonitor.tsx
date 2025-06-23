@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { AlertCircle, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,14 +20,21 @@ export const ConnectionMonitor = () => {
   useEffect(() => {
     const checkConnection = async () => {
       const startTime = Date.now();
+      const controller = new AbortController();
+      
+      // Set up timeout
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, 5000);
       
       try {
         // Simple health check to Supabase
         const response = await fetch('/api/health', {
           method: 'HEAD',
-          timeout: 5000
+          signal: controller.signal
         });
         
+        clearTimeout(timeoutId);
         const responseTime = Date.now() - startTime;
         
         setConnectionStatus(prev => ({
@@ -39,6 +45,7 @@ export const ConnectionMonitor = () => {
         }));
         
       } catch (error) {
+        clearTimeout(timeoutId);
         setConnectionStatus(prev => ({
           status: 'error',
           lastChecked: new Date(),
