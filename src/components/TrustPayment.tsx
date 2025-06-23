@@ -5,7 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, Shield, Clock, CheckCircle, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Product } from "@/types/product";
+
+interface Product {
+  id: string;
+  name: string;
+  price: string;
+  priceInr: string;
+  description: string;
+}
 
 interface TrustPaymentProps {
   product: Product;

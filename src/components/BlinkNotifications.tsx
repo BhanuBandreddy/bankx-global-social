@@ -24,7 +24,7 @@ export const BlinkNotifications = () => {
     if (user) {
       loadNotifications();
       
-      // Set up real-time subscription for new notifications
+      // Set up real-time subscription
       const subscription = supabase
         .channel('blink_notifications')
         .on(
@@ -112,7 +112,7 @@ export const BlinkNotifications = () => {
       {showNotifications && (
         <div className="absolute right-0 top-full mt-2 w-80 bg-white border-4 border-black shadow-[4px_4px_0px_0px_#000] z-50">
           <div className="p-4 border-b-2 border-black bg-gray-50 flex items-center justify-between">
-            <h3 className="font-bold text-black">Notifications</h3>
+            <h3 className="font-bold text-black">Blink Notifications</h3>
             <Button
               onClick={() => setShowNotifications(false)}
               variant="ghost"

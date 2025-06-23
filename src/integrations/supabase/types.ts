@@ -51,6 +51,7 @@ export type Database = {
           title: string
           type: string
           user_id: string
+          workflow_id: string | null
         }
         Insert: {
           created_at?: string
@@ -60,6 +61,7 @@ export type Database = {
           title: string
           type?: string
           user_id: string
+          workflow_id?: string | null
         }
         Update: {
           created_at?: string
@@ -69,16 +71,27 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+          workflow_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "blink_notifications_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "blink_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       blink_workflows: {
         Row: {
           agent_responses: Json | null
           context_data: Json
           created_at: string
+          feed_post_id: string | null
           id: string
           parsed_data: Json | null
+          share_as_post: boolean | null
           status: string
           updated_at: string
           user_id: string
@@ -88,8 +101,10 @@ export type Database = {
           agent_responses?: Json | null
           context_data?: Json
           created_at?: string
+          feed_post_id?: string | null
           id?: string
           parsed_data?: Json | null
+          share_as_post?: boolean | null
           status?: string
           updated_at?: string
           user_id: string
@@ -99,8 +114,10 @@ export type Database = {
           agent_responses?: Json | null
           context_data?: Json
           created_at?: string
+          feed_post_id?: string | null
           id?: string
           parsed_data?: Json | null
+          share_as_post?: boolean | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -162,6 +179,74 @@ export type Database = {
         }
         Relationships: []
       }
+      parsed_itineraries: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_type: string
+          id: string
+          parsed_data: Json
+          raw_response: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_type: string
+          id?: string
+          parsed_data: Json
+          raw_response?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_type?: string
+          id?: string
+          parsed_data?: Json
+          raw_response?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payment_events: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          payment_id: string | null
+          transaction_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          payment_id?: string | null
+          transaction_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          payment_id?: string | null
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_events_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "escrow_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -170,9 +255,11 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string
+          level: string | null
           location: string | null
           trust_points: number | null
           trust_points_history: Json | null
+          trust_score: number | null
           trust_score_v2: number | null
           updated_at: string | null
           user_level: number | null
@@ -185,9 +272,11 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          level?: string | null
           location?: string | null
           trust_points?: number | null
           trust_points_history?: Json | null
+          trust_score?: number | null
           trust_score_v2?: number | null
           updated_at?: string | null
           user_level?: number | null
@@ -200,15 +289,58 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          level?: string | null
           location?: string | null
           trust_points?: number | null
           trust_points_history?: Json | null
+          trust_score?: number | null
           trust_score_v2?: number | null
           updated_at?: string | null
           user_level?: number | null
           username?: string | null
         }
         Relationships: []
+      }
+      workflow_notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          read: boolean | null
+          title: string
+          type: string
+          user_id: string
+          workflow_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          read?: boolean | null
+          title: string
+          type?: string
+          user_id: string
+          workflow_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string
+          workflow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_notifications_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "blink_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
