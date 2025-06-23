@@ -8,7 +8,6 @@ import { DemoProgressHeader } from "./demo/DemoProgressHeader";
 import { FileUploadStep } from "./demo/FileUploadStep";
 import { AdaptiveItineraryDisplay } from "./demo/AdaptiveItineraryDisplay";
 import { DemoControls } from "./demo/DemoControls";
-import { ConnectionMonitor } from "./demo/ConnectionMonitor";
 import { usePDFProcessor } from "./demo/usePDFProcessor";
 import { ItineraryData } from "@/types/journey";
 
@@ -81,7 +80,6 @@ export const DemoFlow = () => {
       };
       setDocumentMetadata(metadata);
       
-      // Enhanced journey context for toast - handled by usePDFProcessor now
       setTimeout(() => {
         console.log('Advancing to step 1 (Product Discovery)');
         setCurrentStep(1);
@@ -148,9 +146,6 @@ export const DemoFlow = () => {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <DemoProgressHeader currentStep={currentStep} />
-      
-      {/* Add connection monitoring */}
-      <ConnectionMonitor />
 
       {currentStep === 0 && (
         <FileUploadStep 
