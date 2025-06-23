@@ -5,7 +5,7 @@ import { SharedTrustPayment } from "./shared/TrustPayment";
 import { PathSyncLogistics } from "./PathSyncLogistics";
 import { DemoProgressHeader } from "./demo/DemoProgressHeader";
 import { FileUploadStep } from "./demo/FileUploadStep";
-import { ItineraryDisplay } from "./demo/ItineraryDisplay";
+import { AdaptiveItineraryDisplay } from "./demo/AdaptiveItineraryDisplay";
 import { DemoControls } from "./demo/DemoControls";
 import { usePDFProcessor } from "./demo/usePDFProcessor";
 import { ItineraryData } from "@/types/journey";
@@ -57,6 +57,10 @@ export const DemoFlow = () => {
   const [itinerary, setItinerary] = useState<ItineraryData | null>(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [escrowTransactionId, setEscrowTransactionId] = useState<string>('');
+  const [documentMetadata, setDocumentMetadata] = useState<{
+    documentType?: 'single-destination' | 'multi-city';
+    totalLegs?: number;
+  }>({});
   const { toast } = useToast();
   const { processFile, isProcessing } = usePDFProcessor();
 
@@ -67,27 +71,15 @@ export const DemoFlow = () => {
       console.log('Setting itinerary and advancing to step 1:', processedItinerary);
       setItinerary(processedItinerary);
       
-      // Enhanced journey context for toast
-      const currentDestination = processedItinerary.journey?.legs[0]?.destination || 
-                                extractDestinationFromRoute(processedItinerary.route) || 
-                                'your destination';
+      // Detect document type and metadata
+      const isMultiCity = processedItinerary.journey && processedItinerary.journey.legs.length > 1;
+      const metadata = {
+        documentType: isMultiCity ? 'multi-city' as const : 'single-destination' as const,
+        totalLegs: isMultiCity ? processedItinerary.journey!.totalDays : 1
+      };
+      setDocumentMetadata(metadata);
       
-      const travelDate = processedItinerary.journey?.legs[0]?.date ||
-                        renderValue(processedItinerary.date) || 
-                        'your travel date';
-      
-      const totalCities = processedItinerary.journey?.cities.length || 1;
-      const journeyInfo = totalCities > 1 ? ` (${totalCities} cities in your journey)` : '';
-      
-      const alerts = processedItinerary.journey?.legs[0]?.alerts ||
-                    processedItinerary.alerts || 
-                    'Have a great trip!';
-      
-      toast({
-        title: `🛬 Welcome to ${currentDestination}!${journeyInfo}`,
-        description: `${travelDate}. ${renderValue(alerts)}. 3 local pick-ups available.`,
-      });
-
+      // Enhanced journey context for toast - handled by usePDFProcessor now
       setTimeout(() => {
         console.log('Advancing to step 1 (Product Discovery)');
         setCurrentStep(1);
@@ -162,7 +154,13 @@ export const DemoFlow = () => {
         />
       )}
 
-      {itinerary && <ItineraryDisplay itinerary={itinerary} />}
+      {itinerary && (
+        <AdaptiveItineraryDisplay 
+          itinerary={itinerary}
+          documentType={documentMetadata.documentType}
+          totalLegs={documentMetadata.totalLegs}
+        />
+      )}
 
       {currentStep === 1 && (
         <SharedProductDiscovery 
