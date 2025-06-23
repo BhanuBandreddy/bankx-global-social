@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { SharedProductDiscovery } from "./shared/ProductDiscovery";
@@ -7,6 +8,7 @@ import { DemoProgressHeader } from "./demo/DemoProgressHeader";
 import { FileUploadStep } from "./demo/FileUploadStep";
 import { AdaptiveItineraryDisplay } from "./demo/AdaptiveItineraryDisplay";
 import { DemoControls } from "./demo/DemoControls";
+import { ConnectionMonitor } from "./demo/ConnectionMonitor";
 import { usePDFProcessor } from "./demo/usePDFProcessor";
 import { ItineraryData } from "@/types/journey";
 
@@ -146,6 +148,9 @@ export const DemoFlow = () => {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <DemoProgressHeader currentStep={currentStep} />
+      
+      {/* Add connection monitoring */}
+      <ConnectionMonitor />
 
       {currentStep === 0 && (
         <FileUploadStep 

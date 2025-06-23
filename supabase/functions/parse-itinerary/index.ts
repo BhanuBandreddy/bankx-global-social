@@ -8,141 +8,192 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Connection management and monitoring
+const CONNECTION_TIMEOUT = 25000; // 25 seconds to stay under Supabase's 30s limit
+const MAX_RETRIES = 2;
+const CIRCUIT_BREAKER_THRESHOLD = 3;
+
+let failureCount = 0;
+let lastFailureTime = 0;
+const CIRCUIT_BREAKER_RESET_TIME = 60000; // 1 minute
+
+// Circuit breaker pattern
+function isCircuitOpen(): boolean {
+  if (failureCount >= CIRCUIT_BREAKER_THRESHOLD) {
+    if (Date.now() - lastFailureTime < CIRCUIT_BREAKER_RESET_TIME) {
+      return true;
+    } else {
+      // Reset circuit breaker
+      failureCount = 0;
+      return false;
+    }
+  }
+  return false;
+}
+
+function recordFailure() {
+  failureCount++;
+  lastFailureTime = Date.now();
+  console.error(`Circuit breaker failure count: ${failureCount}`);
+}
+
+function recordSuccess() {
+  if (failureCount > 0) {
+    console.log('Circuit breaker reset - successful operation');
+    failureCount = 0;
+  }
+}
+
+// Enhanced timeout wrapper
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error(`Operation timed out after ${timeoutMs}ms`)), timeoutMs);
+  });
+  
+  return Promise.race([promise, timeoutPromise]);
+}
+
 serve(async (req) => {
+  const startTime = Date.now();
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Circuit breaker check
+  if (isCircuitOpen()) {
+    console.error('Circuit breaker is open - rejecting request');
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: 'Service temporarily unavailable due to repeated failures. Please try again in a few minutes.',
+        circuitBreakerOpen: true
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 503,
+      }
+    );
+  }
+
   try {
+    console.log(`Starting PDF processing at ${new Date().toISOString()}`);
+    
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Handle FormData from frontend
-    const formData = await req.formData();
+    // Enhanced request parsing with timeout
+    const formData = await withTimeout(req.formData(), 5000);
     const file = formData.get('file') as File;
     
     if (!file) {
       throw new Error('No file uploaded');
     }
 
-    console.log(`Processing file: ${file.name}, type: ${file.type}, size: ${file.size}`);
+    // File validation
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      throw new Error('File size exceeds 10MB limit');
+    }
+
+    if (file.type !== 'application/pdf') {
+      throw new Error('Only PDF files are supported');
+    }
+
+    console.log(`Processing file: ${file.name}, size: ${file.size} bytes`);
     
-    // Convert file to base64
-    const arrayBuffer = await file.arrayBuffer();
+    // Convert file to base64 with timeout
+    const arrayBuffer = await withTimeout(file.arrayBuffer(), 10000);
     const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
     
-    console.log('Sending PDF to OpenAI for intelligent parsing...');
+    console.log('File converted to base64, sending to OpenAI...');
     
-    // Enhanced system prompt for multi-format itinerary parsing
-    const systemPrompt = `You are an expert travel document parser specializing in extracting structured data from any type of travel document. You can handle:
-- Airline boarding passes and e-tickets
-- Hotel confirmations and vouchers
-- Multi-city tour itineraries 
-- Travel agency bookings
-- Vacation rental confirmations
-- Transportation tickets (train, bus, ferry)
-- Complete travel packages
-- Custom travel plans
+    // Enhanced system prompt for better parsing
+    const systemPrompt = `You are an expert travel document parser. Extract structured data from travel documents and return ONLY valid JSON.
 
-CRITICAL: Return ONLY valid JSON. No markdown, no explanations, just pure JSON.
-
-For SINGLE destination trips, return an object with these fields:
+For SINGLE destination trips, return:
 {
   "route": "Origin → Destination",
   "date": "YYYY-MM-DD or readable date",
   "weather": "Weather info or 'Check local forecast'",
-  "alerts": "Important travel info or alerts",
-  "flight": "Flight number or transport details",
-  "gate": "Gate/terminal info if available",
-  "departureTime": "Departure time if available",
-  "arrivalTime": "Arrival time if available", 
+  "alerts": "Important travel info",
+  "flight": "Flight/transport details",
+  "gate": "Gate/terminal if available",
+  "departureTime": "Time if available",
+  "arrivalTime": "Time if available", 
   "destination": "Primary destination city"
 }
 
-For MULTI-CITY trips, return an array of objects, each representing a leg of the journey:
-[
-  {
-    "route": "City A → City B",
-    "date": "YYYY-MM-DD",
-    "weather": "Weather for this leg",
-    "alerts": "Alerts for this segment",
-    "flight": "Transport details",
-    "gate": "Gate/terminal if available",
-    "departureTime": "Time",
-    "arrivalTime": "Time",
-    "destination": "City B"
-  },
-  // ... more legs
-]
+For MULTI-CITY trips, return an array of the above objects.
 
-Extract actual information from the document. If information is missing, use reasonable defaults but indicate uncertainty.`;
+Extract actual information. Use reasonable defaults for missing data.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `Please analyze this travel document (${file.name}) and extract structured travel information. Focus on dates, destinations, transportation, and any important travel alerts. Return only valid JSON as specified.`
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:application/pdf;base64,${base64}`
+    // OpenAI API call with enhanced error handling and timeout
+    const openAIResponse = await withTimeout(
+      fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt
+            },
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `Analyze this travel document (${file.name}) and extract travel information. Return only valid JSON.`
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:application/pdf;base64,${base64}`
+                  }
                 }
-              }
-            ]
-          }
-        ],
-        max_tokens: 2000,
-        temperature: 0.1
-      })
-    });
+              ]
+            }
+          ],
+          max_tokens: 2000,
+          temperature: 0.1
+        })
+      }),
+      CONNECTION_TIMEOUT
+    );
     
-    console.log(`OpenAI response status: ${response.status}`);
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+    if (!openAIResponse.ok) {
+      const errorData = await openAIResponse.json().catch(() => ({}));
+      throw new Error(`OpenAI API error (${openAIResponse.status}): ${errorData.error?.message || 'Unknown error'}`);
     }
     
-    const openAIResponse = await response.json();
-    const content = openAIResponse.choices[0]?.message?.content;
-    
-    console.log('OpenAI response content:', content);
+    const openAIData = await openAIResponse.json();
+    const content = openAIData.choices?.[0]?.message?.content;
     
     if (!content) {
       throw new Error('No content received from OpenAI');
     }
     
-    // Enhanced JSON parsing with better error handling
+    console.log('OpenAI response received, parsing JSON...');
+    
+    // Enhanced JSON parsing
     let parsedData;
     try {
       let jsonContent = content.trim();
       
-      // Remove markdown code block formatting if present
+      // Clean markdown formatting
       if (jsonContent.startsWith('```json')) {
         jsonContent = jsonContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
       } else if (jsonContent.startsWith('```')) {
         jsonContent = jsonContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
       
-      // Try to find and parse JSON content
+      // Extract JSON from response
       const jsonMatch = jsonContent.match(/[\{\[][\s\S]*[\}\]]/);
       if (jsonMatch) {
         parsedData = JSON.parse(jsonMatch[0]);
@@ -150,9 +201,8 @@ Extract actual information from the document. If information is missing, use rea
         throw new Error('No valid JSON found in response');
       }
       
-      // Validate the parsed data structure
+      // Validate and normalize data structure
       if (Array.isArray(parsedData)) {
-        // Multi-city itinerary
         parsedData = parsedData.map(leg => ({
           route: leg.route || 'Unknown Route',
           date: leg.date || 'Date not specified',
@@ -165,7 +215,6 @@ Extract actual information from the document. If information is missing, use rea
           destination: leg.destination || 'Unknown Destination'
         }));
       } else {
-        // Single destination itinerary
         parsedData = {
           route: parsedData.route || 'Unknown Route',
           date: parsedData.date || 'Date not specified',
@@ -180,30 +229,35 @@ Extract actual information from the document. If information is missing, use rea
       }
       
     } catch (parseError) {
-      console.error('Failed to parse JSON:', parseError);
+      console.error('JSON parsing failed:', parseError);
       console.log('Raw content that failed to parse:', content);
       
-      // Enhanced fallback with document analysis
+      // Fallback data
       parsedData = {
-        route: `Document Analysis → ${file.name.replace('.pdf', '').replace(/[_-]/g, ' ')}`,
+        route: `Document Processing → ${file.name.replace('.pdf', '').replace(/[_-]/g, ' ')}`,
         date: new Date().toLocaleDateString(),
-        weather: "Weather information not available - check local forecast",
-        alerts: "Document processed successfully. Please verify details and prepare for your journey.",
+        weather: "Weather information not available",
+        alerts: "Document processed successfully. Please verify details manually.",
         destination: "Destination extracted from filename",
         flight: "Transportation details not specified"
       };
     }
     
-    console.log('Final parsed data:', parsedData);
+    const processingTime = Date.now() - startTime;
+    console.log(`Processing completed successfully in ${processingTime}ms`);
     
-    // Return consistent response format
+    // Record success for circuit breaker
+    recordSuccess();
+    
+    // Return successful response
     return new Response(
       JSON.stringify({ 
         success: true, 
         parsedData: parsedData,
         rawResponse: content,
         documentType: Array.isArray(parsedData) ? 'multi-city' : 'single-destination',
-        totalLegs: Array.isArray(parsedData) ? parsedData.length : 1
+        totalLegs: Array.isArray(parsedData) ? parsedData.length : 1,
+        processingTimeMs: processingTime
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -212,22 +266,44 @@ Extract actual information from the document. If information is missing, use rea
     );
     
   } catch (error) {
-    console.error('Error in parse-itinerary function:', error);
+    const processingTime = Date.now() - startTime;
+    console.error(`Error in parse-itinerary function (${processingTime}ms):`, error);
+    
+    // Record failure for circuit breaker
+    recordFailure();
+    
+    // Enhanced error categorization
+    let errorMessage = error.message || 'Unknown error occurred';
+    let statusCode = 500;
+    
+    if (errorMessage.includes('timeout') || errorMessage.includes('timed out')) {
+      statusCode = 408;
+      errorMessage = 'Processing timeout - please try with a smaller file or try again';
+    } else if (errorMessage.includes('OpenAI')) {
+      statusCode = 502;
+      errorMessage = 'AI service temporarily unavailable - please try again';
+    } else if (errorMessage.includes('file') || errorMessage.includes('File')) {
+      statusCode = 400;
+      errorMessage = 'Invalid file - please ensure you upload a valid PDF';
+    }
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || 'Unknown error occurred',
+        error: errorMessage,
+        errorType: error.name || 'ProcessingError',
+        processingTimeMs: processingTime,
         fallbackData: {
           route: "Processing Error → Manual Review Required",
           date: new Date().toLocaleDateString(),
           weather: "Unable to extract weather information",
-          alerts: "Document upload successful but parsing failed. Please verify your travel details manually.",
+          alerts: "Document upload successful but processing failed. Please verify details manually.",
           destination: "Unknown Destination"
         }
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        status: statusCode,
       }
     );
   }
