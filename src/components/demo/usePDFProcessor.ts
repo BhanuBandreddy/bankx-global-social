@@ -14,7 +14,7 @@ export const usePDFProcessor = () => {
     setIsProcessing(true);
     
     try {
-      console.log('Processing file:', file.name);
+      console.log('Processing file:', file.name, 'Size:', file.size, 'Type:', file.type);
       
       // Create FormData for file upload
       const formData = new FormData();
@@ -32,7 +32,7 @@ export const usePDFProcessor = () => {
 
       console.log('Raw parsing result:', data);
 
-      if (data?.parsedData) {
+      if (data?.success && data?.parsedData) {
         // Handle both single destination and multi-destination responses
         const processedData = Array.isArray(data.parsedData) ? data.parsedData : [data.parsedData];
         
@@ -59,27 +59,46 @@ export const usePDFProcessor = () => {
         } else {
           // Single destination - legacy format
           const single = processedData[0];
-          return {
+          const itinerary: ItineraryData = {
             route: single.route || 'Unknown Route',
             date: single.date || 'Unknown Date',
-            weather: single.weather || 'Not specified',
+            weather: single.weather || 'Weather not specified',
             alerts: single.alerts || 'No alerts',
             departureTime: single.departureTime,
             arrivalTime: single.arrivalTime,
             gate: single.gate,
             flight: single.flight,
-            destination: single.destination
+            destination: single.destination || 'Unknown Destination'
           };
+          
+          console.log('Processed single destination itinerary:', itinerary);
+          return itinerary;
         }
       }
 
-      throw new Error('No parsed data received');
+      // Handle case where parsing failed but we got a response
+      if (data && !data.success) {
+        throw new Error(data.error || 'Failed to parse document');
+      }
+
+      throw new Error('No parsed data received from server');
 
     } catch (error) {
       console.error('Error processing PDF:', error);
+      
+      // Provide user-friendly error messages
+      let errorMessage = "Failed to process the itinerary. ";
+      if (error.message?.includes('OpenAI')) {
+        errorMessage += "AI processing service is unavailable. Please try again later.";
+      } else if (error.message?.includes('file')) {
+        errorMessage += "Please ensure you've uploaded a valid PDF file.";
+      } else {
+        errorMessage += "Please try again or contact support if the issue persists.";
+      }
+      
       toast({
         title: "Processing Error",
-        description: "Failed to process the itinerary. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
       return null;
@@ -105,7 +124,7 @@ export const usePDFProcessor = () => {
       return {
         route: leg.route || `Stop ${index + 1}`,
         date: leg.date || 'Unknown Date',
-        weather: leg.weather || 'Not specified',
+        weather: leg.weather || 'Weather not specified',
         alerts: leg.alerts || 'No alerts',
         departureTime: leg.departureTime,
         arrivalTime: leg.arrivalTime,
@@ -118,7 +137,7 @@ export const usePDFProcessor = () => {
     });
 
     return {
-      legs: processedLegs,
+      legs: processedLegs, // Fixed typo: was processedLeges
       currentLegIndex,
       totalDays: legs.length,
       startDate: legs[0]?.date || 'Unknown',

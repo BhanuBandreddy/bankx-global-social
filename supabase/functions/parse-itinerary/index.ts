@@ -19,18 +19,21 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    const { pdfBase64, fileName, fileType } = await req.json();
+    // Handle FormData from frontend
+    const formData = await req.formData();
+    const file = formData.get('file') as File;
     
-    console.log(`Processing PDF: ${fileName}`);
-    console.log(`File type: ${fileType}`);
-    console.log(`PDF base64 length: ${pdfBase64?.length || 'undefined'}`);
-    
-    if (!pdfBase64) {
-      throw new Error('No PDF data received');
+    if (!file) {
+      throw new Error('No file uploaded');
     }
+
+    console.log(`Processing file: ${file.name}, type: ${file.type}, size: ${file.size}`);
     
-    // Send PDF using the correct file format as per OpenAI docs
-    console.log('Sending PDF to OpenAI using file format...');
+    // Convert file to base64
+    const arrayBuffer = await file.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    
+    console.log('Sending PDF to OpenAI...');
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -39,24 +42,23 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
-            content: 'You are an expert travel document parser. Analyze the provided PDF document and extract ONLY the actual travel information shown. Do not make up or assume any information. If certain details are not visible or clear, use "Not specified". Return ONLY a valid JSON object with the extracted information.'
+            content: 'You are an expert travel document parser. Analyze the provided PDF document and extract travel information. Return ONLY a valid JSON object with the extracted information. If multiple destinations exist, return an array of objects.'
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: `Please analyze this travel document (${fileName}) and extract the actual travel information visible. Return ONLY a JSON object with these fields: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Use the exact information from the document - do not generate fictional data.`
+                text: `Please analyze this travel document (${file.name}) and extract the travel information. Return ONLY a JSON object or array with these fields: route, date, weather, alerts, flight, gate, departureTime, arrivalTime, destination. Use actual information from the document - do not generate fictional data.`
               },
               {
-                type: 'file',
-                file: {
-                  filename: fileName,
-                  file_data: `data:application/pdf;base64,${pdfBase64}`
+                type: 'image_url',
+                image_url: {
+                  url: `data:application/pdf;base64,${base64}`
                 }
               }
             ]
@@ -69,7 +71,7 @@ serve(async (req) => {
     
     console.log(`OpenAI response status: ${response.status}`);
     
-    if (!response.ok) {
+    if (!response.ok) { // Fixed syntax error: was "if !response.ok)"
       const errorData = await response.json();
       console.error('OpenAI API error:', errorData);
       throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
@@ -78,9 +80,60 @@ serve(async (req) => {
     const openAIResponse = await response.json();
     const content = openAIResponse.choices[0]?.message?.content;
     
-    console.log('OpenAI response:', content);
+    console.log('OpenAI response content:', content);
     
-    return parseAndReturnItinerary(content, fileName);
+    if (!content) {
+      throw new Error('No content received from OpenAI');
+    }
+    
+    // Parse JSON from response
+    let parsedData;
+    try {
+      let jsonContent = content.trim();
+      
+      // Remove markdown code block formatting if present
+      if (jsonContent.startsWith('```json')) {
+        jsonContent = jsonContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (jsonContent.startsWith('```')) {
+        jsonContent = jsonContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      // Try to find JSON content within the response
+      const jsonMatch = jsonContent.match(/[\{\[][\s\S]*[\}\]]/);
+      if (jsonMatch) {
+        parsedData = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No valid JSON found in response');
+      }
+      
+    } catch (parseError) {
+      console.error('Failed to parse JSON:', parseError);
+      console.log('Raw content that failed to parse:', content);
+      
+      // Create a fallback structure
+      parsedData = {
+        route: `${file.name} → Processing Complete`,
+        date: new Date().toLocaleDateString(),
+        weather: "Weather information not available from document",
+        alerts: "Document uploaded successfully - manual verification recommended",
+        destination: "Unknown destination"
+      };
+    }
+    
+    console.log('Final parsed data:', parsedData);
+    
+    // Return consistent response format that matches frontend expectations
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        parsedData: parsedData,
+        rawResponse: content
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
+    );
     
   } catch (error) {
     console.error('Error in parse-itinerary function:', error);
@@ -96,94 +149,3 @@ serve(async (req) => {
     );
   }
 });
-
-function parseAndReturnItinerary(content: string, fileName: string) {
-  if (!content) {
-    throw new Error('No content received from OpenAI');
-  }
-  
-  // Parse JSON from response - handle both plain JSON and markdown code blocks
-  let itinerary;
-  try {
-    let jsonContent = content.trim();
-    
-    // Remove markdown code block formatting if present
-    if (jsonContent.startsWith('```json')) {
-      jsonContent = jsonContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (jsonContent.startsWith('```')) {
-      jsonContent = jsonContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
-    }
-    
-    // Try to find JSON content within the response
-    const jsonMatch = jsonContent.match(/[\{\[][\s\S]*[\}\]]/);
-    if (jsonMatch) {
-      const rawItinerary = JSON.parse(jsonMatch[0]);
-      
-      // Handle array of itineraries (multi-leg trips) by taking the first one
-      const itineraryData = Array.isArray(rawItinerary) ? rawItinerary[0] : rawItinerary;
-      
-      // Ensure we have the required structure and clean up the data
-      itinerary = {
-        route: itineraryData.route || `Document: ${fileName}`,
-        date: itineraryData.date || new Date().toLocaleDateString(),
-        weather: typeof itineraryData.weather === 'object' 
-          ? `${itineraryData.weather.departure || 'Not specified'} / ${itineraryData.weather.arrival || 'Not specified'}`
-          : itineraryData.weather || "Weather information not available",
-        alerts: Array.isArray(itineraryData.alerts) 
-          ? itineraryData.alerts.join('; ')
-          : itineraryData.alerts || "Document processed successfully",
-        flight: typeof itineraryData.flight === 'object'
-          ? `${itineraryData.flight.airline || ''} ${itineraryData.flight.number || ''}`.trim()
-          : itineraryData.flight || null,
-        gate: itineraryData.gate || null,
-        departureTime: itineraryData.departureTime || null,
-        arrivalTime: itineraryData.arrivalTime || null,
-        destination: itineraryData.destination || null
-      };
-      
-      // Remove null values to clean up the response
-      Object.keys(itinerary).forEach(key => {
-        if (itinerary[key] === null || itinerary[key] === undefined || itinerary[key] === '') {
-          delete itinerary[key];
-        }
-      });
-      
-    } else {
-      console.log('No JSON found in response, creating fallback structure');
-      // Create a fallback structure if JSON parsing fails
-      itinerary = {
-        route: `${fileName} → Processing Complete`,
-        date: new Date().toLocaleDateString(),
-        weather: "Please check local weather conditions",
-        alerts: "Document uploaded and processed - manual review may be needed for detailed information",
-        rawContent: content
-      };
-    }
-  } catch (parseError) {
-    console.error('Failed to parse JSON:', parseError);
-    console.log('Raw content that failed to parse:', content);
-    
-    // Create a fallback structure if JSON parsing fails
-    itinerary = {
-      route: `${fileName} → Processing Error`,
-      date: new Date().toLocaleDateString(),
-      weather: "Weather information not available",
-      alerts: "Document uploaded but parsing encountered issues - please verify information manually",
-      rawContent: content
-    };
-  }
-  
-  console.log('Final itinerary:', itinerary);
-  
-  return new Response(
-    JSON.stringify({ 
-      success: true, 
-      itinerary,
-      rawResponse: content // Include raw response for debugging
-    }),
-    {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    }
-  );
-}

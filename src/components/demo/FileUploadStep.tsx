@@ -1,8 +1,9 @@
 
 import { useState } from "react";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface FileUploadStepProps {
   onFileProcess: (file: File) => Promise<void>;
@@ -11,12 +12,50 @@ interface FileUploadStepProps {
 
 export const FileUploadStep = ({ onFileProcess, isProcessing }: FileUploadStepProps) => {
   const [isDragOver, setIsDragOver] = useState(false);
+  const { toast } = useToast();
+
+  const validateFile = (file: File): boolean => {
+    // Check file type
+    if (file.type !== 'application/pdf') {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a PDF file. Other file types are not supported.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    // Check file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      toast({
+        title: "File too large",
+        description: "Please upload a PDF file smaller than 10MB.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    // Check if file is empty
+    if (file.size === 0) {
+      toast({
+        title: "Empty file",
+        description: "The selected file appears to be empty. Please choose a valid PDF.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    return true;
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
+    if (file && validateFile(file)) {
       await onFileProcess(file);
     }
+    // Reset input to allow re-uploading the same file
+    event.target.value = '';
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -36,7 +75,7 @@ export const FileUploadStep = ({ onFileProcess, isProcessing }: FileUploadStepPr
     const files = Array.from(e.dataTransfer.files);
     const file = files[0];
     
-    if (file) {
+    if (file && validateFile(file)) {
       await onFileProcess(file);
     }
   };
@@ -75,9 +114,13 @@ export const FileUploadStep = ({ onFileProcess, isProcessing }: FileUploadStepPr
               <p className="text-sm text-gray-600 mb-4">
                 GlobeGuides™ will parse your travel details and provide smart insights
               </p>
+              <div className="flex items-center justify-center space-x-2 mb-4 text-xs text-gray-500">
+                <AlertCircle className="w-4 h-4" />
+                <span>Supported: PDF files up to 10MB</span>
+              </div>
               <input
                 type="file"
-                accept=".pdf"
+                accept=".pdf,application/pdf"
                 onChange={handleFileUpload}
                 className="hidden"
                 id="file-upload"
