@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,45 +27,45 @@ const generateProductsForDestination = (destination: string, route: string, jour
   // London products (enhanced with journey context)
   if (destination?.toLowerCase().includes('london') || 
       route?.toLowerCase().includes('london')) {
-    const baseProducts = [
+    const baseProducts: Product[] = [
       {
         id: "1",
         name: "London Eye Fast Track",
         location: "Westminster Bridge Road, London",
-        coordinates: [-0.1196, 51.5033] as [number, number],
+        coordinates: [-0.1196, 51.5033],
         price: "£27",
         priceInr: "₹2,835",
         rating: 4.6,
         description: "Skip the queue at London's iconic observation wheel",
-        type: "local" as const,
+        type: "local",
         timeFromAirport: "45 min by Tube",
-        crowdLevel: "high" as const
+        crowdLevel: "high"
       },
       {
         id: "2", 
         name: "Borough Market Food Tour",
         location: "Borough Market, London Bridge",
-        coordinates: [-0.0906, 51.5055] as [number, number],
+        coordinates: [-0.0906, 51.5055],
         price: "£35",
         priceInr: "₹3,675",
         rating: 4.8,
         description: "Taste authentic British foods at historic market",
-        type: "restaurant" as const,
+        type: "restaurant",
         timeFromAirport: "30 min by Tube",
-        crowdLevel: "medium" as const
+        crowdLevel: "medium"
       },
       {
         id: "3",
         name: "Harrods Tea & Biscuits",
         location: "Harrods, Knightsbridge",
-        coordinates: [-0.1634, 51.4994] as [number, number],
+        coordinates: [-0.1634, 51.4994],
         price: "£45",
         priceInr: "₹4,725",
         rating: 4.5,
         description: "Iconic British tea collection from luxury department store",
-        type: "local" as const,
+        type: "local",
         timeFromAirport: "40 min by Tube",
-        crowdLevel: "high" as const
+        crowdLevel: "high"
       }
     ];
 
@@ -76,14 +75,14 @@ const generateProductsForDestination = (destination: string, route: string, jour
         id: "4",
         name: "Eurostar Premium Upgrade",
         location: "St Pancras International",
-        coordinates: [-0.1276, 51.5308] as [number, number],
+        coordinates: [-0.1276, 51.5308],
         price: "£89",
         priceInr: "₹9,345",
         rating: 4.7,
         description: "⚡ Upgrade for tomorrow's Paris journey - priority boarding & lounge access",
-        type: "local" as const,
+        type: "local",
         timeFromAirport: "35 min by Tube",
-        crowdLevel: "low" as const
+        crowdLevel: "low"
       });
     }
 
@@ -93,45 +92,45 @@ const generateProductsForDestination = (destination: string, route: string, jour
   // Paris products (enhanced with journey context)
   if (destination?.toLowerCase().includes('paris') || 
       route?.toLowerCase().includes('paris')) {
-    const baseProducts = [
+    const baseProducts: Product[] = [
       {
         id: "1",
         name: "Louvre Skip-the-Line",
         location: "Louvre Museum, 1st Arrondissement",
-        coordinates: [2.3376, 48.8606] as [number, number],
+        coordinates: [2.3376, 48.8606],
         price: "€22",
         priceInr: "₹2,000",
         rating: 4.9,
         description: "Priority access to world's largest art museum",
-        type: "local" as const,
+        type: "local",
         timeFromAirport: "45 min by RER",
-        crowdLevel: "high" as const
+        crowdLevel: "high"
       },
       {
         id: "2", 
         name: "L'As du Fallafel",
         location: "34 Rue des Rosiers, Le Marais",
-        coordinates: [2.3590, 48.8571] as [number, number],
+        coordinates: [2.3590, 48.8571],
         price: "€12",
         priceInr: "₹1,090",
         rating: 4.7,
         description: "Legendary falafel spot in historic Jewish quarter",
-        type: "restaurant" as const,
+        type: "restaurant",
         timeFromAirport: "45 min by RER",
-        crowdLevel: "high" as const
+        crowdLevel: "high"
       },
       {
         id: "3",
         name: "Pierre Hermé Macarons",
         location: "72 Rue Bonaparte, Saint-Germain",
-        coordinates: [2.3344, 48.8533] as [number, number],
+        coordinates: [2.3344, 48.8533],
         price: "€24",
         priceInr: "₹2,180",
         rating: 4.8,
         description: "World's finest macarons, limited edition flavors",
-        type: "local" as const,
+        type: "local",
         timeFromAirport: "50 min by Metro",
-        crowdLevel: "medium" as const
+        crowdLevel: "medium"
       }
     ];
 
@@ -141,14 +140,14 @@ const generateProductsForDestination = (destination: string, route: string, jour
         id: "4",
         name: "Thalys Premium Class",
         location: "Gare du Nord, Paris",
-        coordinates: [2.3554, 48.8807] as [number, number],
+        coordinates: [2.3554, 48.8807],
         price: "€125",
         priceInr: "₹11,375",
         rating: 4.6,
         description: "⚡ Tomorrow's Amsterdam journey - premium comfort + meal included",
-        type: "local" as const,
+        type: "local",
         timeFromAirport: "30 min by Metro",
-        crowdLevel: "low" as const
+        crowdLevel: "low"
       });
     }
 
@@ -163,40 +162,40 @@ const generateProductsForDestination = (destination: string, route: string, jour
         id: "1",
         name: "Anne Frank House Ticket",
         location: "Prinsengracht 263-267, Amsterdam",
-        coordinates: [4.8840, 52.3752] as [number, number],
+        coordinates: [4.8840, 52.3752],
         price: "€16",
         priceInr: "₹1,456",
         rating: 4.8,
         description: "Pre-booked entry to historic house and museum",
-        type: "local" as const,
+        type: "local",
         timeFromAirport: "20 min by train",
-        crowdLevel: "high" as const
+        crowdLevel: "high"
       },
       {
         id: "2", 
         name: "Stroopwafels at Albert Cuyp",
         location: "Albert Cuyp Market",
-        coordinates: [4.8945, 52.3570] as [number, number],
+        coordinates: [4.8945, 52.3570],
         price: "€8",
         priceInr: "₹728",
         rating: 4.7,
         description: "Fresh stroopwafels from century-old market stall",
-        type: "restaurant" as const,
+        type: "restaurant",
         timeFromAirport: "25 min by tram",
-        crowdLevel: "medium" as const
+        crowdLevel: "medium"
       },
       {
         id: "3",
         name: "Van Gogh Museum Priority",
         location: "Museumplein 6, Amsterdam",
-        coordinates: [4.8810, 52.3584] as [number, number],
+        coordinates: [4.8810, 52.3584],
         price: "€22",
         priceInr: "₹2,002",
         rating: 4.9,
         description: "Skip the line at world's largest Van Gogh collection",
-        type: "local" as const,
+        type: "local",
         timeFromAirport: "30 min by train + tram",
-        crowdLevel: "high" as const
+        crowdLevel: "high"
       }
     ];
   }
@@ -207,14 +206,14 @@ const generateProductsForDestination = (destination: string, route: string, jour
       id: "1",
       name: "Local Discovery Pass",
       location: "City Center",
-      coordinates: [0, 0] as [number, number],
+      coordinates: [0, 0],
       price: "$25",
       priceInr: "₹2,080",
       rating: 4.5,
       description: "Curated local experiences in your destination",
-      type: "local" as const,
+      type: "local",
       timeFromAirport: "Varies",
-      crowdLevel: "medium" as const
+      crowdLevel: "medium"
     }
   ];
 };
