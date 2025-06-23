@@ -38,8 +38,9 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured')
     }
 
-    // Convert base64 to buffer and extract text
+    // Convert base64 to buffer for processing
     const buffer = Uint8Array.from(atob(file), c => c.charCodeAt(0))
+    console.log(`Converted base64 to buffer: ${buffer.length} bytes`)
     
     // Use OpenAI to analyze the PDF content
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -49,7 +50,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
