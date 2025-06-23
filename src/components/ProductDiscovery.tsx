@@ -5,21 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Star, MapPin, Clock, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DestinationMap } from "./DestinationMap";
-
-interface Product {
-  id: string;
-  name: string;
-  location: string;
-  coordinates: [number, number];
-  price: string;
-  priceInr: string;
-  rating: number;
-  description: string;
-  type: 'duty-free' | 'local' | 'restaurant';
-  image?: string;
-  timeFromAirport?: string;
-  crowdLevel?: 'low' | 'medium' | 'high';
-}
+import { Product } from "@/types/product";
 
 const parisProducts: Product[] = [
   {

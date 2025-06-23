@@ -3,14 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { MapPin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-
-interface Product {
-  id: string;
-  name: string;
-  location: string;
-  coordinates: [number, number];
-  type: 'duty-free' | 'local' | 'restaurant';
-}
+import { Product } from '@/types/product';
 
 interface DestinationMapProps {
   destination: string;
