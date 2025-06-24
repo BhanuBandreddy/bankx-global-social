@@ -7,10 +7,16 @@ interface UserProfile {
   id: string;
   username: string;
   full_name: string;
-  trust_score: number;
-  level: string;
+  trust_score_v2: number;
+  user_level: number;
   location: string;
   avatar_url: string;
+  bio: string;
+  trust_points: number;
+  badges: any;
+  created_at: string;
+  updated_at: string;
+  trust_points_history: any;
 }
 
 export const useUserProfile = () => {
