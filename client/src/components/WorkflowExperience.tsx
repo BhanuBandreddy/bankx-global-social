@@ -75,18 +75,21 @@ export const WorkflowExperience = () => {
       console.log('Converted PDF to base64');
       
       // Send PDF directly to OpenAI via Supabase Edge Function
-      const { data, error } = await supabase.functions.invoke('parse-itinerary', {
-        body: {
-          pdfBase64: base64PDF,
-          fileName: file.name,
-          fileType: file.type
+      // For now, simulate itinerary parsing until the backend API is ready
+      const data = {
+        success: true,
+        itinerary: {
+          route: "LAX → CDG",
+          date: "December 25, 2024",
+          weather: "Sunny, 18°C",
+          alerts: "Flight on time",
+          departureTime: "14:30",
+          arrivalTime: "09:45+1",
+          gate: "B12",
+          flight: "AF 66",
+          destination: "Paris"
         }
-      });
-      
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw new Error(error.message);
-      }
+      };
       
       console.log('Parse response:', data);
       
