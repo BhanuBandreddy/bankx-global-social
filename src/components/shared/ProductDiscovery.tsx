@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,15 +32,27 @@ interface JourneyContext {
 interface SharedProductDiscoveryProps {
   onProductSelect: (product: Product) => void;
   isDemo?: boolean;
-  destination?: string;
+  destination?: string | string[];
   userRoute?: string;
   journeyContext?: JourneyContext;
 }
 
+// Helper function to convert destination to string for comparison
+const getDestinationString = (destination: string | string[]): string => {
+  if (Array.isArray(destination)) {
+    // For multi-city trips, use the first non-"Home" destination
+    const validDestination = destination.find(dest => dest && dest.toLowerCase() !== 'home');
+    return validDestination || destination[0] || '';
+  }
+  return destination || '';
+};
+
 // Dynamic product generation based on destination
-const generateProductsForDestination = (destination: string, route: string): Product[] => {
+const generateProductsForDestination = (destination: string | string[], route: string): Product[] => {
+  const destString = getDestinationString(destination);
+  
   // Default to New York products if destination contains NYC/New York
-  if (destination?.toLowerCase().includes('new york') || destination?.toLowerCase().includes('nyc') || 
+  if (destString.toLowerCase().includes('new york') || destString.toLowerCase().includes('nyc') || 
       route?.toLowerCase().includes('new york') || route?.toLowerCase().includes('nyc')) {
     return [
       {
@@ -98,7 +111,7 @@ const generateProductsForDestination = (destination: string, route: string): Pro
   }
   
   // Default to Washington DC products if destination contains DC/Washington
-  if (destination?.toLowerCase().includes('washington') || destination?.toLowerCase().includes(' dc') || 
+  if (destString.toLowerCase().includes('washington') || destString.toLowerCase().includes(' dc') || 
       route?.toLowerCase().includes('washington') || route?.toLowerCase().includes(' dc')) {
     return [
       {
@@ -151,6 +164,65 @@ const generateProductsForDestination = (destination: string, route: string): Pro
         description: "Famous DC cupcakes, as seen on TLC show",
         type: "local",
         timeFromAirport: "35 min by Metro + walk",
+        crowdLevel: "low"
+      }
+    ];
+  }
+
+  // Check for London products
+  if (destString.toLowerCase().includes('london') || 
+      route?.toLowerCase().includes('london')) {
+    return [
+      {
+        id: "1",
+        name: "Burberry Trench Coat",
+        location: "Heathrow Terminal 5, Duty Free",
+        coordinates: [-0.4543, 51.4700], // Heathrow Airport coordinates
+        price: "£450",
+        priceInr: "₹46,800",
+        rating: 4.9,
+        description: "Iconic British fashion, 20% duty-free savings",
+        type: "duty-free",
+        timeFromAirport: "At airport",
+        crowdLevel: "medium"
+      },
+      {
+        id: "2", 
+        name: "Fish & Chips at Poppies",
+        location: "6-8 Hanbury St, Spitalfields",
+        coordinates: [-0.0719, 51.5200], // Spitalfields
+        price: "£12",
+        priceInr: "₹1,248",
+        rating: 4.7,
+        description: "Traditional British fish & chips since 1945",
+        type: "restaurant",
+        timeFromAirport: "45 min by Tube",
+        crowdLevel: "high"
+      },
+      {
+        id: "3",
+        name: "Beatles Vinyl Collection",
+        location: "Abbey Road Studios Shop",
+        coordinates: [-0.1795, 51.5319], // Abbey Road
+        price: "£35",
+        priceInr: "₹3,640",
+        rating: 4.8,
+        description: "Original Beatles albums from the legendary studio",
+        type: "local",
+        timeFromAirport: "50 min by Tube",
+        crowdLevel: "medium"
+      },
+      {
+        id: "4",
+        name: "Earl Grey Tea Selection",
+        location: "Fortnum & Mason, Piccadilly",
+        coordinates: [-0.1420, 51.5074], // Piccadilly
+        price: "£28",
+        priceInr: "₹2,912",
+        rating: 4.6,
+        description: "Premium British tea blends from 1707",
+        type: "local",
+        timeFromAirport: "1 hr by Tube",
         crowdLevel: "low"
       }
     ];
@@ -261,6 +333,9 @@ export const SharedProductDiscovery = ({
     }
   };
 
+  // Get display destination for UI
+  const displayDestination = getDestinationString(destination);
+
   return (
     <Card className="border-4 border-black">
       <CardHeader className="bg-green-100 border-b-4 border-black">
@@ -297,7 +372,7 @@ export const SharedProductDiscovery = ({
         <div>
           <h3 className="text-lg font-bold mb-3">🗺️ Destination Map</h3>
           <DestinationMap 
-            destination={destination} 
+            destination={displayDestination} 
             products={allProducts}
             onProductClick={handleMapProductClick}
           />
@@ -392,7 +467,7 @@ export const SharedProductDiscovery = ({
           <h4 className="font-bold text-purple-800 mb-2">🎯 LocaleLens AI Insights</h4>
           <p className="text-sm text-purple-700">
             Curated from 47,000+ traveler reviews + real-time crowd data. Zero tourist traps detected.
-            Recommendations optimized for your {destination} route with live FX rates.
+            Recommendations optimized for your {displayDestination} route with live FX rates.
           </p>
         </div>
       </CardContent>
