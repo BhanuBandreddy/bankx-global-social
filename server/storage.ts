@@ -1,39 +1,40 @@
-import { users, type User, type InsertUser } from "@shared/schema";
+import { db, users, profiles, type User, type InsertUser, type Profile } from "./db";
+import { eq } from "drizzle-orm";
 
-// modify the interface with any CRUD methods
-// you might need
-
+// Database storage implementation using Drizzle ORM
 export interface IStorage {
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
+  getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getUserProfile(userId: string): Promise<Profile | undefined>;
+  createUserProfile(profile: any): Promise<Profile>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  currentId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.currentId = 1;
+export class DatabaseStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return result[0];
   }
 
-  async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return result[0];
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+    const result = await db.insert(users).values(insertUser).returning();
+    return result[0];
+  }
+
+  async getUserProfile(userId: string): Promise<Profile | undefined> {
+    const result = await db.select().from(profiles).where(eq(profiles.id, userId)).limit(1);
+    return result[0] as Profile;
+  }
+
+  async createUserProfile(profile: any): Promise<Profile> {
+    const result = await db.insert(profiles).values(profile).returning();
+    return result[0] as Profile;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

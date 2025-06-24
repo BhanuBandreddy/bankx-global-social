@@ -1,7 +1,6 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +16,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signIn, signUp } = useAuth();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -33,33 +32,11 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        
-        if (error) throw error;
-        
-        if (data.user) {
-          navigate('/');
-        }
+        await signIn(email, password);
+        navigate('/');
       } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              full_name: fullName,
-            }
-          }
-        });
-        
-        if (error) throw error;
-        
-        if (data.user) {
-          setMessage('Check your email for the confirmation link!');
-        }
+        await signUp(email, password, fullName);
+        navigate('/');
       }
     } catch (error: any) {
       setMessage(error.message || 'An error occurred');
