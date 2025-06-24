@@ -1,23 +1,13 @@
 
 import useSWR from 'swr';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/api';
 
 const fetcher = async (url: string) => {
   console.log('Fetching agents from:', url);
   
-  const { data, error } = await supabase.functions.invoke('nanda', {
-    body: { 
-      method: 'GET',
-      path: url 
-    }
-  });
+  const data = await apiClient.callNandaApi(url);
   
-  console.log('Supabase function response:', { data, error });
-  
-  if (error) {
-    console.error('Supabase function error:', error);
-    throw error;
-  }
+  console.log('NANDA API response:', data);
   
   return data;
 };

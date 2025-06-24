@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Sparkles, MessageCircle, X, Minimize2, Send } from "lucide-react";
@@ -92,55 +92,15 @@ export const BlinkConcierge = ({
     if (!user || contextType === 'feed') return;
 
     try {
-      const { data, error } = await supabase
-        .from('blink_conversations')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('message_type', 'user')
-        .order('created_at', { ascending: true })
-        .limit(10);
-
-      if (error) throw error;
-
-      if (data && data.length > 0) {
-        const chatMessages: ChatMessage[] = [];
-        
-        for (const userMsg of data) {
-          // Add user message
-          chatMessages.push({
-            id: `user-${userMsg.id}`,
-            role: 'user',
-            content: userMsg.content,
-            timestamp: new Date(userMsg.created_at)
-          });
-
-          // Find corresponding assistant response
-          const { data: assistantData } = await supabase
-            .from('blink_conversations')
-            .select('*')
-            .eq('user_id', user.id)
-            .eq('session_id', userMsg.session_id)
-            .eq('speaker', 'PathSync')
-            .order('created_at', { ascending: false })
-            .limit(1);
-
-          if (assistantData && assistantData.length > 0) {
-            chatMessages.push({
-              id: `assistant-${assistantData[0].id}`,
-              role: 'assistant',
-              content: assistantData[0].content,
-              timestamp: new Date(assistantData[0].created_at),
-              agentName: 'PathSync'
-            });
-          }
-        }
-        
-        setMessages(chatMessages);
-      }
+      // For now, start with empty chat history since we're migrating away from Supabase
+      // Chat history will be built as users interact with the new system
+      console.log('Chat history loading disabled during migration - starting fresh');
     } catch (error) {
       console.error('Error loading chat history:', error);
     }
   };
+
+
 
   const getContextualQuery = () => {
     if (contextType === 'feed' && feedContext) {
@@ -235,19 +195,12 @@ export const BlinkConcierge = ({
     setMessages(prev => [...prev, userMessage]);
 
     try {
-      const { data, error } = await supabase.functions.invoke('multi-agent-orchestrator', {
-        body: { 
-          query: queryText.trim(),
-          userId: user.id,
-          sessionId,
-          contextType,
-          feedContext
-        }
+      const response: BlinkResponse = await apiClient.sendBlinkMessage({
+        query: queryText.trim(),
+        sessionId,
+        contextType,
+        feedContext
       });
-
-      if (error) throw error;
-
-      const response: BlinkResponse = data;
       
       if (response.success) {
         // Process individual agent responses
