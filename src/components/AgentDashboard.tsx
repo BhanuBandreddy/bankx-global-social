@@ -71,7 +71,7 @@ export const AgentDashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold text-black uppercase tracking-tight">Global Socials AI Agents</h2>
-            <p className="text-gray-600 font-medium mt-1">Neo-brutalist agent ecosystem from Nanda registry</p>
+            <p className="text-gray-600 font-medium mt-1">Smart agent ecosystem powered by Nanda registry</p>
           </div>
           <div className="flex items-center space-x-2">
             <Globe2 className="w-6 h-6 text-black stroke-[2.5]" />
@@ -203,7 +203,7 @@ export const AgentDashboard = () => {
           <div>
             <h3 className="text-lg font-bold text-black mb-2">Global Socials Network Insights</h3>
             <p className="text-black leading-relaxed">
-              Currently showing <span className="font-bold">{agents.length} neo-brutalist agents</span> from the Nanda registry. 
+              Currently showing <span className="font-bold">{agents.length} specialized agents</span> from the Nanda registry. 
               These agents form the backbone of Global Socials' crowd-sourced travel and commerce ecosystem. 
               The registry provides <span className="font-bold text-purple-700">real-time agent discovery</span> 
               for seamless integration with zero tourist traps.
