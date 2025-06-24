@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { MapPin } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { apiClient } from '@/lib/api';
 
 interface Product {
   id: string;
@@ -58,18 +58,10 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
     try {
       console.log('Attempting to fetch Mapbox token from Supabase...');
       
-      // Try to get token from Supabase edge function
-      const { data, error } = await supabase.functions.invoke('get-mapbox-token');
+      // Try to get token from API
+      const data = await apiClient.getMapboxToken();
       
-      console.log('Supabase response:', { data, error });
-      
-      if (error) {
-        console.error('Supabase function error:', error);
-        setError(`Function error: ${error.message}`);
-        setShowTokenInput(true);
-        setIsLoading(false);
-        return;
-      }
+      console.log('API response:', { data });
       
       if (data && data.success && data.token) {
         console.log('Token received successfully, initializing map...');

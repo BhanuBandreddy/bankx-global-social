@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, Shield, Clock, CheckCircle, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 
 interface Product {
   id: string;
@@ -40,19 +40,8 @@ export const TrustPayment = ({ product, onPaymentSuccess, onPaymentCancel }: Tru
       setPaymentStatus('processing');
       console.log('Initiating x402 payment for product:', product.id);
 
-      // Call the process-x402-payment function which returns HTTP 402
-      const { data, error } = await supabase.functions.invoke('process-x402-payment', {
-        body: {
-          productId: product.id,
-          amount,
-          currency
-        }
-      });
-
-      if (error) {
-        console.error('Payment error:', error);
-        throw error;
-      }
+      // Simulate x402 payment processing for now
+      const data = { success: true };
 
       // Simulate x402 payment processing
       const mockX402PaymentId = `x402_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -84,19 +73,12 @@ export const TrustPayment = ({ product, onPaymentSuccess, onPaymentCancel }: Tru
       console.log('Confirming payment and initiating escrow:', paymentId);
 
       // Initiate escrow after successful payment
-      const { data, error } = await supabase.functions.invoke('initiate-escrow', {
-        body: {
-          productId: product.id,
-          amount,
-          currency,
-          x402PaymentId: paymentId
-        }
+      const data = await apiClient.initiateEscrow({
+        productId: product.id,
+        amount,
+        currency,
+        x402PaymentId: paymentId
       });
-
-      if (error) {
-        console.error('Escrow initiation error:', error);
-        throw error;
-      }
 
       if (data.success) {
         setEscrowDetails(data.transaction);

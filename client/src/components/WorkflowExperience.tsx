@@ -7,7 +7,7 @@ import { SharedProductDiscovery } from "./shared/ProductDiscovery";
 import { SharedTrustPayment } from "./shared/TrustPayment";
 import { PathSyncLogistics } from "./PathSyncLogistics";
 import { extractTextFromPDF } from "@/utils/pdfUtils";
-import { supabase } from "@/integrations/supabase/client";
+import { apiClient } from "@/lib/api";
 
 interface ItineraryData {
   route: string;
