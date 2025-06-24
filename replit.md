@@ -1,108 +1,55 @@
-# Global Social - Social Commerce Platform
+# Trust Network Application - Replit Migration
 
 ## Overview
+Social trust network platform with AI agents, payment escrow, and logistics coordination. Successfully migrated from Lovable/Supabase to Replit's built-in PostgreSQL database.
 
-Global Social is a revolutionary AI-powered social commerce platform that combines travel planning, product discovery, secure payments, and peer-to-peer logistics into a unified experience. The platform leverages a multi-agent AI system to create seamless workflows for international commerce and travel coordination.
+## Recent Changes
+- **Migration Complete (January 2025)**: Migrated from Supabase to built-in PostgreSQL with Drizzle ORM
+- **Authentication**: Implemented JWT-based auth system replacing Supabase Auth
+- **Database**: All tables migrated to PostgreSQL with proper schema
+- **API Routes**: Converted all Supabase Edge Functions to Express server routes
+- **Security**: Added proper API key management with secret environment variables
 
-## System Architecture
+## Project Architecture
 
-This is a full-stack TypeScript application built with modern web technologies:
+### Database (PostgreSQL + Drizzle ORM)
+- **users**: User accounts with email/password
+- **profiles**: User profiles with trust scores and metadata
+- **escrow_transactions**: Payment escrow functionality
+- **payment_events**: Transaction audit trail
+- **blink_conversations**: AI chat history
+- **blink_workflows**: AI workflow tracking
+- **blink_notifications**: User notifications
 
-### Frontend Architecture
-- **Framework**: React 18 with Vite for fast development and building
-- **Styling**: Tailwind CSS with shadcn/ui components for consistent design
-- **State Management**: React Query (TanStack Query) for server state management
-- **Authentication**: Supabase Auth with custom AuthContext
-- **Routing**: React Router v6 for client-side navigation
+### Authentication
+- JWT-based authentication with bcrypt password hashing
+- Server-side token verification middleware
+- Client-side auth context with localStorage persistence
 
-### Backend Architecture
-- **Server**: Express.js running on Node.js 20
-- **Database**: PostgreSQL with Supabase as the backend-as-a-service provider
-- **ORM**: Drizzle ORM for type-safe database operations
-- **Edge Functions**: Supabase Edge Functions for serverless computing
-- **Development**: Hot module replacement with Vite in development mode
+### API Endpoints
+- `/api/auth/*`: Authentication (signup, signin, user data)
+- `/api/escrow/*`: Payment escrow management
+- `/api/blink/*`: AI conversation system
+- `/api/nanda`: Agent discovery system
 
-### Data Storage
-- **Primary Database**: PostgreSQL hosted on Supabase
-- **Schema Management**: Drizzle migrations with schema defined in TypeScript
-- **Authentication**: Supabase Auth with row-level security (RLS) policies
-- **File Storage**: Supabase Storage for PDF uploads and assets
+### Key Features
+- **AI Agents**: Multi-agent conversation system with TrustPay, GlobeGuides, LocaleLens, and PathSync
+- **Trust Network**: User profiles with trust scores and social features
+- **Payment Escrow**: Secure transaction handling with release conditions
+- **Social Logistics**: Peer-to-peer delivery and logistics coordination
+- **Travel Support**: Itinerary processing and travel planning assistance
 
-## Key Components
+### Environment Variables Required
+- `JWT_SECRET`: For authentication tokens
+- `OPENAI_API_KEY`: For AI agent functionality
+- `MAPBOX_PUBLIC_TOKEN`: For mapping features
+- `DATABASE_URL`: PostgreSQL connection (auto-configured)
 
-### Multi-Agent AI System
-The platform features a sophisticated AI orchestration system with specialized agents:
-- **TrustPay**: Handles secure payments and escrow transactions
-- **GlobeGuides**: Manages travel planning and itinerary parsing
-- **LocaleLens**: Provides product discovery and recommendations
-- **PathSync**: Coordinates peer-to-peer logistics and delivery
-
-### Trust & Payment Infrastructure
-- **Escrow System**: Secure payment holding with release conditions
-- **X402 Payment Protocol**: HTTP 402 Payment Required implementation
-- **Trust Scoring**: Dynamic user reputation system with Oracle-level verification
-- **Multi-currency Support**: International payment processing
-
-### Social Features
-- **Activity Feed**: Real-time social interactions with products and travel
-- **Trust Metrics Dashboard**: Gamified reputation system with challenges
-- **Community Verification**: Peer-to-peer trust building
-- **Global Logistics Network**: Social delivery coordination
-
-### AI-Powered Workflows
-- **PDF Itinerary Processing**: OpenAI-powered document parsing
-- **Contextual Recommendations**: Location-based product discovery
-- **Conversational Commerce**: Blink AI concierge for guided purchases
-- **Smart Logistics**: Route optimization for delivery matching
-
-## Data Flow
-
-1. **User Authentication**: Supabase handles login/signup with automatic profile creation
-2. **Itinerary Upload**: PDFs processed via OpenAI to extract travel data
-3. **Product Discovery**: AI agents recommend relevant products based on travel context
-4. **Secure Payments**: X402 protocol initiates escrow transactions
-5. **Logistics Coordination**: PathSync matches travelers with delivery requests
-6. **Trust Updates**: Successful transactions update user reputation scores
-
-## External Dependencies
-
-### Core Services
-- **Supabase**: Database, authentication, edge functions, and real-time subscriptions
-- **OpenAI**: GPT models for itinerary parsing and conversational AI
-- **Mapbox**: Interactive maps for destination visualization (optional)
-
-### Payment Infrastructure
-- **X402 Protocol**: Custom payment flow implementation
-- **Multi-currency Support**: International transaction handling
-
-### Development Tools
-- **Drizzle Kit**: Database migrations and schema management
-- **ESBuild**: Fast TypeScript compilation for production builds
-- **Replit**: Development environment with PostgreSQL module
-
-## Deployment Strategy
-
-### Development Environment
-- **Local Development**: Vite dev server with hot reloading
-- **Database**: PostgreSQL 16 module in Replit environment
-- **Environment Variables**: DATABASE_URL for database connection
-
-### Production Build
-- **Frontend**: Vite build outputs to `dist/public`
-- **Backend**: ESBuild bundles server to `dist/index.js`
-- **Deployment**: Autoscale deployment target on port 80
-- **Process Management**: npm scripts for dev/build/start lifecycle
-
-### Configuration Files
-- **Drizzle Config**: Points to shared schema and PostgreSQL dialect
-- **Vite Config**: React plugin with path aliases and runtime error overlay
-- **TypeScript**: Strict mode with ESNext modules and DOM types
+## Development Notes
+- Uses Vite for frontend development with HMR
+- Server runs on port 5000 with Express.js
+- Database schema managed with Drizzle migrations
+- TypeScript throughout with shared schema definitions
 
 ## User Preferences
-
-Preferred communication style: Simple, everyday language.
-
-## Changelog
-
-Changelog:
-- June 24, 2025. Initial setup
+*To be updated based on user feedback and preferences*

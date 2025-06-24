@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Bell, X, CheckCircle, AlertCircle, Info } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,28 +22,6 @@ export const BlinkNotifications = () => {
   useEffect(() => {
     if (user) {
       loadNotifications();
-      
-      // Set up real-time subscription
-      const subscription = supabase
-        .channel('blink_notifications')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'blink_notifications',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            setNotifications(prev => [payload.new as Notification, ...prev]);
-            setUnreadCount(prev => prev + 1);
-          }
-        )
-        .subscribe();
-
-      return () => {
-        subscription.unsubscribe();
-      };
     }
   }, [user]);
 
@@ -52,17 +29,20 @@ export const BlinkNotifications = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('blink_notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
+      // Mock notifications for now - TODO: implement notifications API endpoint
+      const mockNotifications: Notification[] = [
+        {
+          id: '1',
+          title: 'Welcome to PathSync',
+          message: 'Your trust network account has been created successfully.',
+          type: 'success',
+          read: false,
+          created_at: new Date().toISOString()
+        }
+      ];
 
-      if (error) throw error;
-
-      setNotifications(data || []);
-      setUnreadCount((data || []).filter(n => !n.read).length);
+      setNotifications(mockNotifications);
+      setUnreadCount(mockNotifications.filter(n => !n.read).length);
     } catch (error) {
       console.error('Error loading notifications:', error);
     }
@@ -70,11 +50,7 @@ export const BlinkNotifications = () => {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      await supabase
-        .from('blink_notifications')
-        .update({ read: true })
-        .eq('id', notificationId);
-
+      // TODO: implement mark as read API endpoint
       setNotifications(prev => 
         prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
       );

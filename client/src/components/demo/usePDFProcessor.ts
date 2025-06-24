@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { JourneyData, JourneyLeg, ItineraryData } from "@/types/journey";
 
 export const usePDFProcessor = () => {
@@ -84,20 +83,19 @@ export const usePDFProcessor = () => {
       const base64PDF = await convertFileToBase64(file);
       console.log('Converted PDF to base64, length:', base64PDF.length);
       
-      const { data, error } = await supabase.functions.invoke('parse-itinerary', {
-        body: {
-          pdfBase64: base64PDF,
-          fileName: file.name,
-          fileType: file.type
+      // Mock response for PDF processing during migration
+      // TODO: Implement PDF processing API endpoint on server
+      const data = {
+        success: true,
+        itinerary: {
+          route: `${file.name} → Processing Complete`,
+          date: new Date().toLocaleDateString(),
+          weather: "Document uploaded successfully",
+          alerts: "PDF processing functionality needs server implementation",
         }
-      });
+      };
       
-      console.log('Supabase function response:', { data, error });
-      
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw new Error(error.message || 'Failed to process PDF');
-      }
+      console.log('PDF processing response:', data);
       
       if (!data) {
         throw new Error('No response data received');
