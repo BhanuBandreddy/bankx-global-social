@@ -64,16 +64,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { location, category } = req.query;
       
-      let query = db.select().from(products).where(eq(products.status, "active"));
+      let whereConditions = [eq(products.status, "active")];
       
       if (location) {
-        query = query.where(ilike(products.location, `%${location}%`));
+        whereConditions.push(ilike(products.location, `%${location}%`));
       }
       if (category) {
-        query = query.where(eq(products.category, category as string));
+        whereConditions.push(eq(products.category, category as string));
       }
 
-      const productList = await query.limit(50);
+      const productList = await db.select().from(products)
+        .where(and(...whereConditions))
+        .limit(50);
+        
       res.json({ success: true, products: productList });
     } catch (error) {
       console.error("Products fetch error:", error);
@@ -209,7 +212,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { fromLocation, toLocation } = req.query;
       
-      let query = db.select({
+      let whereConditions = [eq(travelers.status, "available")];
+      
+      if (fromLocation) {
+        whereConditions.push(ilike(travelers.fromLocation, `%${fromLocation}%`));
+      }
+      if (toLocation) {
+        whereConditions.push(ilike(travelers.toLocation, `%${toLocation}%`));
+      }
+
+      const availableTravelers = await db.select({
         id: travelers.id,
         userId: travelers.userId,
         user: {
@@ -228,16 +240,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .from(travelers)
       .leftJoin(users, eq(travelers.userId, users.id))
       .leftJoin(profiles, eq(users.id, profiles.id))
-      .where(eq(travelers.status, "available"));
-
-      if (fromLocation) {
-        query = query.where(ilike(travelers.fromLocation, `%${fromLocation}%`));
-      }
-      if (toLocation) {
-        query = query.where(ilike(travelers.toLocation, `%${toLocation}%`));
-      }
-
-      const availableTravelers = await query.limit(20);
+      .where(and(...whereConditions))
+      .limit(20);
+      
       res.json({ success: true, travelers: availableTravelers });
     } catch (error) {
       console.error("Travelers fetch error:", error);
