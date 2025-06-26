@@ -3,7 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { signUp, signIn, getUser, authMiddleware, AuthenticatedRequest } from "./auth";
 import { db, escrowTransactions, paymentEvents, blinkConversations, blinkWorkflows, blinkNotifications } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { products, feedPosts, deliveryOptions, travelers, chatMessages, users, profiles } from "../shared/schema";
+import { insertProductSchema, insertFeedPostSchema, insertDeliveryOptionSchema, insertTravelerSchema, insertChatMessageSchema } from "../shared/schema";
+import { eq, and, desc, asc, ilike } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -11,10 +13,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/signin", signIn);
   app.get("/api/auth/user", authMiddleware, getUser);
 
-  // Escrow and payment routes
+  // Global Feed API
+  app.get("/api/feed", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const feedData = await db.select({
+        id: feedPosts.id,
+        userId: feedPosts.userId,
+        content: feedPosts.content,
+        imageUrl: feedPosts.imageUrl,
+        location: feedPosts.location,
+        tags: feedPosts.tags,
+        likes: feedPosts.likes,
+        comments: feedPosts.comments,
+        shares: feedPosts.shares,
+        trustBoosts: feedPosts.trustBoosts,
+        aiInsight: feedPosts.aiInsight,
+        trustInsight: feedPosts.trustInsight,
+        createdAt: feedPosts.createdAt,
+        user: {
+          id: users.id,
+          name: profiles.fullName,
+          trustScore: profiles.trustScore,
+          level: profiles.level,
+          location: profiles.location
+        },
+        product: {
+          id: products.id,
+          name: products.name,
+          price: products.price,
+          currency: products.currency,
+          trustGuarantee: products.trustGuarantee
+        }
+      })
+      .from(feedPosts)
+      .leftJoin(users, eq(feedPosts.userId, users.id))
+      .leftJoin(profiles, eq(users.id, profiles.id))
+      .leftJoin(products, eq(feedPosts.productId, products.id))
+      .orderBy(desc(feedPosts.createdAt))
+      .limit(20);
+
+      res.json({ success: true, posts: feedData });
+    } catch (error) {
+      console.error("Feed fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch feed" });
+    }
+  });
+
+  // Products API
+  app.get("/api/products", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { location, category } = req.query;
+      
+      let query = db.select().from(products).where(eq(products.status, "active"));
+      
+      if (location) {
+        query = query.where(ilike(products.location, `%${location}%`));
+      }
+      if (category) {
+        query = query.where(eq(products.category, category as string));
+      }
+
+      const productList = await query.limit(50);
+      res.json({ success: true, products: productList });
+    } catch (error) {
+      console.error("Products fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch products" });
+    }
+  });
+
+  // Escrow and payment routes - Enhanced
   app.post("/api/escrow/initiate", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
-      const { productId, amount, currency = "USD", sellerId } = req.body;
+      const { productId, feedPostId, amount, currency = "USD", sellerId, deliveryOption } = req.body;
       const userId = req.user!.id;
 
       const transaction = await db.insert(escrowTransactions).values({
@@ -22,10 +92,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         buyerId: userId,
         sellerId,
         productId,
+        feedPostId: feedPostId || null,
         amount,
         currency,
         status: "escrowed",
         paymentMethod: "x402",
+        deliveryOption: deliveryOption || null,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       }).returning();
 
@@ -33,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await db.insert(paymentEvents).values({
         transactionId: transaction[0].id,
         eventType: "escrow_initiated",
-        eventData: { productId, amount, currency },
+        eventData: { productId, amount, currency, deliveryOption },
       });
 
       res.json({ success: true, transaction: transaction[0] });
@@ -102,6 +174,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Escrow status error:", error);
       res.status(500).json({ error: "Failed to get escrow status" });
+    }
+  });
+
+  // Delivery Options API
+  app.get("/api/delivery-options/:escrowId", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { escrowId } = req.params;
+      
+      const options = await db.select().from(deliveryOptions)
+        .where(eq(deliveryOptions.escrowId, escrowId));
+      
+      res.json({ success: true, options });
+    } catch (error) {
+      console.error("Delivery options fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch delivery options" });
+    }
+  });
+
+  app.post("/api/delivery-options", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const optionData = insertDeliveryOptionSchema.parse(req.body);
+      const newOption = await db.insert(deliveryOptions).values(optionData).returning();
+      
+      res.json({ success: true, option: newOption[0] });
+    } catch (error) {
+      console.error("Delivery option creation error:", error);
+      res.status(500).json({ error: "Failed to create delivery option" });
+    }
+  });
+
+  // Travelers API for peer delivery
+  app.get("/api/travelers/available", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { fromLocation, toLocation } = req.query;
+      
+      let query = db.select({
+        id: travelers.id,
+        userId: travelers.userId,
+        user: {
+          name: profiles.fullName,
+          trustScore: profiles.trustScore
+        },
+        route: travelers.route,
+        fromLocation: travelers.fromLocation,
+        toLocation: travelers.toLocation,
+        departureDate: travelers.departureDate,
+        arrivalDate: travelers.arrivalDate,
+        maxWeight: travelers.maxWeight,
+        deliveryFee: travelers.deliveryFee,
+        status: travelers.status
+      })
+      .from(travelers)
+      .leftJoin(users, eq(travelers.userId, users.id))
+      .leftJoin(profiles, eq(users.id, profiles.id))
+      .where(eq(travelers.status, "available"));
+
+      if (fromLocation) {
+        query = query.where(ilike(travelers.fromLocation, `%${fromLocation}%`));
+      }
+      if (toLocation) {
+        query = query.where(ilike(travelers.toLocation, `%${toLocation}%`));
+      }
+
+      const availableTravelers = await query.limit(20);
+      res.json({ success: true, travelers: availableTravelers });
+    } catch (error) {
+      console.error("Travelers fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch travelers" });
+    }
+  });
+
+  // Chat API for merchant communication
+  app.get("/api/chat/:escrowId", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { escrowId } = req.params;
+      
+      const messages = await db.select().from(chatMessages)
+        .where(eq(chatMessages.escrowId, escrowId))
+        .orderBy(asc(chatMessages.createdAt));
+      
+      res.json({ success: true, messages });
+    } catch (error) {
+      console.error("Chat fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch chat messages" });
+    }
+  });
+
+  app.post("/api/chat/:escrowId", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { escrowId } = req.params;
+      const { receiverId, message, messageType = "text" } = req.body;
+      const senderId = req.user!.id;
+      
+      const chatData = {
+        escrowId,
+        senderId,
+        receiverId,
+        message,
+        messageType
+      };
+      
+      const newMessage = await db.insert(chatMessages).values(chatData).returning();
+      res.json({ success: true, message: newMessage[0] });
+    } catch (error) {
+      console.error("Chat message error:", error);
+      res.status(500).json({ error: "Failed to send message" });
     }
   });
 
