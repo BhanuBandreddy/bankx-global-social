@@ -4,7 +4,7 @@ import { authClient } from './auth';
 const API_BASE = '/api';
 
 export class ApiClient {
-  private async request(endpoint: string, options: RequestInit = {}) {
+  async request(endpoint: string, options: RequestInit = {}) {
     const token = authClient.getToken();
     
     const config: RequestInit = {
@@ -29,9 +29,11 @@ export class ApiClient {
   // Escrow API
   async initiateEscrow(data: {
     productId: string;
+    feedPostId?: string;
     amount: number;
     currency?: string;
     sellerId?: string;
+    deliveryOption?: string;
   }) {
     return this.request('/escrow/initiate', {
       method: 'POST',
@@ -52,14 +54,19 @@ export class ApiClient {
 
   // Blink AI API
   async sendBlinkMessage(data: {
-    query: string;
-    sessionId: string;
+    message?: string;
+    query?: string;
+    sessionId?: string;
     contextType: 'generic' | 'feed';
     feedContext?: any;
   }) {
     return this.request('/blink/conversation', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        message: data.message || data.query,
+        contextType: data.contextType,
+        feedContext: data.feedContext
+      }),
     });
   }
 
