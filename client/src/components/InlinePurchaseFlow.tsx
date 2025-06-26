@@ -131,9 +131,17 @@ export const InlinePurchaseFlow = ({ post, isOpen, onClose }: InlinePurchaseFlow
   const handlePayment = async () => {
     setLoading(true);
     try {
+      console.log('Initiating payment with:', {
+        productId: post.product.id,
+        amount: post.product.price,
+        currency: post.product.currency,
+        sellerId: post.userId,
+        deliveryOption: selectedDelivery?.type || 'instore',
+      });
+
       const response = await apiClient.initiateEscrow({
         productId: post.product.id,
-        amount: parseFloat(post.product.price),
+        amount: post.product.price, // Keep as string, server will parse
         currency: post.product.currency,
         sellerId: post.userId,
         deliveryOption: selectedDelivery?.type || 'instore',
@@ -147,9 +155,10 @@ export const InlinePurchaseFlow = ({ post, isOpen, onClose }: InlinePurchaseFlow
         description: "Your payment is held safely in escrow until delivery",
       });
     } catch (error) {
+      console.error('Payment error:', error);
       toast({
         title: "Payment Failed",
-        description: "Please try again",
+        description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive",
       });
     } finally {
@@ -251,7 +260,7 @@ export const InlinePurchaseFlow = ({ post, isOpen, onClose }: InlinePurchaseFlow
         <div className="space-y-2">
           <div className="flex justify-between">
             <span>{post.product.name}</span>
-            <span className="font-bold">${post.product.price}</span>
+            <span className="font-bold">{post.product.currency} {post.product.price}</span>
           </div>
           {selectedTraveler && (
             <div className="flex justify-between">
@@ -261,7 +270,7 @@ export const InlinePurchaseFlow = ({ post, isOpen, onClose }: InlinePurchaseFlow
           )}
           <div className="border-t border-black pt-2 flex justify-between font-bold">
             <span>Total</span>
-            <span>${(parseFloat(post.product.price) + (selectedTraveler ? parseFloat(selectedTraveler.fee.replace('$', '')) : 0)).toFixed(2)}</span>
+            <span>{post.product.currency} {(parseFloat(post.product.price) + (selectedTraveler ? parseFloat(selectedTraveler.fee.replace('$', '')) : 0)).toFixed(2)}</span>
           </div>
         </div>
       </div>
@@ -334,7 +343,13 @@ export const InlinePurchaseFlow = ({ post, isOpen, onClose }: InlinePurchaseFlow
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-        <Dialog.Content className="fixed bottom-0 left-0 right-0 bg-white border-4 border-black rounded-t-lg max-h-[90vh] overflow-hidden z-50">
+        <Dialog.Content 
+          className="fixed bottom-0 left-0 right-0 bg-white border-4 border-black rounded-t-lg max-h-[90vh] overflow-hidden z-50"
+          aria-describedby="purchase-flow-description"
+        >
+          <Dialog.Description id="purchase-flow-description" className="sr-only">
+            Complete your purchase with secure escrow payment and delivery options
+          </Dialog.Description>
           <div className="border-b-2 border-black p-4">
             <div className="flex items-center justify-between">
               <Dialog.Title className="text-xl font-bold text-black">
