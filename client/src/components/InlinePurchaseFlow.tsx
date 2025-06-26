@@ -133,15 +133,18 @@ export const InlinePurchaseFlow = ({ post, isOpen, onClose }: InlinePurchaseFlow
     try {
       console.log('Initiating payment with:', {
         productId: post.product.id,
-        amount: post.product.price,
+        amount: cleanPrice,
         currency: post.product.currency,
         sellerId: post.userId,
         deliveryOption: selectedDelivery?.type || 'instore',
       });
 
+      // Clean the price by removing currency symbols and parsing as number
+      const cleanPrice = parseFloat(post.product.price.replace(/[^0-9.]/g, ''));
+      
       const response = await apiClient.initiateEscrow({
         productId: post.product.id,
-        amount: post.product.price, // Keep as string, server will parse
+        amount: cleanPrice,
         currency: post.product.currency,
         sellerId: post.userId,
         deliveryOption: selectedDelivery?.type || 'instore',
@@ -270,7 +273,7 @@ export const InlinePurchaseFlow = ({ post, isOpen, onClose }: InlinePurchaseFlow
           )}
           <div className="border-t border-black pt-2 flex justify-between font-bold">
             <span>Total</span>
-            <span>{post.product.currency} {(parseFloat(post.product.price) + (selectedTraveler ? parseFloat(selectedTraveler.fee.replace('$', '')) : 0)).toFixed(2)}</span>
+            <span>{post.product.currency} {(parseFloat(post.product.price.replace(/[^0-9.]/g, '')) + (selectedTraveler ? parseFloat(selectedTraveler.fee.replace('$', '')) : 0)).toFixed(2)}</span>
           </div>
         </div>
       </div>
