@@ -1,7 +1,7 @@
 // API client utilities
 import { authClient } from './auth';
 
-const API_BASE = '/api';
+const API_BASE = '';
 
 export class ApiClient {
   async request(endpoint: string, options: RequestInit = {}) {
@@ -35,21 +35,21 @@ export class ApiClient {
     sellerId?: string;
     deliveryOption?: string;
   }) {
-    return this.request('/escrow/initiate', {
+    return this.request('/api/escrow/initiate', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async releaseEscrow(transactionId: string, confirmationCode?: string) {
-    return this.request('/escrow/release', {
+    return this.request('/api/escrow/release', {
       method: 'POST',
       body: JSON.stringify({ transactionId, confirmationCode }),
     });
   }
 
   async getEscrowStatus(transactionId: string) {
-    return this.request(`/escrow/${transactionId}/status`);
+    return this.request(`/api/escrow/${transactionId}/status`);
   }
 
   // Blink AI API
@@ -60,7 +60,7 @@ export class ApiClient {
     contextType: 'generic' | 'feed';
     feedContext?: any;
   }) {
-    return this.request('/blink/conversation', {
+    return this.request('/api/blink/conversation', {
       method: 'POST',
       body: JSON.stringify({
         message: data.message || data.query,
@@ -72,7 +72,7 @@ export class ApiClient {
 
   // NANDA API
   async callNandaApi(path: string) {
-    return this.request('/nanda', {
+    return this.request('/api/nanda', {
       method: 'POST',
       body: JSON.stringify({ path }),
     });

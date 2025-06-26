@@ -118,12 +118,10 @@ export const SocialFeed = () => {
         <div className="p-4 border-b-4 border-black bg-white sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-black uppercase tracking-tight">Global Feed</h2>
-            <Button
-              onClick={() => setLocation('/workflow')}
-              className="bg-blue-500 text-white border-2 border-black hover:bg-blue-600 font-bold text-sm px-3 py-1"
-            >
-              Try Workflow
-            </Button>
+            <div className="flex items-center space-x-1 text-sm">
+              <div className="w-2 h-2 bg-green-400 border border-black rounded-full animate-pulse"></div>
+              <span className="text-green-600 font-bold">LIVE</span>
+            </div>
             <div className="flex items-center space-x-4">
               <BlinkNotifications />
               <div className="flex items-center space-x-2">
@@ -232,14 +230,15 @@ export const SocialFeed = () => {
                       onClick={() => setLocation('/workflow')}
                       className="px-3 py-2 bg-black text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-1px] hover:translate-y-[-1px] text-sm"
                     >
-                      Buy with Workflow
+                      Buy Now
                     </Button>
-                    <Button
-                      onClick={() => setLocation('/workflow')}
-                      className="px-3 py-2 bg-blue-500 text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-1px] hover:translate-y-[-1px] text-sm"
-                    >
-                      Try Complete Flow
-                    </Button>
+                    <FeedActionTrigger
+                      action="inquire"
+                      postId={post.id}
+                      productData={post.product}
+                      label="Ask Blink"
+                      className="px-3 py-2 bg-purple-500 text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-1px] hover:translate-y-[-1px] text-sm"
+                    />
                   </div>
                 </div>
                 

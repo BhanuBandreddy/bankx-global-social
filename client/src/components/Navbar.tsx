@@ -21,12 +21,6 @@ export const Navbar = () => {
             </h1>
             <div className="flex space-x-2">
               <Button
-                onClick={() => navigate("/workflow")}
-                className="bg-blue-500 text-white border-4 border-blue-500 hover:bg-blue-600 font-bold focus-ring"
-              >
-                WORKFLOW
-              </Button>
-              <Button
                 onClick={() => navigate("/logistics")}
                 className="bg-orange-400 text-black border-4 border-orange-400 hover:bg-orange-500 font-bold focus-ring"
               >
