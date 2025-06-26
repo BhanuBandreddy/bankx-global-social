@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { Verified, TrendingUp, Shield, Zap } from "lucide-react";
+import { Verified, TrendingUp, Shield, Zap, ShoppingCart } from "lucide-react";
 import { CustomIcons } from "./CustomIcons";
 import { FeedActionTrigger } from "./FeedActionTrigger";
 import { BlinkNotifications } from "./BlinkNotifications";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useLocation } from "wouter";
 
 export const SocialFeed = () => {
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [trustBoosts, setTrustBoosts] = useState<Set<string>>(new Set());
+  const [, setLocation] = useLocation();
 
   const handleLike = (postId: string) => {
     const newLiked = new Set(likedPosts);

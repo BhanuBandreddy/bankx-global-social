@@ -291,8 +291,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Blink AI routes
   app.post("/api/blink/conversation", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
-      const { query, sessionId, contextType, feedContext } = req.body;
+      const { message, query, sessionId = `session-${Date.now()}`, contextType, feedContext } = req.body;
       const userId = req.user!.id;
+      const userMessage = message || query;
 
       // Save conversation
       await db.insert(blinkConversations).values({
@@ -300,12 +301,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionId,
         messageType: "user",
         speaker: "User",
-        content: query,
+        content: userMessage,
         contextData: { contextType, feedContext },
       });
 
       // Mock AI response for now
-      const aiResponse = `I understand your request: "${query}". I'm here to help with your trust network and logistics needs.`;
+      const aiResponse = `I understand your request: "${userMessage}". I'm here to help with your trust network and logistics needs.`;
 
       await db.insert(blinkConversations).values({
         userId,
