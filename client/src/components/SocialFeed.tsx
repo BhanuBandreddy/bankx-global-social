@@ -3,14 +3,14 @@ import { Verified, TrendingUp, Shield, Zap, ShoppingCart } from "lucide-react";
 import { CustomIcons } from "./CustomIcons";
 import { FeedActionTrigger } from "./FeedActionTrigger";
 import { BlinkNotifications } from "./BlinkNotifications";
+import { InlinePurchaseFlow } from "./InlinePurchaseFlow";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
 
 export const SocialFeed = () => {
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [trustBoosts, setTrustBoosts] = useState<Set<string>>(new Set());
-  const navigate = useNavigate();
+  const [activePurchasePost, setActivePurchasePost] = useState<any>(null);
 
   const handleLike = (postId: string) => {
     const newLiked = new Set(likedPosts);
@@ -220,10 +220,7 @@ export const SocialFeed = () => {
                   </div>
                   <div className="flex flex-col space-y-2">
                     <Button
-                      onClick={() => {
-                        console.log('Buy Now clicked - navigating to /workflow');
-                        navigate('/workflow');
-                      }}
+                      onClick={() => setActivePurchasePost(post)}
                       className="px-3 py-2 bg-black text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-1px] hover:translate-y-[-1px] text-sm"
                     >
                       Buy Now
@@ -301,6 +298,15 @@ export const SocialFeed = () => {
           <p className="text-sm text-gray-600 font-medium">Pull to refresh • Swipe for more</p>
         </div>
       </div>
+
+      {/* Inline Purchase Flow Drawer */}
+      {activePurchasePost && (
+        <InlinePurchaseFlow
+          post={activePurchasePost}
+          isOpen={!!activePurchasePost}
+          onClose={() => setActivePurchasePost(null)}
+        />
+      )}
     </div>
   );
 };
