@@ -131,6 +131,9 @@ export const InlinePurchaseFlow = ({ post, isOpen, onClose }: InlinePurchaseFlow
   const handlePayment = async () => {
     setLoading(true);
     try {
+      // Clean the price by removing currency symbols and parsing as number
+      const cleanPrice = parseFloat(post.product.price.replace(/[^0-9.]/g, ''));
+      
       console.log('Initiating payment with:', {
         productId: post.product.id,
         amount: cleanPrice,
@@ -139,9 +142,6 @@ export const InlinePurchaseFlow = ({ post, isOpen, onClose }: InlinePurchaseFlow
         deliveryOption: selectedDelivery?.type || 'instore',
       });
 
-      // Clean the price by removing currency symbols and parsing as number
-      const cleanPrice = parseFloat(post.product.price.replace(/[^0-9.]/g, ''));
-      
       const response = await apiClient.initiateEscrow({
         productId: post.product.id,
         amount: cleanPrice,

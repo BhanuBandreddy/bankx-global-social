@@ -90,13 +90,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { productId, feedPostId, amount, currency = "USD", sellerId, deliveryOption } = req.body;
       const userId = req.user!.id;
 
+      // Validate required fields
+      if (!productId || !amount || !sellerId) {
+        return res.status(400).json({ error: 'Missing required fields: productId, amount, sellerId' });
+      }
+
+      // Ensure amount is a valid number
+      const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+      if (isNaN(numericAmount) || numericAmount <= 0) {
+        return res.status(400).json({ error: 'Invalid amount format' });
+      }
+
+      console.log('Creating escrow transaction with:', {
+        userId,
+        sellerId,
+        productId,
+        amount: numericAmount,
+        currency,
+        deliveryOption
+      });
+
       const transaction = await db.insert(escrowTransactions).values({
         userId,
         buyerId: userId,
         sellerId,
         productId,
         feedPostId: feedPostId || null,
-        amount,
+        amount: numericAmount,
         currency,
         status: "escrowed",
         paymentMethod: "x402",
