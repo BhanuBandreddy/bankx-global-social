@@ -35,11 +35,28 @@ export const SocialFeed = () => {
   const feedPosts = [
     {
       id: "1",
-      user: { name: "Maya Chen", handle: "@mayatech", avatar: "🦋", verified: true, trustScore: 96.8, trustLevel: "Oracle Master", trustBadge: "🔮" },
+      userId: "user-maya-001",
+      user: { 
+        id: "user-maya-001",
+        name: "Maya Chen", 
+        handle: "@mayatech", 
+        avatar: "🦋", 
+        verified: true, 
+        trustScore: 96.8, 
+        trustLevel: "Oracle Master", 
+        trustBadge: "🔮" 
+      },
       location: "Tokyo, Japan",
       content: "Found this incredible vintage camera at a local market! The seller's story behind it is amazing - it belonged to a street photographer from the 80s 📸",
       image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=300&fit=crop",
-      product: { name: "Vintage Pentax K1000", price: "$180", originalPrice: "$250", trustGuarantee: true },
+      product: { 
+        id: "prod-vintage-camera-001",
+        name: "Vintage Pentax K1000", 
+        price: "180", 
+        currency: "USD",
+        originalPrice: "$250", 
+        trustGuarantee: true 
+      },
       likes: 2847,
       comments: 94,
       shares: 67,
@@ -49,12 +66,29 @@ export const SocialFeed = () => {
       trustInsight: "Seller verified by 23 Oracle members"
     },
     {
-      id: "2", 
-      user: { name: "Alex Rivers", handle: "@alexcodes", avatar: "⚡", verified: false, trustScore: 82.3, trustLevel: "Trust Warrior", trustBadge: "⚔️" },
+      id: "2",
+      userId: "user-alex-002", 
+      user: { 
+        id: "user-alex-002",
+        name: "Alex Rivers", 
+        handle: "@alexcodes", 
+        avatar: "⚡", 
+        verified: false, 
+        trustScore: 82.3, 
+        trustLevel: "Trust Warrior", 
+        trustBadge: "⚔️" 
+      },
       location: "São Paulo, Brazil",
       content: "My grandmother's recipe for brigadeiros! She taught me this when I was 8. Now I'm shipping these worldwide and sharing her legacy 🍫",
       image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=300&fit=crop",
-      product: { name: "Authentic Brigadeiros (12-pack)", price: "$24", originalPrice: null, trustGuarantee: false },
+      product: { 
+        id: "prod-brigadeiros-002",
+        name: "Authentic Brigadeiros (12-pack)", 
+        price: "24", 
+        currency: "USD",
+        originalPrice: null, 
+        trustGuarantee: false 
+      },
       likes: 1203,
       comments: 156,
       shares: 89,
@@ -65,11 +99,28 @@ export const SocialFeed = () => {
     },
     {
       id: "3",
-      user: { name: "Zara Okafor", handle: "@zarafashion", avatar: "👑", verified: true, trustScore: 94.1, trustLevel: "Eco Oracle", trustBadge: "🌱" },
+      userId: "user-zara-003",
+      user: { 
+        id: "user-zara-003",
+        name: "Zara Okafor", 
+        handle: "@zarafashion", 
+        avatar: "👑", 
+        verified: true, 
+        trustScore: 94.1, 
+        trustLevel: "Eco Oracle", 
+        trustBadge: "🌱" 
+      },
       location: "Lagos, Nigeria", 
       content: "Sustainable fashion shouldn't be expensive. These earrings are made from recycled ocean plastic - every purchase removes 5 bottles from the sea 🌊",
       image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=300&fit=crop",
-      product: { name: "Ocean Plastic Earrings", price: "$32", originalPrice: "$45", trustGuarantee: true },
+      product: { 
+        id: "prod-ocean-earrings-003",
+        name: "Ocean Plastic Earrings", 
+        price: "32", 
+        currency: "USD",
+        originalPrice: "$45", 
+        trustGuarantee: true 
+      },
       likes: 5621,
       comments: 287,
       shares: 234,
@@ -80,11 +131,28 @@ export const SocialFeed = () => {
     },
     {
       id: "4",
-      user: { name: "Kai Nakamura", handle: "@kaivibes", avatar: "🎨", verified: false, trustScore: 89.2, trustLevel: "Art Seeker", trustBadge: "🎭" },
+      userId: "user-kai-004",
+      user: { 
+        id: "user-kai-004",
+        name: "Kai Nakamura", 
+        handle: "@kaivibes", 
+        avatar: "🎨", 
+        verified: false, 
+        trustScore: 89.2, 
+        trustLevel: "Art Seeker", 
+        trustBadge: "🎭" 
+      },
       location: "Kyoto, Japan",
       content: "Street art from my morning walk. This piece speaks to me - it's about connection across cultures 🎭",
       image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=300&fit=crop",
-      product: { name: "Limited Print Collection", price: "$45", originalPrice: "$65", trustGuarantee: false },
+      product: { 
+        id: "prod-art-prints-004",
+        name: "Limited Print Collection", 
+        price: "45", 
+        currency: "USD",
+        originalPrice: "$65", 
+        trustGuarantee: false 
+      },
       likes: 892,
       comments: 67,
       shares: 34,
@@ -95,11 +163,28 @@ export const SocialFeed = () => {
     },
     {
       id: "5",
-      user: { name: "Luna Park", handle: "@lunabeats", avatar: "🎵", verified: true, trustScore: 93.5, trustLevel: "Sound Oracle", trustBadge: "🎧" },
+      userId: "user-luna-005",
+      user: { 
+        id: "user-luna-005",
+        name: "Luna Park", 
+        handle: "@lunabeats", 
+        avatar: "🎵", 
+        verified: true, 
+        trustScore: 93.5, 
+        trustLevel: "Sound Oracle", 
+        trustBadge: "🎧" 
+      },
       location: "Seoul, South Korea",
       content: "Late night studio session. This track is going to change everything. First 100 people get exclusive access 🎧",
       image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=400&h=300&fit=crop",
-      product: { name: "Exclusive Track Access", price: "$12", originalPrice: "$20", trustGuarantee: true },
+      product: { 
+        id: "prod-track-access-005",
+        name: "Exclusive Track Access", 
+        price: "12", 
+        currency: "USD",
+        originalPrice: "$20", 
+        trustGuarantee: true 
+      },
       likes: 3456,
       comments: 234,
       shares: 156,

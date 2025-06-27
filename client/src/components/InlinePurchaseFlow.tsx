@@ -132,14 +132,26 @@ export const InlinePurchaseFlow = ({ post, isOpen, onClose }: InlinePurchaseFlow
     setLoading(true);
     try {
       // Clean the price by removing currency symbols and parsing as number
-      const cleanPrice = parseFloat(post.product.price.replace(/[^0-9.]/g, ''));
+      const priceString = String(post.product.price);
+      const cleanPrice = parseFloat(priceString.replace(/[^0-9.]/g, ''));
+      
+      if (isNaN(cleanPrice) || cleanPrice <= 0) {
+        console.error('Invalid price format:', post.product.price);
+        throw new Error('Invalid product price format');
+      }
       
       // Validate we have all required data
-      if (!post.product.id) {
+      if (!post.product?.id) {
+        console.error('Missing product ID:', post.product);
         throw new Error('Product ID is missing');
       }
       if (!post.userId) {
+        console.error('Missing seller ID:', post);
         throw new Error('Seller ID is missing');
+      }
+      if (!post.product.price) {
+        console.error('Missing product price:', post.product);
+        throw new Error('Product price is missing');
       }
 
       const paymentData = {
@@ -267,7 +279,7 @@ export const InlinePurchaseFlow = ({ post, isOpen, onClose }: InlinePurchaseFlow
         <div className="space-y-2">
           <div className="flex justify-between">
             <span>{post.product.name}</span>
-            <span className="font-bold">{post.product.currency} {post.product.price}</span>
+            <span className="font-bold">{post.product.currency || 'USD'} {post.product.price}</span>
           </div>
           {selectedTraveler && (
             <div className="flex justify-between">
@@ -277,7 +289,7 @@ export const InlinePurchaseFlow = ({ post, isOpen, onClose }: InlinePurchaseFlow
           )}
           <div className="border-t border-black pt-2 flex justify-between font-bold">
             <span>Total</span>
-            <span>{post.product.currency} {(parseFloat(post.product.price.replace(/[^0-9.]/g, '')) + (selectedTraveler ? parseFloat(selectedTraveler.fee.replace('$', '')) : 0)).toFixed(2)}</span>
+            <span>{post.product.currency || 'USD'} {(parseFloat(String(post.product.price).replace(/[^0-9.]/g, '')) + (selectedTraveler ? parseFloat(selectedTraveler.fee.replace('$', '')) : 0)).toFixed(2)}</span>
           </div>
         </div>
       </div>
