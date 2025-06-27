@@ -73,7 +73,7 @@ export const escrowTransactions = pgTable("escrow_transactions", {
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   buyerId: uuid("buyer_id").references(() => users.id),
   sellerId: uuid("seller_id").references(() => users.id),
-  productId: uuid("product_id").references(() => products.id),
+  productId: uuid("product_id"), // Removed foreign key constraint for demo purposes
   feedPostId: uuid("feed_post_id").references(() => feedPosts.id),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   currency: text("currency").notNull().default("USD"),
