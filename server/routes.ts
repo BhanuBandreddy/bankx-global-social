@@ -91,8 +91,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
 
       // Validate required fields
-      if (!productId || !amount || !sellerId) {
-        return res.status(400).json({ error: 'Missing required fields: productId, amount, sellerId' });
+      if (!amount) {
+        return res.status(400).json({ error: 'Missing required fields: amount' });
       }
 
       // Ensure amount is a valid number
@@ -118,7 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         buyerId: userId,
         sellerId: finalSellerId,
-        productId,
+        productId: productId || null, // Allow null for demo
         feedPostId: feedPostId || null,
         amount: numericAmount,
         currency,
