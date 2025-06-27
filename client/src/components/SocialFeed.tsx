@@ -35,9 +35,9 @@ export const SocialFeed = () => {
   const feedPosts = [
     {
       id: "1",
-      userId: "user-maya-001",
+      userId: "550e8400-e29b-41d4-a716-446655440001",
       user: { 
-        id: "user-maya-001",
+        id: "550e8400-e29b-41d4-a716-446655440001",
         name: "Maya Chen", 
         handle: "@mayatech", 
         avatar: "🦋", 
@@ -50,7 +50,7 @@ export const SocialFeed = () => {
       content: "Found this incredible vintage camera at a local market! The seller's story behind it is amazing - it belonged to a street photographer from the 80s 📸",
       image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=300&fit=crop",
       product: { 
-        id: "prod-vintage-camera-001",
+        id: "650e8400-e29b-41d4-a716-446655440001",
         name: "Vintage Pentax K1000", 
         price: "180", 
         currency: "USD",
@@ -67,9 +67,9 @@ export const SocialFeed = () => {
     },
     {
       id: "2",
-      userId: "user-alex-002", 
+      userId: "550e8400-e29b-41d4-a716-446655440002", 
       user: { 
-        id: "user-alex-002",
+        id: "550e8400-e29b-41d4-a716-446655440002",
         name: "Alex Rivers", 
         handle: "@alexcodes", 
         avatar: "⚡", 
@@ -82,7 +82,7 @@ export const SocialFeed = () => {
       content: "My grandmother's recipe for brigadeiros! She taught me this when I was 8. Now I'm shipping these worldwide and sharing her legacy 🍫",
       image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=300&fit=crop",
       product: { 
-        id: "prod-brigadeiros-002",
+        id: "650e8400-e29b-41d4-a716-446655440002",
         name: "Authentic Brigadeiros (12-pack)", 
         price: "24", 
         currency: "USD",
@@ -99,9 +99,9 @@ export const SocialFeed = () => {
     },
     {
       id: "3",
-      userId: "user-zara-003",
+      userId: "550e8400-e29b-41d4-a716-446655440003",
       user: { 
-        id: "user-zara-003",
+        id: "550e8400-e29b-41d4-a716-446655440003",
         name: "Zara Okafor", 
         handle: "@zarafashion", 
         avatar: "👑", 
@@ -114,7 +114,7 @@ export const SocialFeed = () => {
       content: "Sustainable fashion shouldn't be expensive. These earrings are made from recycled ocean plastic - every purchase removes 5 bottles from the sea 🌊",
       image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=300&fit=crop",
       product: { 
-        id: "prod-ocean-earrings-003",
+        id: "650e8400-e29b-41d4-a716-446655440003",
         name: "Ocean Plastic Earrings", 
         price: "32", 
         currency: "USD",
@@ -131,9 +131,9 @@ export const SocialFeed = () => {
     },
     {
       id: "4",
-      userId: "user-kai-004",
+      userId: "550e8400-e29b-41d4-a716-446655440004",
       user: { 
-        id: "user-kai-004",
+        id: "550e8400-e29b-41d4-a716-446655440004",
         name: "Kai Nakamura", 
         handle: "@kaivibes", 
         avatar: "🎨", 
@@ -146,7 +146,7 @@ export const SocialFeed = () => {
       content: "Street art from my morning walk. This piece speaks to me - it's about connection across cultures 🎭",
       image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=300&fit=crop",
       product: { 
-        id: "prod-art-prints-004",
+        id: "650e8400-e29b-41d4-a716-446655440004",
         name: "Limited Print Collection", 
         price: "45", 
         currency: "USD",
@@ -163,9 +163,9 @@ export const SocialFeed = () => {
     },
     {
       id: "5",
-      userId: "user-luna-005",
+      userId: "550e8400-e29b-41d4-a716-446655440005",
       user: { 
-        id: "user-luna-005",
+        id: "550e8400-e29b-41d4-a716-446655440005",
         name: "Luna Park", 
         handle: "@lunabeats", 
         avatar: "🎵", 
@@ -178,7 +178,7 @@ export const SocialFeed = () => {
       content: "Late night studio session. This track is going to change everything. First 100 people get exclusive access 🎧",
       image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=400&h=300&fit=crop",
       product: { 
-        id: "prod-track-access-005",
+        id: "650e8400-e29b-41d4-a716-446655440005",
         name: "Exclusive Track Access", 
         price: "12", 
         currency: "USD",
