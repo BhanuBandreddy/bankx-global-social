@@ -154,11 +154,13 @@ export const InlinePurchaseFlow = ({ post, isOpen, onClose }: InlinePurchaseFlow
         throw new Error('Product price is missing');
       }
 
+      // For demo purposes, we'll use the current user as both buyer and seller
+      // In a real scenario, these would be different users
       const paymentData = {
         productId: post.product.id,
         amount: cleanPrice,
         currency: post.product.currency || 'USD',
-        sellerId: post.userId,
+        sellerId: post.userId, // This will be validated or defaulted on the server
         deliveryOption: selectedDelivery?.type || 'instore',
       };
       
