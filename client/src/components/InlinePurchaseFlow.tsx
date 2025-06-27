@@ -134,21 +134,25 @@ export const InlinePurchaseFlow = ({ post, isOpen, onClose }: InlinePurchaseFlow
       // Clean the price by removing currency symbols and parsing as number
       const cleanPrice = parseFloat(post.product.price.replace(/[^0-9.]/g, ''));
       
-      console.log('Initiating payment with:', {
-        productId: post.product.id,
-        amount: cleanPrice,
-        currency: post.product.currency,
-        sellerId: post.userId,
-        deliveryOption: selectedDelivery?.type || 'instore',
-      });
+      // Validate we have all required data
+      if (!post.product.id) {
+        throw new Error('Product ID is missing');
+      }
+      if (!post.userId) {
+        throw new Error('Seller ID is missing');
+      }
 
-      const response = await apiClient.initiateEscrow({
+      const paymentData = {
         productId: post.product.id,
         amount: cleanPrice,
-        currency: post.product.currency,
+        currency: post.product.currency || 'USD',
         sellerId: post.userId,
         deliveryOption: selectedDelivery?.type || 'instore',
-      });
+      };
+      
+      console.log('Initiating payment with:', paymentData);
+
+      const response = await apiClient.initiateEscrow(paymentData);
 
       setEscrowTransactionId(response.transaction.id);
       setCurrentStep('confirmation');

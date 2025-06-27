@@ -32,9 +32,10 @@ export class ApiClient {
     feedPostId?: string;
     amount: number;
     currency?: string;
-    sellerId?: string;
+    sellerId: string;
     deliveryOption?: string;
   }) {
+    console.log('API Client sending data:', data);
     return this.request('/api/escrow/initiate', {
       method: 'POST',
       body: JSON.stringify(data),
