@@ -19,26 +19,7 @@ export const Navbar = () => {
             >
               GLOBAL SOCIAL 🌍
             </h1>
-            <div className="flex space-x-2">
-              <Button
-                onClick={() => navigate("/demo")}
-                className="bg-purple-400 text-black border-4 border-purple-400 hover:bg-purple-500 font-bold focus-ring"
-              >
-                DEMO FLOW
-              </Button>
-              <Button
-                onClick={() => navigate("/workflow")}
-                className="bg-blue-400 text-black border-4 border-blue-400 hover:bg-blue-500 font-bold focus-ring"
-              >
-                WORKFLOW
-              </Button>
-              <Button
-                onClick={() => navigate("/logistics")}
-                className="bg-orange-400 text-black border-4 border-orange-400 hover:bg-orange-500 font-bold focus-ring"
-              >
-                PATHSYNC
-              </Button>
-            </div>
+
           </div>
           
           <AuthNavbar />

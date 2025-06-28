@@ -409,6 +409,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
             performance_score: 96.2,
             last_updated: "2024-01-14T15:45:00Z",
             icon: "lock-keyhole"
+          },
+          {
+            id: "agent-003",
+            name: "LocaleLens AI",
+            tagline: "Hidden gems via social proof.",
+            description: "Discovers authentic local experiences through community data analysis and social validation.",
+            capabilities: ["local_discovery", "social_analysis", "experience_curation", "cultural_insights"],
+            status: "active",
+            version: "1.8.2",
+            endpoint: "https://localelens-ai.nanda.ai/api/v1",
+            region: "Global",
+            performance_score: 94.7,
+            last_updated: "2024-01-13T09:20:00Z",
+            icon: "search-check"
+          },
+          {
+            id: "agent-004",
+            name: "PathSync Social Logistics",
+            tagline: "Crowd-sourced delivery network.",
+            description: "Coordinates peer-to-peer delivery through trusted traveler networks and social logistics.",
+            capabilities: ["peer_delivery", "route_optimization", "traveler_matching", "logistics_coordination"],
+            status: "active",
+            version: "2.0.1",
+            endpoint: "https://pathsync-logistics.nanda.ai/api/v1",
+            region: "Global",
+            performance_score: 92.8,
+            last_updated: "2024-01-12T14:30:00Z",
+            icon: "navigation-2"
           }
         ];
 
