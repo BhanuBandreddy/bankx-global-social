@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 
-import { config } from 'dotenv';
-config();
+// Environment configuration for agent registration
+const config = process.env;
 
 interface AgentRegistration {
   name: string;
@@ -93,7 +93,8 @@ async function verifyRegistration() {
   }
 }
 
-if (require.main === module) {
+// Run registration if script is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
   registerAgent();
 }
 

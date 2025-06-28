@@ -19,7 +19,7 @@ interface PingTest {
 class NandaHeartbeat {
   private config: HeartbeatConfig;
   private isRunning = false;
-  private heartbeatTimer?: NodeJS.Timer;
+  private heartbeatTimer?: NodeJS.Timeout;
   private lastHeartbeat?: Date;
   private lastPingSuccess?: Date;
 
@@ -232,7 +232,8 @@ async function runPhase2Demo() {
   console.log('Phase 2 demo complete! Ready for UI integration.');
 }
 
-if (require.main === module) {
+// Run demo if script is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
   runPhase2Demo().catch(console.error);
 }
 
