@@ -69,7 +69,8 @@ const CrowdHeatBadge = ({ location, productCategory }: { location: string, produ
   return (
     <Badge 
       variant="outline" 
-      className={`border-blue-200 ${isHot ? 'bg-red-50 border-red-300' : 'bg-blue-50'}`}
+      className={`${isHot ? 'bg-red-50 border-red-300 text-red-700' : 'bg-blue-50 border-blue-300 text-blue-700'} font-medium`}
+      title={`Crowd intelligence: ${Math.round(heatData.confidence * 100)}% confidence`}
     >
       <span className="mr-1">🧭</span>
       <span className="text-xs font-medium">
@@ -310,7 +311,9 @@ export const SocialFeed = () => {
                       <span>•</span>
                       <CustomIcons.Location className="w-3 h-3" />
                       <span>{post.location}</span>
-                      {/* AgentTorch Crowd Heat Badge */}
+                    </div>
+                    {/* AgentTorch Crowd Heat Badge - Separate line for visibility */}
+                    <div className="mt-1">
                       <CrowdHeatBadge 
                         location={post.location} 
                         productCategory={post.productCategory}
