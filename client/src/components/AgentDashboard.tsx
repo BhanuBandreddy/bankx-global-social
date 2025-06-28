@@ -98,6 +98,10 @@ export const AgentDashboard = () => {
         body: JSON.stringify({ endpoint: 'https://globeguides-concierge.nanda.ai/api/v1' })
       });
       
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const result = await response.json();
       console.log('Ping test result:', result);
       
@@ -107,8 +111,22 @@ export const AgentDashboard = () => {
         lastPing: new Date().toISOString(),
         pingAge: 0
       }));
+      
+      // Show success/failure feedback
+      if (result.success) {
+        console.log('✅ Ping successful:', result.response);
+      } else {
+        console.warn('⚠️ Ping failed:', result.error);
+      }
+      
     } catch (error) {
       console.error('Ping test failed:', error);
+      // Still update the ping timestamp to show attempt was made
+      setHeartbeatStatus(prev => ({
+        ...prev,
+        lastPing: new Date().toISOString(),
+        pingAge: 0
+      }));
     }
   };
 
