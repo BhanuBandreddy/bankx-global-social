@@ -106,6 +106,7 @@ interface ItineraryData {
   arrivalTime?: string;
   gate?: string;
   flight?: string;
+  destination?: string;
 }
 
 // Helper function to convert file to base64

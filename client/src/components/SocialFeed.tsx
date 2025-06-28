@@ -310,6 +310,11 @@ export const SocialFeed = () => {
                       <span>•</span>
                       <CustomIcons.Location className="w-3 h-3" />
                       <span>{post.location}</span>
+                      {/* AgentTorch Crowd Heat Badge */}
+                      <CrowdHeatBadge 
+                        location={post.location} 
+                        productCategory={post.productCategory}
+                      />
                     </div>
                   </div>
                 </div>

@@ -4,6 +4,7 @@
 Social trust network platform with AI agents, payment escrow, and logistics coordination. Successfully migrated from Lovable/Supabase to Replit's built-in PostgreSQL database.
 
 ## Recent Changes
+- **AgentTorch Phase 1 Complete (June 2025)**: Implemented crowd-heat simulation with real-time market prediction across 8 cities, integrated into social feed and demo workflow for predictive commerce intelligence
 - **NANDA Phase 3 Complete (June 2025)**: Implemented comprehensive automated testing infrastructure with Jest integration tests, GitHub Actions CI workflow, and executable verification of NANDA handshake protocol
 - **NANDA Phase 2 Complete (June 2025)**: Successfully implemented and tested NANDA SDK-style cryptographic heartbeat system with DID generation, signature verification, and real-time status monitoring showing ACTIVE status consistently
 - **Agent Dashboard Navigation Fixed (June 2025)**: Removed extra navigation buttons, restored full 4-agent display in NANDA registry
