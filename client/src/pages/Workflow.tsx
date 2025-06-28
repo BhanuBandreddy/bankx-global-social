@@ -1,5 +1,6 @@
 import { WorkflowGlobalFeed } from "@/components/WorkflowGlobalFeed";
 import { AuthNavbar } from "@/components/AuthNavbar";
+import { LocaleLensDemo } from "@/components/LocaleLensDemo";
 
 export default function Workflow() {
   return (
@@ -16,7 +17,10 @@ export default function Workflow() {
             </p>
           </div>
           
-          <WorkflowGlobalFeed />
+          <div className="space-y-6">
+            <LocaleLensDemo destination="Tokyo" />
+            <WorkflowGlobalFeed />
+          </div>
         </div>
       </div>
     </div>

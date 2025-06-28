@@ -4,6 +4,8 @@
 Social trust network platform with AI agents, payment escrow, and logistics coordination. Successfully migrated from Lovable/Supabase to Replit's built-in PostgreSQL database.
 
 ## Recent Changes
+- **LocaleLens Phase 1 Complete (June 2025)**: Implemented AI-powered local discovery system with category filtering, crowd-aware recommendations, and real-time trending scores ready for Mapbox integration
+- **PDF Processing Fixed (June 2025)**: Enhanced smart destination detection from filenames, removed Supabase dependency for Mapbox token loading
 - **AgentTorch Phase 1 Complete (June 2025)**: Implemented crowd-heat simulation with real-time market prediction across 8 cities, integrated into social feed and demo workflow for predictive commerce intelligence
 - **NANDA Phase 3 Complete (June 2025)**: Implemented comprehensive automated testing infrastructure with Jest integration tests, GitHub Actions CI workflow, and executable verification of NANDA handshake protocol
 - **NANDA Phase 2 Complete (June 2025)**: Successfully implemented and tested NANDA SDK-style cryptographic heartbeat system with DID generation, signature verification, and real-time status monitoring showing ACTIVE status consistently
