@@ -457,12 +457,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // NANDA SDK-style DID generation with crypto
       const timestamp = Date.now();
-      const nonce = crypto.randomBytes(16).toString('hex');
-      const did = `did:nanda:globalsocial:${crypto.createHash('sha256').update(`${agentId}:${timestamp}:${nonce}`).digest('hex').substring(0, 16)}`;
+      const nonce = randomBytes(16).toString('hex');
+      const did = `did:nanda:globalsocial:${createHash('sha256').update(`${agentId}:${timestamp}:${nonce}`).digest('hex').substring(0, 16)}`;
       
       // Generate cryptographic signature (simplified for demo)
       const payload = `${did}:${timestamp}:${agentId}:${status}`;
-      const signature = crypto.createHash('sha256').update(payload).digest('hex');
+      const signature = createHash('sha256').update(payload).digest('hex');
       
       const heartbeatResponse = {
         success: true,
