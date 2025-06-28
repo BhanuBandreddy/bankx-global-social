@@ -450,6 +450,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // NANDA Phase 2: Heartbeat API
+  app.post("/api/nanda/heartbeat", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { agentId, status } = req.body;
+      
+      // Generate mock DID and heartbeat response
+      const mockDID = `did:web:globalsocial.network:${Date.now()}`;
+      const heartbeatResponse = {
+        isRunning: true,
+        heartbeatAge: 0,
+        pingAge: null,
+        indicator: '🟢' as const,
+        lastHeartbeat: new Date().toISOString(),
+        did: mockDID
+      };
+
+      console.log(`Heartbeat from agent ${agentId}:`, heartbeatResponse);
+      res.json(heartbeatResponse);
+    } catch (error) {
+      console.error("Heartbeat error:", error);
+      res.status(500).json({ 
+        success: false,
+        error: "Heartbeat failed", 
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // NANDA Phase 2: Ping API
+  app.post("/api/nanda/ping", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { endpoint } = req.body;
+      
+      // Attempt real JSON-RPC ping with proper error handling
+      let pingResult;
+      
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            method: "ping",
+            params: {},
+            id: 1
+          }),
+          signal: AbortSignal.timeout(5000) // 5 second timeout
+        });
+
+        if (response.ok) {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            pingResult = {
+              success: true,
+              endpoint,
+              timestamp: new Date().toISOString(),
+              response: data,
+              latency: "< 5000ms"
+            };
+          } else {
+            // Handle non-JSON responses
+            const text = await response.text();
+            pingResult = {
+              success: false,
+              endpoint,
+              timestamp: new Date().toISOString(),
+              response: null,
+              error: `Endpoint returned HTML instead of JSON (likely a web page, not an API)`
+            };
+          }
+        } else {
+          pingResult = {
+            success: false,
+            endpoint,
+            timestamp: new Date().toISOString(),
+            response: null,
+            error: `HTTP ${response.status}: ${response.statusText}`
+          };
+        }
+      } catch (fetchError) {
+        // Handle network errors, JSON parsing errors, timeouts
+        pingResult = {
+          success: false,
+          endpoint,
+          timestamp: new Date().toISOString(),
+          response: null,
+          error: fetchError instanceof Error ? 
+            `Network error: ${fetchError.message}` : 
+            "Unknown network error"
+        };
+      }
+
+      console.log(`Ping test to ${endpoint}:`, pingResult);
+      res.json(pingResult);
+    } catch (error) {
+      console.error("Ping error:", error);
+      res.status(500).json({ 
+        success: false,
+        error: "Ping failed", 
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
