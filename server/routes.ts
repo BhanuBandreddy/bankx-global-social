@@ -456,7 +456,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { agentId, status } = req.body;
       
       // NANDA SDK-style DID generation with crypto
-      const crypto = require('crypto');
       const timestamp = Date.now();
       const nonce = crypto.randomBytes(16).toString('hex');
       const did = `did:nanda:globalsocial:${crypto.createHash('sha256').update(`${agentId}:${timestamp}:${nonce}`).digest('hex').substring(0, 16)}`;
