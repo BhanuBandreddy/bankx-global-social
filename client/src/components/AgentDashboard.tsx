@@ -205,18 +205,32 @@ export const AgentDashboard = () => {
         </div>
       </div>
 
-      {/* Global Socials Insights */}
+      {/* NANDA Status & Phase 2 Features */}
       <div className="p-6 bg-purple-50 border-t-4 border-black">
-        <div className="flex items-start space-x-4">
-          <TrendingUp className="w-8 h-8 text-purple-600 mt-1 stroke-[2.5]" />
-          <div>
-            <h3 className="text-lg font-bold text-black mb-2">Global Socials Network Insights</h3>
-            <p className="text-black leading-relaxed">
-              Currently showing <span className="font-bold">{agents.length} specialized agents</span> from the Nanda registry. 
-              These agents form the backbone of Global Socials' crowd-sourced travel and commerce ecosystem. 
-              The registry provides <span className="font-bold text-purple-700">real-time agent discovery</span> 
-              for seamless integration with zero tourist traps.
-            </p>
+        <div className="flex items-start justify-between">
+          <div className="flex items-start space-x-4">
+            <TrendingUp className="w-8 h-8 text-purple-600 mt-1 stroke-[2.5]" />
+            <div>
+              <h3 className="text-lg font-bold text-black mb-2">NANDA Registry Status</h3>
+              <p className="text-black leading-relaxed">
+                Currently showing <span className="font-bold">{agents.length} specialized agents</span> from the registry. 
+                <span className="font-bold text-purple-700"> Real-time agent discovery</span> active.
+              </p>
+            </div>
+          </div>
+          
+          {/* Live Status Indicator */}
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-green-400 border-2 border-black rounded-full animate-pulse"></div>
+              <span className="text-sm font-bold text-green-700">NANDA LIVE</span>
+            </div>
+            <button 
+              onClick={() => {/* Ping test will be implemented in Phase 2 */}}
+              className="px-3 py-1 bg-blue-500 text-white border-2 border-black text-xs font-bold hover:bg-blue-600"
+            >
+              PING TEST
+            </button>
           </div>
         </div>
       </div>
