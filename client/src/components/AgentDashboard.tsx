@@ -1,8 +1,11 @@
 
-import { useState } from "react";
-import { TrendingUp, MessageSquare, Globe2, LockKeyhole, SearchCheck, Navigation2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { TrendingUp, MessageSquare, Globe2, LockKeyhole, SearchCheck, Navigation2, Activity, Wifi, WifiOff } from "lucide-react";
 import { useNandaAgents } from "@/lib/useNandaAgents";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const iconMap = {
   "globe-2": Globe2,
@@ -11,8 +14,25 @@ const iconMap = {
   "navigation-2": Navigation2,
 };
 
+interface HeartbeatStatus {
+  isRunning: boolean;
+  heartbeatAge: number | null;
+  pingAge: number | null;
+  indicator: '🟢' | '🟡' | '🔴';
+  lastHeartbeat?: string;
+  lastPing?: string;
+  did?: string;
+}
+
 export const AgentDashboard = () => {
   const [selectedAgent, setSelectedAgent] = useState(0);
+  const [heartbeatStatus, setHeartbeatStatus] = useState<HeartbeatStatus>({
+    isRunning: false,
+    heartbeatAge: null,
+    pingAge: null,
+    indicator: '🔴'
+  });
+  const [isHeartbeatActive, setIsHeartbeatActive] = useState(false);
   const { data: agents, error } = useNandaAgents("travel_commerce");
 
   // Show skeleton loader while data is loading
@@ -54,6 +74,83 @@ export const AgentDashboard = () => {
       </div>
     );
   }
+
+  // Phase 2: Heartbeat Management
+  useEffect(() => {
+    let heartbeatInterval: NodeJS.Timeout;
+    
+    if (isHeartbeatActive) {
+      // Start heartbeat
+      heartbeatInterval = setInterval(async () => {
+        try {
+          const response = await fetch('/api/nanda/heartbeat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              agentId: 'agent-globalsocial',
+              status: 'active'
+            })
+          });
+          
+          const status = await response.json();
+          setHeartbeatStatus(status);
+        } catch (error) {
+          console.error('Heartbeat failed:', error);
+          setHeartbeatStatus(prev => ({ ...prev, indicator: '🔴', isRunning: false }));
+        }
+      }, 30000); // Every 30 seconds
+
+      // Initial heartbeat
+      fetch('/api/nanda/heartbeat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          agentId: 'agent-globalsocial',
+          status: 'active'
+        })
+      }).then(r => r.json()).then(setHeartbeatStatus);
+    }
+
+    return () => {
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+    };
+  }, [isHeartbeatActive]);
+
+  const handleStartHeartbeat = () => {
+    setIsHeartbeatActive(true);
+  };
+
+  const handleStopHeartbeat = () => {
+    setIsHeartbeatActive(false);
+    setHeartbeatStatus({
+      isRunning: false,
+      heartbeatAge: null,
+      pingAge: null,
+      indicator: '🔴'
+    });
+  };
+
+  const handlePingTest = async () => {
+    try {
+      const response = await fetch('/api/nanda/ping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: 'https://globeguides-concierge.nanda.ai/api/v1' })
+      });
+      
+      const result = await response.json();
+      console.log('Ping test result:', result);
+      
+      // Update heartbeat status with ping result
+      setHeartbeatStatus(prev => ({
+        ...prev,
+        lastPing: new Date().toISOString(),
+        pingAge: 0
+      }));
+    } catch (error) {
+      console.error('Ping test failed:', error);
+    }
+  };
 
   const currentAgent = agents[selectedAgent] || agents[0];
 
@@ -205,7 +302,86 @@ export const AgentDashboard = () => {
         </div>
       </div>
 
-      {/* NANDA Status & Phase 2 Features */}
+      {/* NANDA Phase 2 - Cryptographic Heartbeat */}
+      <div className="mb-8">
+        <Card className="border-4 border-black bg-gradient-to-r from-yellow-400 to-orange-400">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-black font-black">
+              <Activity className="w-6 h-6" />
+              NANDA PHASE 2 • CRYPTOGRAPHIC HEARTBEAT
+            </CardTitle>
+            <CardDescription className="text-black font-bold">
+              Live connection to NANDA registry • DID authentication • Real-time status monitoring
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Heartbeat Controls */}
+              <div className="flex flex-wrap gap-4">
+                {!isHeartbeatActive ? (
+                  <Button 
+                    onClick={handleStartHeartbeat}
+                    className="bg-green-500 hover:bg-green-600 text-white border-2 border-black font-bold"
+                  >
+                    <Wifi className="w-4 h-4 mr-2" />
+                    START HEARTBEAT
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={handleStopHeartbeat}
+                    className="bg-red-500 hover:bg-red-600 text-white border-2 border-black font-bold"
+                  >
+                    <WifiOff className="w-4 h-4 mr-2" />
+                    STOP HEARTBEAT
+                  </Button>
+                )}
+                
+                <Button 
+                  onClick={handlePingTest}
+                  variant="outline"
+                  className="border-2 border-black text-black hover:bg-black hover:text-yellow-400 font-bold"
+                >
+                  🏓 JSON-RPC PING
+                </Button>
+              </div>
+
+              {/* Status Indicators */}
+              <div className="flex flex-wrap gap-4">
+                <Badge variant="outline" className="border-2 border-black text-black font-bold">
+                  Status: {heartbeatStatus.indicator} {heartbeatStatus.isRunning ? 'ACTIVE' : 'INACTIVE'}
+                </Badge>
+                <Badge variant="outline" className="border-2 border-black text-black font-bold">
+                  🔄 Auto-Refresh: 15s
+                </Badge>
+                <Badge variant="outline" className="border-2 border-black text-black font-bold">
+                  🎯 Agents: {agents?.length || 0}
+                </Badge>
+                {heartbeatStatus.did && (
+                  <Badge variant="outline" className="border-2 border-black text-black font-bold">
+                    🔑 DID: {heartbeatStatus.did.substring(0, 20)}...
+                  </Badge>
+                )}
+              </div>
+
+              {/* Live Metrics */}
+              {isHeartbeatActive && (
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="bg-black/10 p-2 rounded border border-black">
+                    <strong>Last Heartbeat:</strong><br/>
+                    {heartbeatStatus.lastHeartbeat ? new Date(heartbeatStatus.lastHeartbeat).toLocaleTimeString() : 'Never'}
+                  </div>
+                  <div className="bg-black/10 p-2 rounded border border-black">
+                    <strong>Last Ping:</strong><br/>
+                    {heartbeatStatus.lastPing ? new Date(heartbeatStatus.lastPing).toLocaleTimeString() : 'Never'}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* NANDA Registry Status */}
       <div className="p-6 bg-purple-50 border-t-4 border-black">
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-4">
@@ -225,12 +401,6 @@ export const AgentDashboard = () => {
               <div className="w-3 h-3 bg-green-400 border-2 border-black rounded-full animate-pulse"></div>
               <span className="text-sm font-bold text-green-700">NANDA LIVE</span>
             </div>
-            <button 
-              onClick={() => {/* Ping test will be implemented in Phase 2 */}}
-              className="px-3 py-1 bg-blue-500 text-white border-2 border-black text-xs font-bold hover:bg-blue-600"
-            >
-              PING TEST
-            </button>
           </div>
         </div>
       </div>
