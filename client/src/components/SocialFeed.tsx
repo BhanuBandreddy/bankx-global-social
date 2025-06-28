@@ -1,11 +1,83 @@
-import { useState } from "react";
-import { Verified, TrendingUp, Shield, Zap, ShoppingCart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Verified, TrendingUp, Shield, Zap, ShoppingCart, Loader2 } from "lucide-react";
 import { CustomIcons } from "./CustomIcons";
 import { FeedActionTrigger } from "./FeedActionTrigger";
 import { BlinkNotifications } from "./BlinkNotifications";
 import { InlinePurchaseFlow } from "./InlinePurchaseFlow";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { apiClient } from "@/lib/api";
+
+interface CrowdHeatData {
+  city: string;
+  product_tag: string;
+  demand_score: number;
+  trend: 'rising' | 'falling' | 'stable';
+  confidence: number;
+  timestamp: string;
+}
+
+// Crowd Heat Badge Component
+const CrowdHeatBadge = ({ location, productCategory }: { location: string, productCategory?: string }) => {
+  const [heatData, setHeatData] = useState<CrowdHeatData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!location) return;
+    
+    const fetchHeatData = async () => {
+      setIsLoading(true);
+      try {
+        const city = location.split(',')[0].trim(); // Extract city from "Paris, France"
+        const response = await apiClient.get(`/api/crowd-heat/trending/${city}`);
+        if (response.success && response.trending?.length > 0) {
+          // Find matching product category or use top trending
+          let targetData = response.trending[0];
+          if (productCategory) {
+            const match = response.trending.find((item: CrowdHeatData) => 
+              item.product_tag.toLowerCase().includes(productCategory.toLowerCase())
+            );
+            if (match) targetData = match;
+          }
+          setHeatData(targetData);
+        }
+      } catch (error) {
+        console.log('Crowd heat data not available');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchHeatData();
+  }, [location, productCategory]);
+
+  if (isLoading) {
+    return (
+      <Badge variant="outline" className="border-blue-200 bg-blue-50">
+        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+        <span className="text-xs">Loading...</span>
+      </Badge>
+    );
+  }
+
+  if (!heatData) return null;
+
+  const trendIcon = heatData.trend === 'rising' ? '↑' : heatData.trend === 'falling' ? '↓' : '→';
+  const percentage = Math.round(heatData.demand_score * 100);
+  const isHot = heatData.demand_score > 0.7;
+
+  return (
+    <Badge 
+      variant="outline" 
+      className={`border-blue-200 ${isHot ? 'bg-red-50 border-red-300' : 'bg-blue-50'}`}
+    >
+      <span className="mr-1">🧭</span>
+      <span className="text-xs font-medium">
+        {heatData.product_tag.replace('-', ' ')} {trendIcon}{percentage}%
+      </span>
+    </Badge>
+  );
+};
 
 export const SocialFeed = () => {
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
@@ -48,6 +120,7 @@ export const SocialFeed = () => {
       },
       location: "Tokyo, Japan",
       content: "Found this incredible vintage camera at a local market! The seller's story behind it is amazing - it belonged to a street photographer from the 80s 📸",
+      productCategory: "electronics",
       image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=300&fit=crop",
       product: { 
         id: "650e8400-e29b-41d4-a716-446655440001",
@@ -80,6 +153,7 @@ export const SocialFeed = () => {
       },
       location: "São Paulo, Brazil",
       content: "My grandmother's recipe for brigadeiros! She taught me this when I was 8. Now I'm shipping these worldwide and sharing her legacy 🍫",
+      productCategory: "food-specialties",
       image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=300&fit=crop",
       product: { 
         id: "650e8400-e29b-41d4-a716-446655440002",
@@ -144,6 +218,7 @@ export const SocialFeed = () => {
       },
       location: "Kyoto, Japan",
       content: "Street art from my morning walk. This piece speaks to me - it's about connection across cultures 🎭",
+      productCategory: "local-crafts",
       image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=300&fit=crop",
       product: { 
         id: "650e8400-e29b-41d4-a716-446655440004",
@@ -174,8 +249,9 @@ export const SocialFeed = () => {
         trustLevel: "Sound Oracle", 
         trustBadge: "🎧" 
       },
-      location: "Seoul, South Korea",
+      location: "Seoul, South Korea", 
       content: "Late night studio session. This track is going to change everything. First 100 people get exclusive access 🎧",
+      productCategory: "electronics",
       image: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=400&h=300&fit=crop",
       product: { 
         id: "650e8400-e29b-41d4-a716-446655440005",

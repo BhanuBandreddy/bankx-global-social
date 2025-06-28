@@ -421,6 +421,11 @@ export const WorkflowExperience = () => {
               </div>
             </div>
             
+            {/* AgentTorch Crowd Intelligence Integration */}
+            <div className="mt-6">
+              <CrowdIntelligenceCard destination={itinerary.destination} />
+            </div>
+            
             {(itinerary.flight || itinerary.gate) && (
               <div className="mt-4 grid grid-cols-2 gap-4">
                 {itinerary.flight && (
