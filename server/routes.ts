@@ -367,6 +367,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (path.startsWith("/discover")) {
         const mockAgents = [
           {
+            id: "agent-globalsocial",
+            name: "GlobalSocial Trust Network",
+            tagline: "Social commerce with verified trust.",
+            description: "Social trust network platform with AI agents, payment escrow, and logistics coordination for seamless travel commerce",
+            capabilities: ["social_commerce", "trust_escrow", "peer_delivery", "travel_logistics", "multi_agent_orchestration"],
+            status: "active",
+            version: "1.0.0",
+            endpoint: process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS}/api/agents` : "https://your-app.replit.app/api/agents",
+            region: "Global",
+            performance_score: 95.0,
+            last_updated: new Date().toISOString(),
+            icon: "globe-2",
+            owner: "did:web:globalsocial.network",
+            isOwnAgent: true
+          },
+          {
             id: "agent-001",
             name: "GlobeGuides™ Concierge",
             tagline: "Turns every trip into home-turf.",

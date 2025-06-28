@@ -85,14 +85,20 @@ export const AgentDashboard = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {agents.map((agent, index) => {
             const IconComponent = iconMap[agent.icon] || Globe2;
+            const isOwnAgent = agent.isOwnAgent || agent.owner?.includes('globalsocial');
+            
             return (
               <button
                 key={agent.id || index}
                 onClick={() => setSelectedAgent(index)}
-                className={`p-4 border-4 border-black transition-all duration-200 transform ${
+                className={`p-4 border-4 transition-all duration-200 transform ${
+                  isOwnAgent 
+                    ? 'border-yellow-500 bg-yellow-50' 
+                    : 'border-black bg-white'
+                } ${
                   selectedAgent === index
-                    ? "bg-lime-400 shadow-[8px_8px_0px_0px_#000] translate-x-[-4px] translate-y-[-4px]"
-                    : "bg-white shadow-[4px_4px_0px_0px_#000] hover:shadow-[8px_8px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+                    ? "shadow-[8px_8px_0px_0px_#000] translate-x-[-4px] translate-y-[-4px]"
+                    : "shadow-[4px_4px_0px_0px_#000] hover:shadow-[8px_8px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px]"
                 }`}
               >
                 <div className="text-center">
@@ -102,6 +108,9 @@ export const AgentDashboard = () => {
                   <div className={`text-sm font-bold ${selectedAgent === index ? 'text-black' : 'text-gray-600'}`}>
                     {agent.name || `Agent ${index + 1}`}
                   </div>
+                  {isOwnAgent && (
+                    <div className="text-xs font-bold text-yellow-700 uppercase">OUR AGENT</div>
+                  )}
                   <div className={`text-xs mt-1 px-2 py-1 border-2 border-black ${
                     agent.status === 'active' ? 'bg-green-300' : 'bg-yellow-300'
                   }`}>
