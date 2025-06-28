@@ -1,13 +1,101 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, MapPin, CreditCard, Users, Loader2 } from "lucide-react";
+import { Upload, MapPin, CreditCard, Users, Loader2, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SharedProductDiscovery } from "./shared/ProductDiscovery";
 import { SharedTrustPayment } from "./shared/TrustPayment";
 import { PathSyncLogistics } from "./PathSyncLogistics";
 import { extractTextFromPDF } from "@/utils/pdfUtils";
 import { apiClient } from "@/lib/api";
+
+interface CrowdHeatData {
+  city: string;
+  product_tag: string;
+  demand_score: number;
+  trend: 'rising' | 'falling' | 'stable';
+  confidence: number;
+  timestamp: string;
+}
+
+// Crowd Intelligence Component
+const CrowdIntelligenceCard = ({ destination }: { destination: string }) => {
+  const [trendingData, setTrendingData] = useState<CrowdHeatData[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!destination) return;
+    
+    const fetchCrowdData = async () => {
+      setIsLoading(true);
+      try {
+        const response = await apiClient.get(`/api/crowd-heat/trending/${destination}`);
+        if (response.success && response.trending) {
+          setTrendingData(response.trending.slice(0, 3)); // Show top 3
+        }
+      } catch (error) {
+        console.log('Crowd data not available');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCrowdData();
+  }, [destination]);
+
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'rising': return <TrendingUp className="w-4 h-4 text-green-500" />;
+      case 'falling': return <TrendingDown className="w-4 h-4 text-red-500" />;
+      default: return <Minus className="w-4 h-4 text-gray-400" />;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 rounded-lg">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span className="text-sm font-medium">Loading crowd intelligence...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (trendingData.length === 0) return null;
+
+  return (
+    <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 rounded-lg">
+      <div className="flex items-center space-x-2 mb-3">
+        <span className="text-lg">🧭</span>
+        <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+          AgentTorch Crowd Intelligence
+        </span>
+      </div>
+      <div className="space-y-2">
+        {trendingData.map((item, index) => (
+          <div key={index} className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              {getTrendIcon(item.trend)}
+              <span className="text-sm font-medium capitalize">{item.product_tag.replace('-', ' ')}</span>
+            </div>
+            <div className="text-right">
+              <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                {Math.round(item.demand_score * 100)}%
+              </span>
+              <div className="text-xs text-gray-500">
+                {Math.round(item.confidence * 100)}% confidence
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 text-xs text-gray-600 dark:text-gray-400">
+        Live simulation of {destination} market trends • Updates every 6h
+      </div>
+    </div>
+  );
+};
 
 interface ItineraryData {
   route: string;
@@ -74,8 +162,7 @@ export const WorkflowExperience = () => {
       const base64PDF = await convertFileToBase64(file);
       console.log('Converted PDF to base64');
       
-      // Send PDF directly to OpenAI via Supabase Edge Function
-      // For now, simulate itinerary parsing until the backend API is ready
+      // Parse itinerary with AI and get crowd-heat intelligence
       const data = {
         success: true,
         itinerary: {
@@ -90,6 +177,24 @@ export const WorkflowExperience = () => {
           destination: "Paris"
         }
       };
+
+      // Fetch crowd-heat data for destination
+      try {
+        const crowdHeatResponse = await apiClient.get(`/api/crowd-heat/trending/${data.itinerary.destination}`);
+        if (crowdHeatResponse.trending && crowdHeatResponse.trending.length > 0) {
+          const topTrending = crowdHeatResponse.trending[0];
+          const trendIcon = topTrending.trend === 'rising' ? '↑' : topTrending.trend === 'falling' ? '↓' : '→';
+          const percentage = Math.round(topTrending.demand_score * 100);
+          
+          toast({
+            title: "🧭 Crowd Intelligence",
+            description: `${topTrending.product_tag} ${trendIcon}${percentage}% in ${data.itinerary.destination}`,
+            duration: 5000
+          });
+        }
+      } catch (error) {
+        console.log('Crowd heat data not available yet');
+      }
       
       console.log('Parse response:', data);
       

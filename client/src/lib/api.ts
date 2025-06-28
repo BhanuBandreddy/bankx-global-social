@@ -49,6 +49,19 @@ export class ApiClient {
     });
   }
 
+  // Generic GET method for AgentTorch crowd-heat API
+  async get(endpoint: string) {
+    return this.request(endpoint, { method: 'GET' });
+  }
+
+  // Generic POST method
+  async post(endpoint: string, data?: any) {
+    return this.request(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
   async getEscrowStatus(transactionId: string) {
     return this.request(`/api/escrow/${transactionId}/status`);
   }

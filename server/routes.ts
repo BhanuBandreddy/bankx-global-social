@@ -356,6 +356,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AgentTorch crowd-heat endpoints
+  app.get("/api/crowd-heat", async (req, res) => {
+    try {
+      const { city, product_tag, min_demand } = req.query;
+      
+      const filters: any = {};
+      if (city) filters.city = city as string;
+      if (product_tag) filters.product_tag = product_tag as string;
+      if (min_demand) filters.min_demand = parseFloat(min_demand as string);
+
+      const { agentTorchSimulator } = await import('./agenttorch');
+      const heatData = agentTorchSimulator.getCrowdHeat(filters);
+      
+      res.json({
+        success: true,
+        data: heatData,
+        count: heatData.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Crowd heat error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch crowd heat data'
+      });
+    }
+  });
+
+  app.get("/api/crowd-heat/trending/:city", async (req, res) => {
+    try {
+      const { city } = req.params;
+      const limit = parseInt(req.query.limit as string) || 5;
+      
+      const { agentTorchSimulator } = await import('./agenttorch');
+      const trending = agentTorchSimulator.getTopTrendingByCity(city, limit);
+      
+      res.json({
+        success: true,
+        city,
+        trending,
+        count: trending.length
+      });
+    } catch (error) {
+      console.error('Trending data error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch trending data'
+      });
+    }
+  });
+
+  app.post("/api/crowd-heat/surge-check", async (req, res) => {
+    try {
+      const { city, product_tag } = req.body;
+      
+      if (!city || !product_tag) {
+        return res.status(400).json({
+          success: false,
+          error: 'City and product_tag are required'
+        });
+      }
+
+      const { agentTorchSimulator } = await import('./agenttorch');
+      const surgeInfo = agentTorchSimulator.getDemandSurge(city, product_tag);
+      
+      res.json({
+        success: true,
+        city,
+        product_tag,
+        ...surgeInfo
+      });
+    } catch (error) {
+      console.error('Surge check error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to check demand surge'
+      });
+    }
+  });
+
+  app.get("/api/crowd-heat/status", async (req, res) => {
+    try {
+      const { agentTorchSimulator } = await import('./agenttorch');
+      const status = agentTorchSimulator.getSimulationStatus();
+      
+      res.json({
+        success: true,
+        ...status
+      });
+    } catch (error) {
+      console.error('Status check error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get simulation status'
+      });
+    }
+  });
+
   // NANDA agent discovery
   app.post("/api/nanda", async (req, res) => {
     try {
