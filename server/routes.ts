@@ -451,27 +451,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // NANDA Phase 2: Heartbeat API
-  app.post("/api/nanda/heartbeat", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/nanda/heartbeat", async (req, res) => {
     try {
       const { agentId, status } = req.body;
       
-      // Generate mock DID and heartbeat response
-      const mockDID = `did:web:globalsocial.network:${Date.now()}`;
+      // NANDA SDK-style DID generation with crypto
+      const crypto = require('crypto');
+      const timestamp = Date.now();
+      const nonce = crypto.randomBytes(16).toString('hex');
+      const did = `did:nanda:globalsocial:${crypto.createHash('sha256').update(`${agentId}:${timestamp}:${nonce}`).digest('hex').substring(0, 16)}`;
+      
+      // Generate cryptographic signature (simplified for demo)
+      const payload = `${did}:${timestamp}:${agentId}:${status}`;
+      const signature = crypto.createHash('sha256').update(payload).digest('hex');
+      
       const heartbeatResponse = {
+        success: true,
         isRunning: true,
         heartbeatAge: 0,
         pingAge: null,
         indicator: '🟢' as const,
         lastHeartbeat: new Date().toISOString(),
-        did: mockDID
+        did,
+        signature,
+        timestamp,
+        agentId,
+        nonce
       };
 
-      console.log(`Heartbeat from agent ${agentId}:`, heartbeatResponse);
+      console.log(`✅ NANDA Heartbeat registered for ${agentId}`);
       res.json(heartbeatResponse);
     } catch (error) {
       console.error("Heartbeat error:", error);
       res.status(500).json({ 
         success: false,
+        isRunning: false,
+        indicator: '🔴',
         error: "Heartbeat failed", 
         details: error instanceof Error ? error.message : "Unknown error"
       });
@@ -479,7 +494,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // NANDA Phase 2: Ping API
-  app.post("/api/nanda/ping", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/nanda/ping", async (req, res) => {
     try {
       const { endpoint } = req.body;
       

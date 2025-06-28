@@ -52,23 +52,47 @@ export const AgentDashboard = () => {
             })
           });
           
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          
           const status = await response.json();
+          console.log('✅ Heartbeat successful:', status);
           setHeartbeatStatus(status);
         } catch (error) {
           console.error('Heartbeat failed:', error);
-          setHeartbeatStatus(prev => ({ ...prev, indicator: '🔴', isRunning: false }));
+          setHeartbeatStatus(prev => ({ 
+            ...prev, 
+            indicator: '🔴', 
+            isRunning: false,
+            lastHeartbeat: new Date().toISOString()
+          }));
         }
-      }, 30000); // Every 30 seconds
+      }, 15000); // Every 15 seconds (faster for demo)
 
       // Initial heartbeat
-      fetch('/api/nanda/heartbeat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          agentId: 'agent-globalsocial',
-          status: 'active'
-        })
-      }).then(r => r.json()).then(setHeartbeatStatus);
+      const sendInitialHeartbeat = async () => {
+        try {
+          const response = await fetch('/api/nanda/heartbeat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              agentId: 'agent-globalsocial',
+              status: 'active'
+            })
+          });
+          
+          if (response.ok) {
+            const status = await response.json();
+            console.log('✅ Initial heartbeat successful:', status);
+            setHeartbeatStatus(status);
+          }
+        } catch (error) {
+          console.error('Initial heartbeat failed:', error);
+        }
+      };
+      
+      sendInitialHeartbeat();
     }
 
     return () => {
@@ -369,7 +393,7 @@ export const AgentDashboard = () => {
                   Status: {heartbeatStatus.indicator} {heartbeatStatus.isRunning ? 'ACTIVE' : 'INACTIVE'}
                 </Badge>
                 <Badge variant="outline" className="border-2 border-black text-black font-bold">
-                  🔄 Auto-Refresh: 15s
+                  🔄 Heartbeat: 15s
                 </Badge>
                 <Badge variant="outline" className="border-2 border-black text-black font-bold">
                   🎯 Agents: {agents?.length || 0}
