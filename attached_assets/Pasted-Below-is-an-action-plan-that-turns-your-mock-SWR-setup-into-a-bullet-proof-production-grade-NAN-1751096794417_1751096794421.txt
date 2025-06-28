@@ -1,0 +1,83 @@
+Below is an action-plan that turns your “mock + SWR” setup into a bullet-proof, production-grade NANDA handshake demo—complete with cryptographic proof, live UI indicators, and automated tests. It’s broken into four fast phases so you can ship visible progress every 48 h.
+
+🔑 Phase 0 – One-line config switch (15 min)
+Task	How
+Add real endpoint URL	In .env (or Supabase secret) set NANDA_BASE_URL=https://nanda-registry.com/api/v1
+Proxy instead of mock	Replace /api/nanda mock route with a simple fetch(NANDA_BASE_URL + req.url) proxy. (2-line diff.)
+
+Outcome: Dashboard now shows live public agents from the real quilt.
+
+⚙️ Phase 1 – Register your BankX agent (4 h)
+Create Agent Card JSON (bankx-agent.json):
+
+json
+Copy
+Edit
+{
+  "name": "BankX Social Hub 🇮🇳",
+  "endpoint": "https://mcp.bankx.global",
+  "capabilities": ["travel_commerce","escrow","wishlist"],
+  "owner": "did:web:bankx.global"
+}
+POST once via cURL
+
+bash
+Copy
+Edit
+curl -X POST $NANDA_BASE_URL/agents \
+     -H "Content-Type: application/json" \
+     -d @bankx-agent.json
+Dashboard badge – in AgentDashboard.tsx highlight your own agent in gold when the GET returns it.
+
+Outcome: Proof that you can publish → discover instantly.
+
+🔐 Phase 2 – Cryptographic heartbeat & secure ping (1 day)
+Sub-task	Implementation
+1. DID keypair	Use @nanda/sdk helper: const {did, sign} = generateKeypair() (store private key in Supabase secret).
+2. Heartbeat Edge Function	bankx-heartbeat.ts → every 5 min POST {did, signature, timestamp} to /agents/heartbeat.
+3. JSON-RPC test	Add button “Ping NANDA Calculator” → POST {"jsonrpc":"2.0","method":"ping","id":1} to demo agent endpoint, show "pong" toast.
+4. UI indicator	Top-right badge: 🟢 NANDA LIVE turns 🟡 if heartbeat >6 min or ping fails.
+
+Outcome: Irrefutable live handshake with signed proof.
+
+🧪 Phase 3 – Automated CI + screen-cap (1 day)
+Jest integration test
+
+ts
+Copy
+Edit
+test("registry returns BankX agent", async ()=> {
+  const res = await fetch(`${process.env.NANDA_BASE_URL}/agents?owner=bankx`);
+  expect((await res.json()).length).toBeGreaterThan(0);
+});
+asciinema script to record: POST → GET → ping.
+Store cast file; auto-update Loom for every commit.
+
+GitHub badge in README: ✅ NANDA handshake passing (shields.io from CI status).
+
+Outcome: Anyone can clone, run npm test, and see handshake proof.
+
+🎬 Phase 4 – Polished demo & metrics (2 days)
+Deliverable	Details
+90-sec Loom	Show PDF upload and chat path; overlay DevTools Network panel with POST 201 → GET → SSE heartbeat line; end on gold agent badge + 🟢 NANDA LIVE.
+Slide	“BankX @ NANDA Levels → L1↔L2 today, Adapter ready for L3” (use earlier analysis).
+Blog / LinkedIn post	Publish “How we wired BankX to the NANDA quilt in 72 hours” — drives inbound interest.
+
+📋 Command-pack you can paste into Lovable (adds Phases 0-2 code)
+markdown
+Copy
+Edit
+<instruction>
+Replace mock NANDA route with real proxy, register BankX agent, add heartbeat function, ping button, and live status badge.
+</instruction>
+
+<steps>
+1. **.env** — add NANDA_BASE_URL.
+2. **server/routes.ts** — proxy any /api/nanda/* to `${process.env.NANDA_BASE_URL}`.
+3. **scripts/registerAgent.ts** — POST bankx-agent.json once.
+4. **supabase/functions/bankx-heartbeat.ts** — every 5 min POST heartbeat with DID+sig.
+5. **client/components/AgentDashboard.tsx**
+   • highlight own agent (gold border)
+   • add ping button; on success setState(live=true)
+6. **client/components/NavStatus.tsx**
+   • show 🟢 or 🟡 based on lastPing/heartbeat timestamp.

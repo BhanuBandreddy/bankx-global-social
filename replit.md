@@ -4,6 +4,9 @@
 Social trust network platform with AI agents, payment escrow, and logistics coordination. Successfully migrated from Lovable/Supabase to Replit's built-in PostgreSQL database.
 
 ## Recent Changes
+- **NANDA Registry Integration - Phase 1 (June 2025)**: Implemented agent registration system with real registry proxy support
+- **Agent Dashboard Enhancement**: Added gold highlighting for GlobalSocial agent with "OUR AGENT" label
+- **Registration Scripts**: Created automated agent registration and integration testing tools
 - **Seamless Purchase Flow Complete (June 2025)**: Implemented inline transaction flow within social feed using drawer overlay
 - **Fixed Payment Processing**: Resolved UUID validation and foreign key constraint issues in escrow system
 - **Enhanced Mock Data**: Updated social feed with proper UUID formatting for products and users
