@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { authClient } from "@/lib/auth";
 
 const iconMap = {
   "globe-2": Globe2,
@@ -43,9 +44,13 @@ export const AgentDashboard = () => {
       // Start heartbeat
       heartbeatInterval = setInterval(async () => {
         try {
+          const token = authClient.getToken();
           const response = await fetch('/api/nanda/heartbeat', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              ...(token && { 'Authorization': `Bearer ${token}` })
+            },
             body: JSON.stringify({ 
               agentId: 'agent-globalsocial',
               status: 'active'
@@ -73,9 +78,13 @@ export const AgentDashboard = () => {
       // Initial heartbeat
       const sendInitialHeartbeat = async () => {
         try {
+          const token = authClient.getToken();
           const response = await fetch('/api/nanda/heartbeat', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              ...(token && { 'Authorization': `Bearer ${token}` })
+            },
             body: JSON.stringify({ 
               agentId: 'agent-globalsocial',
               status: 'active'
@@ -116,9 +125,13 @@ export const AgentDashboard = () => {
 
   const handlePingTest = async () => {
     try {
+      const token = authClient.getToken();
       const response = await fetch('/api/nanda/ping', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
         body: JSON.stringify({ endpoint: 'https://globeguides-concierge.nanda.ai/api/v1' })
       });
       
