@@ -1,0 +1,57 @@
+
+0 │ Where Global Social stands today
+Layer	Status
+NANDA SDK	✅ Agents registered, heartbeat & ping passing, Jest CI badge green.
+Core agents	GlobeGuides, LocaleLens, TrustPay, PathSync all orchestrated via MCP + A2A.
+Trust / Escrow	x402 flow live, real-time dashboard & UI badge.
+Data gaps	No crowd-level demand forecasts; LocaleLens relies solely on GPT-4 results.
+
+1 │ AgentTorch Pilot – “Crowd-Heat Sandbox” (1 week)
+| Goal | Offline simulation that predicts city-level demand spikes (e.g. “Sneakers surge in Paris”). |
+
+Steps
+1. Spin up AgentTorch on a Colab Pro or Modal GPU with agents = 100k shoppers, 500 couriers, 200 merchants.
+2. Seed simulation with anonymised real platform events: itineraries & wishlist tags (Supabase → Parquet).
+3. Output hourly “heat” JSON → {city, product_tag, demand_score}.
+4. Expose as /functions/v1/crowd-heat Edge Function that simply SERVES yesterday’s JSON.
+5. UI tweak: show a unobtrusive badge “🧭 Crowd signal: Sneakers ↑27 % in Paris”.
+
+Impact: demonstrates Level-4 “ripple sensing” the MIT article calls for, using AgentTorch but without live coupling yet.
+
+2 │ LocaleLens Upgrade – Perplexity API (3 days)
+Why Perplexity?	Fast, low-cost retrieval-augmented search that blends web + citations—perfect for hyper-local facts.
+1. Create /functions/v1/perplexity-proxy (call Perplexity’s /search?query= with secret key).	
+2. Inside localeLensAgent prompt, add a tool call: {"name":"perplexitySearch", "description":"Get freshest local info"}.	
+3. Parse result → highlight “Local gem” cards with citations.	
+4. Fallback: if Perplexity 429, revert to GPT-4 search.	
+
+Benefit: richer, up-to-date local suggestions without hammering GPT-4 tokens; tangible quality bump users notice immediately.
+
+3 │ Real-time Feedback Loop (4 weeks, optional)
+Feature	How to implement with minimal risk
+Adaptive Escrow Limits	TrustPay Edge Function queries AgentTorch API: if demand_score > 0.8 && trust_score < 60 tighten release period from 7 d → 10 d.
+Dynamic Courier Pricing	PathSync adjusts courier incentive up 10 % when crowd-heat predicts parcel congestion.
+Agent Self-evaluation	Feed Perplexity + AgentTorch metrics into a nightly AutoGPT script that retrains LocaleLens embedding index (“top 500 trending locales”).
+
+Suggested Sprint Timeline
+Week	Deliverable
+1	AgentTorch notebook + heat JSON API + UI badge
+2	Perplexity proxy + LocaleLens tool call + A/B toggle
+3	Metrics review: click-through on crowd badge, Perplexity latency & cost
+4–5	Adaptive escrow & courier pricing rules behind feature flag
+
+Measuring Success
+Metric	Target after Phase 2
+Heat-badge CTR	≥ 15 % users click for details
+Perplexity latency	≤ 1.5 s median
+GPT token spend	↓ 30 % in LocaleLens pipeline
+Trust-score disputes	No increase after adaptive limits (Phase 3)
+
+Bottom line
+NANDA SDK proves real handshake & identity.
+
+AgentTorch supplies predictive crowd intelligence (Level-4 coordination).
+
+Perplexity boosts LocaleLens precision while cutting cost.
+
+Together they turn Global Social into a crowd-aware, cost-efficient, next-gen agent platform—a compelling story for any acquirer or strategic partner.
