@@ -35,46 +35,6 @@ export const AgentDashboard = () => {
   const [isHeartbeatActive, setIsHeartbeatActive] = useState(false);
   const { data: agents, error } = useNandaAgents("travel_commerce");
 
-  // Show skeleton loader while data is loading
-  if (!agents || agents.length === 0) {
-    return (
-      <div className="max-w-6xl mx-auto bg-white border-4 border-black">
-        <div className="p-6 border-b-4 border-black bg-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-3xl font-bold text-black uppercase tracking-tight">Global Socials AI Agents</h2>
-              <p className="text-gray-600 font-medium mt-1">Loading agents from Nanda registry...</p>
-            </div>
-            <Skeleton className="h-6 w-32" />
-          </div>
-        </div>
-        
-        <div className="p-6 bg-gray-50 border-b-4 border-black">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-32 w-full" />
-            ))}
-          </div>
-        </div>
-        
-        <div className="p-6">
-          <Skeleton className="h-64 w-full" />
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="max-w-6xl mx-auto bg-white border-4 border-black">
-        <div className="p-6 text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error Loading Agents</h2>
-          <p className="text-gray-600">Failed to load agents from Nanda registry</p>
-        </div>
-      </div>
-    );
-  }
-
   // Phase 2: Heartbeat Management
   useEffect(() => {
     let heartbeatInterval: NodeJS.Timeout;
@@ -160,6 +120,46 @@ export const AgentDashboard = () => {
     { agent: "LocaleLens AI", action: "Found hidden jazz club via quilt data", impact: "Perfect local match", time: "3m ago" },
     { agent: "PathSync Social Logistics", action: "Fellow traveller collecting your package", impact: "Crowd-sourced delivery", time: "5m ago" },
   ];
+
+  // Show skeleton loader while data is loading
+  if (!agents || agents.length === 0) {
+    return (
+      <div className="max-w-6xl mx-auto bg-white border-4 border-black">
+        <div className="p-6 border-b-4 border-black bg-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-black uppercase tracking-tight">Global Socials AI Agents</h2>
+              <p className="text-gray-600 font-medium mt-1">Loading agents from Nanda registry...</p>
+            </div>
+            <Skeleton className="h-6 w-32" />
+          </div>
+        </div>
+        
+        <div className="p-6 bg-gray-50 border-b-4 border-black">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-32 w-full" />
+            ))}
+          </div>
+        </div>
+        
+        <div className="p-6">
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-6xl mx-auto bg-white border-4 border-black">
+        <div className="p-6 text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error Loading Agents</h2>
+          <p className="text-gray-600">Failed to load agents from Nanda registry</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto bg-white border-4 border-black">
