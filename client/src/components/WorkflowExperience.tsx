@@ -215,11 +215,20 @@ export const WorkflowExperience = () => {
       } else {
         throw new Error('Failed to parse itinerary');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing PDF:', error);
+      
+      // Enhanced error handling with specific messages
+      let errorMessage = "Failed to parse itinerary. Please try again.";
+      if (error.message?.includes('JSON') || error.message?.includes('Unexpected token')) {
+        errorMessage = "Server response error. The API might be unavailable.";
+      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        errorMessage = "Network error. Please check your connection.";
+      }
+      
       toast({
         title: "Processing Error",
-        description: "Failed to parse itinerary. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
