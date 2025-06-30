@@ -61,9 +61,9 @@ class OpenAIItineraryParser {
       };
     }
 
-    // Check if file is too large (simplified check - in real implementation, decode and check size)
-    if (base64PDF === 'large_file' || base64PDF.length > 500000) {
-      console.log('File too large for OpenAI processing, using filename parsing');
+    // Only skip OpenAI if specifically marked as large_file
+    if (base64PDF === 'large_file') {
+      console.log('File marked as large, using filename parsing');
       return {
         success: true,
         itinerary: {
@@ -79,6 +79,8 @@ class OpenAIItineraryParser {
         }
       };
     }
+    
+    console.log(`Sending ${base64PDF.length} character base64 PDF to OpenAI GPT-4o for real parsing...`);
 
     const prompt = `Parse this travel document and extract key itinerary information. Look for:
 
@@ -112,6 +114,8 @@ Format as JSON:
 Parse the actual document content, not just the filename. If the filename suggests ${suggestedDestination} but the document shows different destinations, use the document content.`;
 
     try {
+      console.log('Making actual OpenAI API call to GPT-4o with document content...');
+      
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
@@ -146,19 +150,25 @@ Parse the actual document content, not just the filename. If the filename sugges
           response_format: { type: "json_object" }
         }),
       });
+      
+      console.log('OpenAI API response received, status:', response.status);
 
       if (!response.ok) {
         throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log('Full OpenAI response:', JSON.stringify(data, null, 2));
+      
       const content = data.choices[0]?.message?.content;
+      console.log('OpenAI extracted content:', content);
 
       if (!content) {
         throw new Error('No content received from OpenAI API');
       }
 
       const parsedItinerary = JSON.parse(content);
+      console.log('Successfully parsed travel itinerary from OpenAI:', parsedItinerary);
       
       return {
         success: true,
