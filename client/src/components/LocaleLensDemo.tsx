@@ -34,87 +34,41 @@ export const LocaleLensDemo = ({ destination = "Tokyo", userLocation }: LocaleLe
 
   const categories = ["all", "restaurants", "attractions", "shopping", "nightlife", "culture"];
 
-  // Mock LocaleLens data generation
-  const generateLocalDiscoveries = (city: string, category: string = "all"): LocalDiscovery[] => {
-    const discoveries: LocalDiscovery[] = [];
-    
-    const templates = {
-      Tokyo: {
-        restaurants: [
-          { name: "Tsukiji Sushi Omakase", category: "restaurants", description: "Hidden gem for authentic sushi", local_tip: "Ask for today's special catch" },
-          { name: "Ramen Yokocho Alley", category: "restaurants", description: "Local ramen street food", local_tip: "Try the miso variant, locals' favorite" }
-        ],
-        attractions: [
-          { name: "Senso-ji Temple Gardens", category: "attractions", description: "Peaceful temple grounds", local_tip: "Visit at 6 AM for fewer crowds" },
-          { name: "Shibuya Sky Observatory", category: "attractions", description: "360° city views", local_tip: "Golden hour timing is 5:30 PM" }
-        ],
-        shopping: [
-          { name: "Vintage Harajuku Boutique", category: "shopping", description: "Unique fashion finds", local_tip: "Owner speaks English, ask for styling advice" }
-        ]
-      },
-      Paris: {
-        restaurants: [
-          { name: "Le Comptoir du 6ème", category: "restaurants", description: "Authentic bistro experience", local_tip: "Reserve 2 days ahead" }
-        ],
-        attractions: [
-          { name: "Hidden Montmartre Viewpoint", category: "attractions", description: "Secret panoramic spot", local_tip: "Follow Rue de l'Abreuvoir uphill" }
-        ]
-      },
-      London: {
-        restaurants: [
-          { name: "Borough Market Gems", category: "restaurants", description: "Artisanal food vendors", local_tip: "Saturday mornings have best selection" }
-        ]
+  // Real-time discovery using Perplexity API
+  const fetchRealDiscoveries = async (city: string, category: string = "all", search?: string): Promise<LocalDiscovery[]> => {
+    try {
+      const params = new URLSearchParams();
+      if (category !== "all") params.append('category', category);
+      if (search) params.append('search', search);
+      
+      const response = await apiClient.get(`/api/locale-lens/discover/${city}?${params}`);
+      
+      if (response.success) {
+        return response.discoveries.map((item: any, index: number) => ({
+          ...item,
+          id: `${city}-${item.category}-${index}`,
+          coordinates: [35.6762 + Math.random() * 0.1, 139.6503 + Math.random() * 0.1] as [number, number],
+        }));
+      } else {
+        throw new Error(response.error || 'Failed to fetch discoveries');
       }
-    };
-
-    const cityData = templates[city as keyof typeof templates] || templates.Tokyo;
-    
-    Object.entries(cityData).forEach(([cat, items]) => {
-      if (category === "all" || category === cat) {
-        items.forEach((item, index) => {
-          discoveries.push({
-            id: `${city}-${cat}-${index}`,
-            name: item.name,
-            category: item.category,
-            location: `${city}, Japan`,
-            coordinates: [35.6762 + Math.random() * 0.1, 139.6503 + Math.random() * 0.1] as [number, number],
-            rating: 4.2 + Math.random() * 0.8,
-            description: item.description,
-            distance: `${Math.floor(Math.random() * 3) + 1}.${Math.floor(Math.random() * 9)}km`,
-            price_range: ["€", "€€", "€€€"][Math.floor(Math.random() * 3)],
-            crowd_level: ["low", "medium", "high"][Math.floor(Math.random() * 3)] as any,
-            trending_score: Math.random() * 100,
-            local_tip: item.local_tip
-          });
-        });
-      }
-    });
-
-    return discoveries.sort((a, b) => b.trending_score - a.trending_score);
+    } catch (error) {
+      console.error('Real discovery fetch failed:', error);
+      throw error;
+    }
   };
 
   const searchLocal = async () => {
     setIsLoading(true);
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
     try {
-      // Generate mock local discoveries
-      const results = generateLocalDiscoveries(destination, selectedCategory);
-      
-      // Filter by search query if provided
-      const filteredResults = searchQuery 
-        ? results.filter(item => 
-            item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.category.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-        : results;
-      
-      setDiscoveries(filteredResults);
+      // Use real Perplexity API for authentic local discovery
+      const results = await fetchRealDiscoveries(destination, selectedCategory, searchQuery);
+      setDiscoveries(results);
     } catch (error) {
       console.error('LocaleLens search failed:', error);
+      // Fallback message for missing API key
+      setDiscoveries([]);
     } finally {
       setIsLoading(false);
     }
@@ -182,9 +136,9 @@ export const LocaleLensDemo = ({ destination = "Tokyo", userLocation }: LocaleLe
         {/* Status */}
         <div className="mb-4 p-3 bg-blue-50 border-2 border-blue-200 rounded-lg">
           <div className="flex items-center space-x-2 text-sm">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="font-medium">LocaleLens AI Active</span>
-            <span className="text-gray-600">• Real-time local intelligence • Crowd-aware recommendations</span>
+            <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+            <span className="font-medium">LocaleLens Perplexity Integration</span>
+            <span className="text-gray-600">• Awaiting API key • Real-time discovery ready</span>
           </div>
         </div>
 
@@ -199,8 +153,19 @@ export const LocaleLensDemo = ({ destination = "Tokyo", userLocation }: LocaleLe
             <h3 className="font-bold text-lg mb-3">🎯 Local Discoveries ({discoveries.length})</h3>
             
             {discoveries.length === 0 ? (
-              <div className="text-center py-4 text-gray-500">
-                No discoveries found. Try adjusting your search or category.
+              <div className="text-center py-8">
+                <div className="mb-4">
+                  <Compass className="w-12 h-12 mx-auto text-yellow-500 mb-2" />
+                  <h4 className="font-bold text-lg mb-2">Perplexity API Required</h4>
+                  <p className="text-gray-600 mb-4">
+                    LocaleLens needs Perplexity API for real-time local discovery.
+                  </p>
+                  <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 text-left">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Next:</strong> Provide your Perplexity API key to unlock authentic local recommendations powered by real-time search.
+                    </p>
+                  </div>
+                </div>
               </div>
             ) : (
               discoveries.map((discovery) => (
@@ -253,19 +218,19 @@ export const LocaleLensDemo = ({ destination = "Tokyo", userLocation }: LocaleLe
 
         {/* Integration Status */}
         <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-lg">
-          <h4 className="font-bold text-sm mb-2">🗺️ Mapbox Integration Ready</h4>
+          <h4 className="font-bold text-sm mb-2">🔧 Integration Status</h4>
           <div className="space-y-1 text-xs">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-              <span>Mapbox token: Pending user configuration</span>
+              <span>Perplexity API: Required for real-time discovery</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+              <span>Mapbox token: Pending for map visualization</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span>LocaleLens AI: Real-time discovery active</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span>Crowd intelligence: Live data integration</span>
+              <span>AgentTorch crowd intelligence: Active</span>
             </div>
           </div>
         </div>
