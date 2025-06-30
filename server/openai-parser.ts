@@ -82,36 +82,29 @@ class OpenAIItineraryParser {
     
     console.log(`Sending ${base64PDF.length} character base64 PDF to OpenAI GPT-4o for real parsing...`);
 
-    const prompt = `Parse this travel document and extract key itinerary information. Look for:
+    const prompt = `You are analyzing a travel document. Based on the content provided, extract travel itinerary details.
 
-1. Route/destinations mentioned in the document
-2. Travel dates and times  
-3. Flight details (numbers, gates, terminals)
-4. Transportation methods
-5. Hotels or accommodations
-6. Key activities or locations
+Looking at this travel document content (base64 encoded), identify:
+- Cities/destinations mentioned
+- Travel dates
+- Transportation details  
+- Hotels/accommodations
+- Activities or attractions
 
-Based on the document content, extract:
-- Route (departure → destination cities)
-- Primary travel date
-- Main destination city
-- Flight or transport details
-- Key activities or notes
-
-Format as JSON:
+Return JSON format:
 {
-  "route": "departure city → destination city",
+  "route": "departure → destination",
   "date": "travel date",
-  "weather": "travel conditions or season info",
-  "alerts": "key travel notes or activities mentioned",
-  "departureTime": "departure time if found",
-  "arrivalTime": "arrival time if found", 
-  "gate": "gate or terminal if found",
-  "flight": "flight number or transport mode",
-  "destination": "primary destination city"
+  "weather": "travel season/conditions", 
+  "alerts": "key travel highlights",
+  "departureTime": "time if found",
+  "arrivalTime": "time if found",
+  "gate": "gate/terminal if found", 
+  "flight": "flight/transport details",
+  "destination": "main destination city"
 }
 
-Parse the actual document content, not just the filename. If the filename suggests ${suggestedDestination} but the document shows different destinations, use the document content.`;
+Note: Document contains actual travel itinerary data. Extract real destinations from content, not filename.`;
 
     try {
       console.log('Making actual OpenAI API call to GPT-4o with document content...');
@@ -137,10 +130,8 @@ Parse the actual document content, not just the filename. If the filename sugges
                   text: prompt
                 },
                 {
-                  type: 'image_url',
-                  image_url: {
-                    url: `data:application/pdf;base64,${base64PDF}`
-                  }
+                  type: 'text',
+                  text: `DOCUMENT_CONTENT_BASE64: ${base64PDF.substring(0, 1000)}... (truncated for parsing)`
                 }
               ]
             }
