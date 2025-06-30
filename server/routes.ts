@@ -333,41 +333,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Processing file:', filename);
       
-      // Smart filename parsing with enhanced detection
-      const fname = filename.toLowerCase();
-      let destination = "Tokyo"; // Default to Tokyo for travel docs
+      // Try OpenAI parsing first, then fallback to filename parsing
+      const { openaiParser } = await import('./openai-parser');
       
-      if (fname.includes('tokyo') || fname.includes('nrt') || fname.includes('hnd') || fname.includes('travel') || fname.includes('doc')) {
-        destination = "Tokyo";
-      } else if (fname.includes('london') || fname.includes('lhr') || fname.includes('lgw')) {
-        destination = "London";
-      } else if (fname.includes('dubai') || fname.includes('dxb')) {
-        destination = "Dubai";
-      } else if (fname.includes('singapore') || fname.includes('sin')) {
-        destination = "Singapore";
-      } else if (fname.includes('bangkok') || fname.includes('bkk')) {
-        destination = "Bangkok";
-      } else if (fname.includes('paris') || fname.includes('cdg') || fname.includes('ory')) {
-        destination = "Paris";
-      }
-
-      const result = {
-        success: true,
-        itinerary: {
-          route: `Document → ${destination}`,
-          date: new Date().toLocaleDateString(),
-          weather: "Smart parsing from filename",
-          alerts: "Intelligent destination detection from document name",
-          departureTime: "Processing...",
-          arrivalTime: "Processing...",
-          gate: "TBD",
-          flight: "Document uploaded",
-          destination: destination
+      let result;
+      if (openaiParser.isConfigured()) {
+        console.log('Attempting OpenAI PDF parsing...');
+        try {
+          result = await openaiParser.parseItinerary(base64PDF, filename);
+          console.log('OpenAI parsing result:', result);
+        } catch (error) {
+          console.error('OpenAI parsing failed, falling back to filename parsing:', error);
+          result = null;
         }
-      };
+      }
+      
+      // Fallback to smart filename parsing if OpenAI failed or not configured
+      if (!result || !result.success) {
+        console.log('Using fallback filename parsing...');
+        const fname = filename.toLowerCase();
+        let destination = "Tokyo"; // Default to Tokyo for travel docs
+        
+        if (fname.includes('tokyo') || fname.includes('nrt') || fname.includes('hnd') || fname.includes('travel') || fname.includes('doc')) {
+          destination = "Tokyo";
+        } else if (fname.includes('london') || fname.includes('lhr') || fname.includes('lgw')) {
+          destination = "London";
+        } else if (fname.includes('dubai') || fname.includes('dxb')) {
+          destination = "Dubai";
+        } else if (fname.includes('singapore') || fname.includes('sin')) {
+          destination = "Singapore";
+        } else if (fname.includes('bangkok') || fname.includes('bkk')) {
+          destination = "Bangkok";
+        } else if (fname.includes('paris') || fname.includes('cdg') || fname.includes('ory')) {
+          destination = "Paris";
+        }
+
+        result = {
+          success: true,
+          itinerary: {
+            route: `Document → ${destination}`,
+            date: new Date().toLocaleDateString(),
+            weather: "Smart parsing from filename",
+            alerts: "Filename-based destination detection",
+            departureTime: "Processing...",
+            arrivalTime: "Processing...",
+            gate: "TBD",
+            flight: "Document uploaded",
+            destination: destination
+          }
+        };
+      }
       
       console.log('Returning result:', result);
-      res.json(result);
+      return res.json(result);
     } catch (error: any) {
       console.error('Parse itinerary error:', error);
       res.status(500).json({

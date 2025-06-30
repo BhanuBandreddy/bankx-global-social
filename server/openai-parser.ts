@@ -42,15 +42,16 @@ class OpenAIItineraryParser {
       suggestedDestination = "Bangkok";
     }
 
-    // If file is too large or no API key, use smart filename parsing
-    if (!this.apiKey || base64PDF === 'large_file') {
+    // If no API key, use smart filename parsing
+    if (!this.apiKey) {
+      console.log('No OpenAI API key configured, using filename parsing');
       return {
         success: true,
         itinerary: {
           route: `Document → ${suggestedDestination}`,
           date: new Date().toLocaleDateString(),
           weather: "Smart parsing from filename",
-          alerts: "Filename-based destination detection",
+          alerts: "Filename-based destination detection (OpenAI not configured)",
           departureTime: "Processing...",
           arrivalTime: "Processing...",
           gate: "TBD", 
@@ -60,29 +61,55 @@ class OpenAIItineraryParser {
       };
     }
 
-    const prompt = `Parse this travel document and extract key itinerary information. The document suggests travel to ${suggestedDestination}.
+    // Check if file is too large (simplified check - in real implementation, decode and check size)
+    if (base64PDF === 'large_file' || base64PDF.length > 500000) {
+      console.log('File too large for OpenAI processing, using filename parsing');
+      return {
+        success: true,
+        itinerary: {
+          route: `Document → ${suggestedDestination}`,
+          date: new Date().toLocaleDateString(),
+          weather: "Large file - filename parsing used",
+          alerts: "File size optimization applied",
+          departureTime: "Processing...",
+          arrivalTime: "Processing...",
+          gate: "TBD", 
+          flight: "Document uploaded",
+          destination: suggestedDestination
+        }
+      };
+    }
 
-Extract:
-- Route (departure → destination)
-- Travel date
-- Flight details (departure/arrival times, gate, flight number)
-- Weather info or travel alerts
-- Destination city
+    const prompt = `Parse this travel document and extract key itinerary information. Look for:
+
+1. Route/destinations mentioned in the document
+2. Travel dates and times  
+3. Flight details (numbers, gates, terminals)
+4. Transportation methods
+5. Hotels or accommodations
+6. Key activities or locations
+
+Based on the document content, extract:
+- Route (departure → destination cities)
+- Primary travel date
+- Main destination city
+- Flight or transport details
+- Key activities or notes
 
 Format as JSON:
 {
   "route": "departure city → destination city",
   "date": "travel date",
-  "weather": "weather info or travel conditions",
-  "alerts": "any travel alerts or important notes",
-  "departureTime": "departure time",
-  "arrivalTime": "arrival time", 
-  "gate": "gate number",
-  "flight": "flight number",
-  "destination": "destination city"
+  "weather": "travel conditions or season info",
+  "alerts": "key travel notes or activities mentioned",
+  "departureTime": "departure time if found",
+  "arrivalTime": "arrival time if found", 
+  "gate": "gate or terminal if found",
+  "flight": "flight number or transport mode",
+  "destination": "primary destination city"
 }
 
-If information is missing, use reasonable defaults based on the filename suggesting ${suggestedDestination}.`;
+Parse the actual document content, not just the filename. If the filename suggests ${suggestedDestination} but the document shows different destinations, use the document content.`;
 
     try {
       const response = await fetch(this.baseUrl, {

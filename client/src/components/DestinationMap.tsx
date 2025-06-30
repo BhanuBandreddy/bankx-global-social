@@ -51,36 +51,25 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
   const destinationCoords = getDestinationCoords(destination);
 
   useEffect(() => {
-    fetchMapboxToken();
+    initializeMapWithToken();
   }, []);
 
-  const fetchMapboxToken = async () => {
-    try {
-      console.log('Attempting to fetch Mapbox token from Supabase...');
-      
-      // Try to get token from API
-      const data = await apiClient.getMapboxToken();
-      
-      console.log('API response:', { data });
-      
-      if (data && data.success && data.token) {
-        console.log('Token received successfully, initializing map...');
-        setMapboxToken(data.token);
-        setIsLoading(false);
-        // Add a small delay to ensure container is ready
-        setTimeout(() => initializeMap(data.token), 100);
-      } else {
-        console.log('No token in response or unsuccessful:', data);
-        setError('No valid token received from server');
-        setShowTokenInput(true);
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error('Error fetching Mapbox token:', error);
-      setError(`Network error: ${error.message}`);
+  const initializeMapWithToken = () => {
+    // Use environment variable for Mapbox token
+    const token = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
+    
+    if (!token) {
+      console.warn('Mapbox token not found - showing fallback display');
+      setError('Mapbox token not configured');
       setShowTokenInput(true);
       setIsLoading(false);
+      return;
     }
+
+    setMapboxToken(token);
+    setIsLoading(false);
+    // Add a small delay to ensure container is ready
+    setTimeout(() => initializeMap(token), 100);
   };
 
   const initializeMap = (token: string) => {
@@ -172,9 +161,9 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
         }
       };
       
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error initializing map:', err);
-      setError(`Map setup error: ${err.message}`);
+      setError(`Map setup error: ${err.message || 'Unknown error'}`);
     }
   };
 
@@ -212,7 +201,7 @@ export const DestinationMap = ({ destination, products, onProductClick }: Destin
           onClick={() => {
             setError(null);
             setIsLoading(true);
-            fetchMapboxToken();
+            initializeMapWithToken();
           }}
           className="bg-red-600 text-white px-4 py-2 border-4 border-red-800 hover:bg-red-700"
         >
