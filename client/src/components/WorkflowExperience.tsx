@@ -163,37 +163,15 @@ export const WorkflowExperience = () => {
       const base64PDF = await convertFileToBase64(file);
       console.log('Converted PDF to base64');
       
-      // Enhanced itinerary parsing with real destination extraction
-      const fileName = file.name.toLowerCase();
-      let destination = "Paris"; // Default
+      // Use OpenAI for real PDF parsing
+      const parseResponse = await apiClient.post('/api/parse-itinerary', {
+        base64PDF: base64PDF,
+        filename: file.name
+      });
       
-      // Smart destination detection from filename
-      if (fileName.includes('tokyo') || fileName.includes('nrt') || fileName.includes('hnd')) {
-        destination = "Tokyo";
-      } else if (fileName.includes('london') || fileName.includes('lhr') || fileName.includes('lgw')) {
-        destination = "London";
-      } else if (fileName.includes('dubai') || fileName.includes('dxb')) {
-        destination = "Dubai";
-      } else if (fileName.includes('singapore') || fileName.includes('sin')) {
-        destination = "Singapore";
-      } else if (fileName.includes('bangkok') || fileName.includes('bkk')) {
-        destination = "Bangkok";
-      }
-
-      const data = {
-        success: true,
-        itinerary: {
-          route: `Document → ${destination}`,
-          date: new Date().toLocaleDateString(),
-          weather: "Processing travel details...",
-          alerts: "Document parsed successfully",
-          departureTime: "Processing...",
-          arrivalTime: "Processing...",
-          gate: "TBD",
-          flight: "Document uploaded",
-          destination: destination
-        }
-      };
+      console.log('PDF processing response:', parseResponse);
+      
+      const data = parseResponse;
 
       // Fetch crowd-heat data for destination
       try {

@@ -9,6 +9,7 @@ import { insertProductSchema, insertFeedPostSchema, insertDeliveryOptionSchema, 
 import { eq, and, desc, asc, ilike } from "drizzle-orm";
 import { agentTorchSimulator } from "./agenttorch";
 import { perplexityLocaleLens, getSmartPricing } from "./perplexity";
+import { openaiParser } from "./openai-parser";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -670,6 +671,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }
+  });
+
+  // LocaleLens API endpoints
+  app.get("/api/locale-lens/discover/:destination", async (req: AuthenticatedRequest, res) => {
+    try {
+      const { destination } = req.params;
+      const { category = 'all', search } = req.query;
+      
+      if (!perplexityLocaleLens.isConfigured()) {
+        return res.status(503).json({
+          success: false,
+          error: "Perplexity API not configured",
+          message: "LocaleLens requires Perplexity API key for real-time discovery"
+        });
+      }
+
+      const discoveries = await perplexityLocaleLens.searchLocalDiscoveries(
+        destination,
+        category as string,
+        search as string
+      );
+
+      const crowdData = agentTorchSimulator.getCrowdHeat({ city: destination });
+      const smartPricing = getSmartPricing(discoveries, crowdData);
+
+      res.json({
+        success: true,
+        destination,
+        discoveries,
+        count: discoveries.length,
+        smart_pricing: smartPricing,
+        crowd_context: crowdData.slice(0, 3),
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error('LocaleLens discovery error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || "Failed to discover local spots"
+      });
+    }
+  });
+
+  app.get("/api/locale-lens/status", async (req, res) => {
+    res.json({
+      success: true,
+      configured: perplexityLocaleLens.isConfigured(),
+      message: perplexityLocaleLens.isConfigured() 
+        ? "LocaleLens ready for real-time discovery"
+        : "Perplexity API key required for LocaleLens activation"
+    });
   });
 
   const httpServer = createServer(app);
