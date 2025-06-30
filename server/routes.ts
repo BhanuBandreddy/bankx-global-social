@@ -7,6 +7,8 @@ import { db, escrowTransactions, paymentEvents, blinkConversations, blinkWorkflo
 import { products, feedPosts, deliveryOptions, travelers, chatMessages, users, profiles } from "../shared/schema";
 import { insertProductSchema, insertFeedPostSchema, insertDeliveryOptionSchema, insertTravelerSchema, insertChatMessageSchema } from "../shared/schema";
 import { eq, and, desc, asc, ilike } from "drizzle-orm";
+import { agentTorchSimulator } from "./agenttorch";
+import { perplexityLocaleLens, getSmartPricing } from "./perplexity";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes

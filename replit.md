@@ -7,6 +7,7 @@ Social trust network platform with AI agents, payment escrow, and logistics coor
 - **Platform Architecture Clarified (June 2025)**: Separated full app flow (production social commerce) from demo flow (quick use case demonstration) with distinct user paths and clear integration status
 - **LocaleLens Perplexity Integration (June 2025)**: Implemented real-time local discovery using Perplexity API for authentic recommendations, replacing mock data with live search capabilities
 - **PDF Processing Fixed (June 2025)**: Enhanced smart destination detection from filenames, removed Supabase dependency for Mapbox token loading
+- **PDF Processing Fixed (June 2025)**: Enhanced smart destination detection from filenames, removed Supabase dependency for Mapbox token loading
 - **AgentTorch Phase 1 Complete (June 2025)**: Implemented crowd-heat simulation with real-time market prediction across 8 cities, integrated into social feed and demo workflow for predictive commerce intelligence
 - **NANDA Phase 3 Complete (June 2025)**: Implemented comprehensive automated testing infrastructure with Jest integration tests, GitHub Actions CI workflow, and executable verification of NANDA handshake protocol
 - **NANDA Phase 2 Complete (June 2025)**: Successfully implemented and tested NANDA SDK-style cryptographic heartbeat system with DID generation, signature verification, and real-time status monitoring showing ACTIVE status consistently

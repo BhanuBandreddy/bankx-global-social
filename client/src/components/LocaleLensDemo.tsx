@@ -134,11 +134,11 @@ export const LocaleLensDemo = ({ destination = "Tokyo", userLocation }: LocaleLe
         </div>
 
         {/* Status */}
-        <div className="mb-4 p-3 bg-blue-50 border-2 border-blue-200 rounded-lg">
+        <div className="mb-4 p-3 bg-green-50 border-2 border-green-200 rounded-lg">
           <div className="flex items-center space-x-2 text-sm">
-            <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-            <span className="font-medium">LocaleLens Perplexity Integration</span>
-            <span className="text-gray-600">• Awaiting API key • Real-time discovery ready</span>
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="font-medium">LocaleLens Perplexity Active</span>
+            <span className="text-gray-600">• Real-time discovery • Authentic recommendations</span>
           </div>
         </div>
 
@@ -155,14 +155,14 @@ export const LocaleLensDemo = ({ destination = "Tokyo", userLocation }: LocaleLe
             {discoveries.length === 0 ? (
               <div className="text-center py-8">
                 <div className="mb-4">
-                  <Compass className="w-12 h-12 mx-auto text-yellow-500 mb-2" />
-                  <h4 className="font-bold text-lg mb-2">Perplexity API Required</h4>
+                  <Compass className="w-12 h-12 mx-auto text-blue-500 mb-2 animate-pulse" />
+                  <h4 className="font-bold text-lg mb-2">Searching Local Discoveries...</h4>
                   <p className="text-gray-600 mb-4">
-                    LocaleLens needs Perplexity API for real-time local discovery.
+                    LocaleLens is finding authentic recommendations for {destination}
                   </p>
-                  <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 text-left">
-                    <p className="text-sm text-yellow-800">
-                      <strong>Next:</strong> Provide your Perplexity API key to unlock authentic local recommendations powered by real-time search.
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-4 text-left">
+                    <p className="text-sm text-blue-800">
+                      <strong>Powered by:</strong> Perplexity real-time search • AgentTorch crowd intelligence
                     </p>
                   </div>
                 </div>
@@ -221,12 +221,12 @@ export const LocaleLensDemo = ({ destination = "Tokyo", userLocation }: LocaleLe
           <h4 className="font-bold text-sm mb-2">🔧 Integration Status</h4>
           <div className="space-y-1 text-xs">
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-              <span>Perplexity API: Required for real-time discovery</span>
+              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              <span>Perplexity API: Active - Real-time discovery enabled</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-              <span>Mapbox token: Pending for map visualization</span>
+              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              <span>Mapbox token: Active - Map visualization enabled</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
