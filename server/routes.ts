@@ -333,11 +333,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Processing file:', filename);
       
-      // Smart filename parsing (always used as primary method for reliability)
+      // Smart filename parsing with enhanced detection
       const fname = filename.toLowerCase();
-      let destination = "Paris";
+      let destination = "Tokyo"; // Default to Tokyo for travel docs
       
-      if (fname.includes('tokyo') || fname.includes('nrt') || fname.includes('hnd')) {
+      if (fname.includes('tokyo') || fname.includes('nrt') || fname.includes('hnd') || fname.includes('travel') || fname.includes('doc')) {
         destination = "Tokyo";
       } else if (fname.includes('london') || fname.includes('lhr') || fname.includes('lgw')) {
         destination = "London";
@@ -347,6 +347,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         destination = "Singapore";
       } else if (fname.includes('bangkok') || fname.includes('bkk')) {
         destination = "Bangkok";
+      } else if (fname.includes('paris') || fname.includes('cdg') || fname.includes('ory')) {
+        destination = "Paris";
       }
 
       const result = {
