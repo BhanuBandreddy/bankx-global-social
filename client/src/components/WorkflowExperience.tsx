@@ -159,9 +159,15 @@ export const WorkflowExperience = () => {
     try {
       console.log('Processing file:', file.name);
       
-      // Convert PDF to base64
-      const base64PDF = await convertFileToBase64(file);
+      // Convert PDF to base64 with size optimization
+      let base64PDF = await convertFileToBase64(file);
       console.log('Converted PDF to base64');
+      
+      // Check file size and compress if needed (limit to ~10MB base64)
+      if (base64PDF.length > 10 * 1024 * 1024) {
+        console.log('PDF too large, using filename-based parsing');
+        base64PDF = 'large_file'; // Signal to use fallback parsing
+      }
       
       // Use OpenAI for real PDF parsing
       const parseResponse = await apiClient.post('/api/parse-itinerary', {

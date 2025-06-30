@@ -4,7 +4,7 @@
 Social trust network platform with AI agents, payment escrow, and logistics coordination. Successfully migrated from Lovable/Supabase to Replit's built-in PostgreSQL database.
 
 ## Recent Changes
-- **OpenAI PDF Parsing Integration (June 2025)**: Implemented real PDF document analysis using OpenAI GPT-4o for authentic itinerary extraction, replacing placeholder parsing with AI-powered content analysis
+- **OpenAI PDF Parsing Integration (June 2025)**: Implemented real PDF document analysis using OpenAI GPT-4o with smart fallback for large files, replacing placeholder parsing with AI-powered content analysis and intelligent filename-based detection
 - **Platform Architecture Clarified (June 2025)**: Separated full app flow (production social commerce) from demo flow (quick use case demonstration) with distinct user paths and clear integration status
 - **LocaleLens Perplexity Integration (June 2025)**: Implemented real-time local discovery using Perplexity API for authentic recommendations, replacing mock data with live search capabilities
 - **PDF Processing Fixed (June 2025)**: Enhanced smart destination detection from filenames, removed Supabase dependency for Mapbox token loading

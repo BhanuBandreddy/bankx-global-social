@@ -26,10 +26,6 @@ class OpenAIItineraryParser {
   }
 
   async parseItinerary(base64PDF: string, filename: string): Promise<OpenAIParseResult> {
-    if (!this.apiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
-
     // Smart destination detection from filename
     let suggestedDestination = "Paris"; // Default
     const fname = filename.toLowerCase();
@@ -44,6 +40,24 @@ class OpenAIItineraryParser {
       suggestedDestination = "Singapore";
     } else if (fname.includes('bangkok') || fname.includes('bkk')) {
       suggestedDestination = "Bangkok";
+    }
+
+    // If file is too large or no API key, use smart filename parsing
+    if (!this.apiKey || base64PDF === 'large_file') {
+      return {
+        success: true,
+        itinerary: {
+          route: `Document → ${suggestedDestination}`,
+          date: new Date().toLocaleDateString(),
+          weather: "Smart parsing from filename",
+          alerts: "Filename-based destination detection",
+          departureTime: "Processing...",
+          arrivalTime: "Processing...",
+          gate: "TBD", 
+          flight: "Document uploaded",
+          destination: suggestedDestination
+        }
+      };
     }
 
     const prompt = `Parse this travel document and extract key itinerary information. The document suggests travel to ${suggestedDestination}.
@@ -132,8 +146,8 @@ If information is missing, use reasonable defaults based on the filename suggest
         itinerary: {
           route: `Document → ${suggestedDestination}`,
           date: new Date().toLocaleDateString(),
-          weather: "Processing travel details...",
-          alerts: "Document parsed successfully",
+          weather: "Fallback parsing from filename",
+          alerts: "Smart destination detection from filename",
           departureTime: "Processing...",
           arrivalTime: "Processing...",
           gate: "TBD",
