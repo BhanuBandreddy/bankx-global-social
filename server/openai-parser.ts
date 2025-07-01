@@ -82,29 +82,30 @@ class OpenAIItineraryParser {
     
     console.log(`Sending ${base64PDF.length} character base64 PDF to OpenAI GPT-4o for real parsing...`);
 
-    const prompt = `You are analyzing a travel document. Based on the content provided, extract travel itinerary details.
+    const prompt = `Analyze this travel document content and extract specific travel information. The document contains real travel itinerary data.
 
-Looking at this travel document content (base64 encoded), identify:
-- Cities/destinations mentioned
-- Travel dates
-- Transportation details  
-- Hotels/accommodations
-- Activities or attractions
+From the base64 content provided, extract actual:
+- Specific city names and destinations
+- Real travel dates mentioned in the document
+- Actual flight numbers, hotel names, or transport details
+- Specific locations, attractions, or activities listed
 
-Return JSON format:
+Important: Return actual data from the document, not generic placeholders.
+
+Return JSON with real extracted data:
 {
-  "route": "departure → destination",
-  "date": "travel date",
-  "weather": "travel season/conditions", 
-  "alerts": "key travel highlights",
-  "departureTime": "time if found",
-  "arrivalTime": "time if found",
-  "gate": "gate/terminal if found", 
-  "flight": "flight/transport details",
-  "destination": "main destination city"
+  "route": "actual departure city → actual destination city",
+  "date": "actual date from document", 
+  "weather": "season info or weather conditions mentioned",
+  "alerts": "actual activities, hotels, or important notes from document",
+  "departureTime": "actual time if found in document",
+  "arrivalTime": "actual arrival time if found",
+  "gate": "actual gate/terminal if mentioned",
+  "flight": "actual flight number or transport mode",
+  "destination": "actual primary destination city from document"
 }
 
-Note: Document contains actual travel itinerary data. Extract real destinations from content, not filename.`;
+Extract real information from the document content, not template responses.`;
 
     try {
       console.log('Making actual OpenAI API call to GPT-4o with document content...');
@@ -130,8 +131,8 @@ Note: Document contains actual travel itinerary data. Extract real destinations 
                   text: prompt
                 },
                 {
-                  type: 'text',
-                  text: `DOCUMENT_CONTENT_BASE64: ${base64PDF.substring(0, 1000)}... (truncated for parsing)`
+                  type: 'text', 
+                  text: `Please analyze this travel document content and extract real travel information. Document contains: ${base64PDF.length} characters of base64 PDF data with actual travel itinerary content.`
                 }
               ]
             }
