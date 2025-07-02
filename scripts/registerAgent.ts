@@ -61,8 +61,7 @@ async function registerAgent() {
             'Content-Type': 'application/json',
             'User-Agent': 'GlobalSocial-Agent-Registration/1.0'
           },
-          body: JSON.stringify(GLOBALSOCIAL_AGENT),
-          timeout: 10000
+          body: JSON.stringify(GLOBALSOCIAL_AGENT)
         });
         
         if (response.ok) {
@@ -76,7 +75,6 @@ async function registerAgent() {
         lastError = error;
       }
     }
-    });
 
     if (!response || !response.ok) {
       throw new Error(`All endpoints failed. Last error: ${lastError?.message || 'Unknown error'}`);
@@ -104,7 +102,7 @@ async function verifyRegistration() {
   console.log('🔍 Verifying agent registration...');
   
   try {
-    const response = await fetch(`${NANDA_BASE_URL}/agents?owner=globalsocial.network`);
+    const response = await fetch(`${NANDA_BASE_URL}/api/v1/agents?owner=globalsocial.network`);
     const agents = await response.json();
     
     const ourAgent = agents.find((agent: any) => agent.name === GLOBALSOCIAL_AGENT.name);
