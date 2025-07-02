@@ -813,7 +813,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // NANDA Protocol Bridge - Handle JSON-RPC requests
+  app.post("/api/agents/rpc", async (req, res) => {
+    const { nandaBridge } = await import('./nanda-bridge');
+    await nandaBridge.handleNANDARequest(req, res);
+  });
+
+  // NANDA Methods Discovery
+  app.get("/api/agents/methods", async (req, res) => {
+    const { nandaBridge } = await import('./nanda-bridge');
+    res.json({
+      success: true,
+      methods: nandaBridge.getAvailableMethods(),
+      agent_id: "globalsocial-001",
+      protocol: "JSON-RPC 2.0"
+    });
+  });
+
   const httpServer = createServer(app);
+
   // NANDA Agent Endpoint - Required for registry validation
   app.get("/api/agents", async (req, res) => {
     try {
@@ -839,6 +857,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         api_version: "1.0",
         last_heartbeat: new Date().toISOString(),
         supported_protocols: ["HTTP", "JSON-RPC"],
+        rpc_endpoint: `${req.protocol}://${req.get('host')}/api/agents/rpc`,
+        methods_endpoint: `${req.protocol}://${req.get('host')}/api/agents/methods`,
         registration_time: new Date().toISOString()
       };
 
