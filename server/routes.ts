@@ -814,5 +814,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  // NANDA Agent Endpoint - Required for registry validation
+  app.get("/api/agents", async (req, res) => {
+    try {
+      // Return our agent information in NANDA-compatible format
+      const agentInfo = {
+        agent_id: "globalsocial-001",
+        name: "GlobalSocial Trust Network",
+        status: "active",
+        capabilities: [
+          "social_commerce", 
+          "trust_escrow", 
+          "peer_delivery", 
+          "travel_logistics",
+          "multi_agent_orchestration",
+          "conversational_ai"
+        ],
+        owner: "did:web:globalsocial.network",
+        description: "Social trust network platform with AI agents, payment escrow, and logistics coordination for seamless travel commerce",
+        version: "1.0.0",
+        region: "Global",
+        performance_score: 95.0,
+        endpoint: `${req.protocol}://${req.get('host')}/api/agents`,
+        api_version: "1.0",
+        last_heartbeat: new Date().toISOString(),
+        supported_protocols: ["HTTP", "JSON-RPC"],
+        registration_time: new Date().toISOString()
+      };
+
+      console.log('NANDA agent info requested from:', req.ip);
+      res.json(agentInfo);
+    } catch (error) {
+      console.error("Agent endpoint error:", error);
+      res.status(500).json({ error: "Agent information unavailable" });
+    }
+  });
+
+  // NANDA Agent Health Check
+  app.get("/api/agents/health", async (req, res) => {
+    res.json({
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      agent_id: "globalsocial-001"
+    });
+  });
+
   return httpServer;
 }
