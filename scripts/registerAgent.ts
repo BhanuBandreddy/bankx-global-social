@@ -35,23 +35,51 @@ const GLOBALSOCIAL_AGENT: AgentRegistration = {
 };
 
 async function registerAgent() {
-  const NANDA_BASE_URL = process.env.NANDA_BASE_URL || 'https://nanda-registry.com/api/v1';
+  const NANDA_BASE_URL = process.env.NANDA_BASE_URL || 'https://chat.nanda-registry.com:6900';
   
   console.log('🚀 Registering GlobalSocial agent with NANDA registry...');
   console.log('Agent data:', JSON.stringify(GLOBALSOCIAL_AGENT, null, 2));
   
   try {
-    const response = await fetch(`${NANDA_BASE_URL}/agents`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'GlobalSocial-Agent-Registration/1.0'
-      },
-      body: JSON.stringify(GLOBALSOCIAL_AGENT)
+    // Try different potential endpoints for NANDA registry
+    const endpoints = [
+      `${NANDA_BASE_URL}/api/v1/agents`,
+      `${NANDA_BASE_URL}/agents`,
+      `${NANDA_BASE_URL}/register`,
+      `${NANDA_BASE_URL}/api/agents`
+    ];
+    
+    let response;
+    let lastError;
+    
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`Trying endpoint: ${endpoint}`);
+        response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'GlobalSocial-Agent-Registration/1.0'
+          },
+          body: JSON.stringify(GLOBALSOCIAL_AGENT),
+          timeout: 10000
+        });
+        
+        if (response.ok) {
+          console.log(`✅ Success with endpoint: ${endpoint}`);
+          break;
+        } else {
+          console.log(`❌ ${endpoint} returned ${response.status}`);
+        }
+      } catch (error) {
+        console.log(`❌ ${endpoint} failed:`, error.message);
+        lastError = error;
+      }
+    }
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    if (!response || !response.ok) {
+      throw new Error(`All endpoints failed. Last error: ${lastError?.message || 'Unknown error'}`);
     }
 
     const result = await response.json();
@@ -71,7 +99,7 @@ async function registerAgent() {
 }
 
 async function verifyRegistration() {
-  const NANDA_BASE_URL = process.env.NANDA_BASE_URL || 'https://nanda-registry.com/api/v1';
+  const NANDA_BASE_URL = process.env.NANDA_BASE_URL || 'https://chat.nanda-registry.com:6900';
   
   console.log('🔍 Verifying agent registration...');
   
