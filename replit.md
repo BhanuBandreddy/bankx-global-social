@@ -4,6 +4,7 @@
 Social trust network platform with AI agents, payment escrow, and logistics coordination. Successfully migrated from Lovable/Supabase to Replit's built-in PostgreSQL database.
 
 ## Recent Changes
+- **Crowd Intelligence Transparency (July 2025)**: Added clear logging and documentation that AgentTorch crowd heat data is currently simulation-based, created framework for real crowd intelligence API integration (Google Places, Foursquare, Social Media APIs)
 - **LocaleLens Location Fix (July 2025)**: Fixed Perplexity API integration to provide accurate city-specific recommendations instead of defaulting to Japanese cultural curation regardless of input city
 - **Production Deployment Ready (July 2025)**: Completed all NANDA integration phases with 89% success rate, comprehensive testing infrastructure, registry communication protocols, and production deployment preparation for live NANDA network participation
 - **NANDA Phase 3 Complete (July 2025)**: Implemented comprehensive automated testing infrastructure with Jest integration tests, milestone progression validation, agent discovery protocols, and complete registry search documentation for production NANDA network deployment
