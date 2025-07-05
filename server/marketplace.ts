@@ -186,7 +186,7 @@ export async function createEscrow(productId: string, amount: number, currency: 
   try {
     const escrowId = `esc_${Date.now()}`;
     
-    await db.insert(escrows).values({
+    await db.insert(marketplaceEscrows).values({
       id: escrowId,
       amount,
       currency,
@@ -197,5 +197,71 @@ export async function createEscrow(productId: string, amount: number, currency: 
   } catch (error) {
     console.error('Error creating escrow:', error);
     throw new Error('Failed to create escrow');
+  }
+}
+
+/**
+ * Create a match between request and trip with escrow
+ */
+export async function createMatch(requestId: string, tripId: string, amount: number): Promise<{ matchId: string; escrowId: string } | null> {
+  try {
+    const escrowId = `esc_${Date.now()}`;
+    const matchId = `match_${Date.now()}`;
+
+    await db.transaction(async (tx) => {
+      // Create escrow
+      await tx.insert(marketplaceEscrows).values({
+        id: escrowId,
+        amount,
+        currency: 'USD',
+        state: 'held',
+      });
+
+      // Create match
+      await tx.insert(marketplaceMatches).values({
+        id: matchId,
+        requestId,
+        tripId,
+        escrowId,
+      });
+
+      // Update request status
+      await tx.update(marketplaceRequests)
+        .set({ status: 'matched' })
+        .where(eq(marketplaceRequests.id, requestId));
+    });
+
+    return { matchId, escrowId };
+  } catch (error) {
+    console.error('Error creating match:', error);
+    return null;
+  }
+}
+
+/**
+ * Get user's open requests
+ */
+export async function getUserRequests(userId: string): Promise<any[]> {
+  try {
+    const requests = await db
+      .select({
+        id: marketplaceRequests.id,
+        productTitle: marketplaceProducts.title,
+        productPrice: marketplaceProducts.priceUsd,
+        productCity: marketplaceProducts.city,
+        merchantName: marketplaceUsers.name,
+        qty: marketplaceRequests.qty,
+        status: marketplaceRequests.status,
+      })
+      .from(marketplaceRequests)
+      .innerJoin(marketplaceProducts, eq(marketplaceRequests.productId, marketplaceProducts.id))
+      .innerJoin(marketplaceUsers, eq(marketplaceProducts.merchantId, marketplaceUsers.id))
+      .where(eq(marketplaceRequests.shopperId, userId))
+      .orderBy(marketplaceRequests.createdAt);
+
+    return requests;
+  } catch (error) {
+    console.error('Error getting user requests:', error);
+    return [];
   }
 }
