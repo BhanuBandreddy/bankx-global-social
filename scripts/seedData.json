@@ -1,0 +1,127 @@
+{
+  "users": [
+    { "id": "u_m1", "name": "SneakerHub NYC", "email": "sneakers@nyc.com", "password": "$2b$10$hash1", "role": "merchant", "trustScore": 92 },
+    { "id": "u_m2", "name": "TokyoTech Gadgets", "email": "tech@tokyo.com", "password": "$2b$10$hash2", "role": "merchant", "trustScore": 88 },
+    { "id": "u_m3", "name": "ParisVintage Atelier", "email": "vintage@paris.com", "password": "$2b$10$hash3", "role": "merchant", "trustScore": 90 },
+
+    { "id": "u_t1", "name": "Raj Traveler", "email": "raj@travel.com", "password": "$2b$10$hash4", "role": "traveler", "trustScore": 88 },
+    { "id": "u_t2", "name": "Emma Nomad", "email": "emma@nomad.com", "password": "$2b$10$hash5", "role": "traveler", "trustScore": 85 },
+    { "id": "u_t3", "name": "Li Chen", "email": "li@travel.com", "password": "$2b$10$hash6", "role": "traveler", "trustScore": 91 },
+
+    { "id": "u_s1", "name": "Maya Sharma", "email": "maya@shop.com", "password": "$2b$10$hash7", "role": "shopper", "trustScore": 75 },
+    { "id": "u_s2", "name": "Andre Gomes", "email": "andre@shop.com", "password": "$2b$10$hash8", "role": "shopper", "trustScore": 73 },
+    { "id": "u_s3", "name": "Sara Tanaka", "email": "sara@shop.com", "password": "$2b$10$hash9", "role": "shopper", "trustScore": 78 },
+    { "id": "u_s4", "name": "Alex Rivers", "email": "alex@shop.com", "password": "$2b$10$hash10", "role": "shopper", "trustScore": 80 }
+  ],
+
+  "products": [
+    { "id": "p_1", "merchantId": "u_m1", "title": "Nike Air Max 270", "priceUsd": 150, "city": "New York", "stock": 10 },
+    { "id": "p_2", "merchantId": "u_m3", "title": "Leica M6 Film Camera", "priceUsd": 3800, "city": "Paris", "stock": 2 },
+    { "id": "p_3", "merchantId": "u_m2", "title": "Sony WH-1000XM5", "priceUsd": 349, "city": "Tokyo", "stock": 15 },
+    { "id": "p_4", "merchantId": "u_m2", "title": "Brigadeiros (12-pack)", "priceUsd": 24, "city": "São Paulo", "stock": 40 },
+    { "id": "p_5", "merchantId": "u_m1", "title": "Adidas Ultraboost 22", "priceUsd": 180, "city": "New York", "stock": 8 },
+    { "id": "p_6", "merchantId": "u_m3", "title": "Vintage Hermès Scarf", "priceUsd": 280, "city": "Paris", "stock": 3 }
+  ],
+
+  "trips": [
+    {
+      "id": "trp_1",
+      "travelerId": "u_t1",
+      "fromCity": "New York",
+      "toCity": "Bengaluru",
+      "departUtc": "2025-07-07T02:00:00Z",
+      "capacityKg": 8
+    },
+    {
+      "id": "trp_2",
+      "travelerId": "u_t2",
+      "fromCity": "São Paulo",
+      "toCity": "Tokyo",
+      "departUtc": "2025-07-10T15:00:00Z",
+      "capacityKg": 6
+    },
+    {
+      "id": "trp_3",
+      "travelerId": "u_t3",
+      "fromCity": "Paris",
+      "toCity": "Lagos",
+      "departUtc": "2025-07-09T09:00:00Z",
+      "capacityKg": 5
+    },
+    {
+      "id": "trp_4",
+      "travelerId": "u_t1",
+      "fromCity": "Tokyo",
+      "toCity": "New York",
+      "departUtc": "2025-07-12T18:00:00Z",
+      "capacityKg": 10
+    }
+  ],
+
+  "requests": [
+    {
+      "id": "req_1",
+      "shopperId": "u_s1",
+      "productId": "p_1",
+      "qty": 1,
+      "status": "open"
+    },
+    {
+      "id": "req_2",
+      "shopperId": "u_s4",
+      "productId": "p_2",
+      "qty": 1,
+      "status": "matched"
+    },
+    {
+      "id": "req_3",
+      "shopperId": "u_s3",
+      "productId": "p_4",
+      "qty": 2,
+      "status": "matched"
+    },
+    {
+      "id": "req_4",
+      "shopperId": "u_s2",
+      "productId": "p_3",
+      "qty": 1,
+      "status": "open"
+    }
+  ],
+
+  "matches": [
+    {
+      "id": "match_1",
+      "requestId": "req_2",
+      "tripId": "trp_3",
+      "escrowId": "esc_1"
+    },
+    {
+      "id": "match_2",
+      "requestId": "req_3",
+      "tripId": "trp_2",
+      "escrowId": "esc_2"
+    }
+  ],
+
+  "escrows": [
+    {
+      "id": "esc_1",
+      "amount": 3800,
+      "currency": "USD",
+      "state": "held"
+    },
+    {
+      "id": "esc_2",
+      "amount": 48,
+      "currency": "USD",
+      "state": "held"
+    },
+    {
+      "id": "esc_3",
+      "amount": 150,
+      "currency": "USD",
+      "state": "released"
+    }
+  ]
+}

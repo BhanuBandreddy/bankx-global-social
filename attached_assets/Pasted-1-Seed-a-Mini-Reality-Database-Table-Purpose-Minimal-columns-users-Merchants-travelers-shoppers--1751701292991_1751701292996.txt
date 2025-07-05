@@ -1,0 +1,92 @@
+1 Seed a “Mini-Reality” Database
+Table	Purpose	Minimal columns
+users	Merchants, travelers, shoppers	id, name, role ENUM('merchant','traveler','shopper'), trust_score
+products	Items merchants list	id, merchant_id, title, price_usd, city, stock
+trips	Traveler routes that can carry packages	id, traveler_id, from_city, to_city, depart_utc, capacity_kg
+requests	Shopper wish-list or purchase intent	id, shopper_id, product_id, qty, status ENUM('open','matched','delivered')
+matches	Conductor-made pairings of request ↔ trip	id, request_id, trip_id, escrow_id
+escrows	TrustPay money lock	id, amount, currency, state ENUM('held','released','disputed')
+
+Seed script: Insert 3 merchants, 5 products, 2 travelers, 2 trips.
+Example JSON seed → run once in Replit:
+
+ts
+Copy
+Edit
+await db.insertInto('users').values([
+  {id:'u_m1',name:'SneakerHub NYC',role:'merchant',trust_score:92},
+  {id:'u_t1',name:'Raj Traveler', role:'traveler',trust_score:88},
+  {id:'u_s1',name:'Maya Shopper', role:'shopper',trust_score:75},
+]);
+await db.insertInto('products').values([
+  {id:'p_1',merchant_id:'u_m1',title:'Nike Air Max 270',price_usd:150,city:'New York',stock:10},
+]);
+await db.insertInto('trips').values([
+  {id:'trp_1', traveler_id:'u_t1', from_city:'New York', to_city:'Bengaluru', depart_utc:'2025-07-07T02:00:00Z', capacity_kg:8},
+]);
+2 Update Conductor Planning Prompt
+sql
+Copy
+Edit
+SYSTEM
+You have real data. If user asks for an item:
+1. Lookup products LIKE %query% AND city = user.city_wish.
+2. Lookup trips from that city to user's home.
+3. If found, propose match with price and traveler ETA.
+Return friendly offer. If none, say you’ll watch feed.
+Never talk about tool calls or agent counts.
+Quick lookup helper (Node / Drizzle)
+ts
+Copy
+Edit
+async function findOffer(query:string, homeCity:string){
+  const product = await db.select().from('products')
+     .where(sql`title ILIKE ${'%'+query+'%'}`).limit(1);
+  if(!product.length) return null;
+
+  const trip = await db.select().from('trips')
+     .where({from_city:product[0].city,to_city:homeCity}).limit(1);
+  if(!trip.length) return null;
+
+  return { product:product[0], trip:trip[0] };
+}
+Call that inside your tool so the LLM can do:
+
+json
+Copy
+Edit
+{
+ "name":"offer_match",
+ "arguments":{"query":"sneakers","homeCity":"Bengaluru"}
+}
+and Conductor replies with:
+
+“Great news! Raj is flying New York → Bengaluru on 7 Jul.
+He can carry up to 8 kg and has room for one pair of Nike Air Max 270 ($150).
+Shall I secure it in escrow for you?”
+
+3 UX polish in Chat
+Tag suggestions (buttons under text box): “🛍️ Products”, “✈️ Trips”, “📦 Track”.
+On click, pre-fill prompt templates so users ask concrete things.
+
+Context chips in replies: show product card + traveler card inline (makes the response feel factual).
+
+Fallback flow: If findOffer() returns null, reply:
+
+“No traveler currently on that route. I’ll monitor new trips and ping you.”
+
+4 Keep the demo tight
+5 real-looking messages showcase full cycle:
+
+greet → 2) ask for sneakers → 3) Blink offers match → 4) user accepts → 5) TrustPay confirms escrow.
+
+Hard-code escrow success rather than wiring Stripe right now—UI just shows “Escrow 🟢 Held”.
+
+5 What Replit reviewers will see
+Realistic dialogue with concrete names, dates, prices.
+
+No boilerplate “coordinated with 0 agents” lines—only useful offers.
+
+A minimal dataset that makes every test drive deterministic (no random hallucinations).
+
+Deliver this seeding + lookup layer and your Ask Blink chat will finally feel alive and credible for product demos while the full multi-agent engine grows behind the scenes.

@@ -450,13 +450,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Extract agents used - fix for workflow structure  
           agentsUsed = conductorResponse.workflows.map((w: any) => w.agent || w.agentId);
           
-          // Generate user-friendly response without exposing orchestration details
-          if (userMessage.toLowerCase().includes('restaurant') || userMessage.toLowerCase().includes('food')) {
+          // Use real marketplace data for product searches
+          const { findProductOffer, findTrips } = await import('./marketplace');
+          
+          if (userMessage.toLowerCase().includes('sneaker') || userMessage.toLowerCase().includes('shoes')) {
+            const offer = await findProductOffer('sneaker', 'Bengaluru');
+            if (offer?.trip) {
+              finalAnswer = `Great news! ${offer.trip.travelerName} is flying ${offer.trip.fromCity} → ${offer.trip.toCity} on ${offer.trip.departUtc.toLocaleDateString()}. They can carry up to ${offer.trip.capacityKg}kg and have room for ${offer.product.title} ($${offer.product.priceUsd}). Shall I secure it in escrow for you?`;
+            } else if (offer) {
+              finalAnswer = `Found ${offer.product.title} for $${offer.product.priceUsd} at ${offer.product.merchant} in ${offer.product.city}. No traveler currently on that route, but I'll monitor new trips and notify you!`;
+            } else {
+              finalAnswer = "No sneakers currently available, but I'll watch the marketplace and ping you when new items arrive!";
+            }
+          } else if (userMessage.toLowerCase().includes('headphones') || userMessage.toLowerCase().includes('audio')) {
+            const offer = await findProductOffer('headphones', 'Tokyo');
+            if (offer?.trip) {
+              finalAnswer = `Perfect! Found ${offer.product.title} for $${offer.product.priceUsd} in ${offer.product.city}. ${offer.trip.travelerName} is traveling ${offer.trip.fromCity} → ${offer.trip.toCity} on ${offer.trip.departUtc.toLocaleDateString()}. Ready to secure in escrow?`;
+            } else if (offer) {
+              finalAnswer = `Found ${offer.product.title} for $${offer.product.priceUsd} in ${offer.product.city}. I'll find a traveler on that route for you!`;
+            } else {
+              finalAnswer = "No headphones available right now, but I'll keep monitoring for you!";
+            }
+          } else if (userMessage.toLowerCase().includes('camera')) {
+            const offer = await findProductOffer('camera', 'Lagos');
+            if (offer?.trip) {
+              finalAnswer = `Excellent! Found a ${offer.product.title} for $${offer.product.priceUsd} in ${offer.product.city}. ${offer.trip.travelerName} is flying ${offer.trip.fromCity} → ${offer.trip.toCity} on ${offer.trip.departUtc.toLocaleDateString()}. This is a high-value item - shall I set up secure escrow?`;
+            } else if (offer) {
+              finalAnswer = `Found a ${offer.product.title} for $${offer.product.priceUsd} in ${offer.product.city}. Looking for travelers on that route...`;
+            } else {
+              finalAnswer = "No cameras available currently. I'll notify you when new photography gear arrives!";
+            }
+          } else if (userMessage.toLowerCase().includes('restaurant') || userMessage.toLowerCase().includes('food')) {
             finalAnswer = "I've found some great local dining recommendations for you! Let me search for the best options in your area.";
           } else if (userMessage.toLowerCase().includes('travel') || userMessage.toLowerCase().includes('trip')) {
-            finalAnswer = "I'd be happy to help you plan your trip! I can assist with destinations, logistics, and local recommendations.";
-          } else if (userMessage.toLowerCase().includes('shop') || userMessage.toLowerCase().includes('buy')) {
-            finalAnswer = "I can help you find what you're looking for! Let me check for the best options and deals available.";
+            const trips = await findTrips();
+            if (trips.length > 0) {
+              const trip = trips[0];
+              finalAnswer = `I can help with your trip! For example, ${trip.travelerName} is traveling ${trip.fromCity} → ${trip.toCity} on ${trip.departUtc.toLocaleDateString()}. Where are you planning to go?`;
+            } else {
+              finalAnswer = "I'd be happy to help you plan your trip! I can assist with destinations, logistics, and local recommendations.";
+            }
           } else {
             finalAnswer = "I understand what you need. Let me help you with that right away!";
           }
