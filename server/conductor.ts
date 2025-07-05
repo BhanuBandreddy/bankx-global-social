@@ -127,7 +127,30 @@ Respond in JSON format with reasoning, workflows, contextUpdates, and eventBusMe
         response_format: { type: "json_object" }
       });
 
-      const conductorResponse: ConductorResponse = JSON.parse(response.choices[0].message.content);
+      let conductorResponse: ConductorResponse;
+      try {
+        conductorResponse = JSON.parse(response.choices[0].message.content || '{}');
+        
+        // Ensure required properties exist
+        if (!conductorResponse.workflows) {
+          conductorResponse.workflows = [];
+        }
+        if (!conductorResponse.eventBusMessages) {
+          conductorResponse.eventBusMessages = [];
+        }
+        if (!conductorResponse.contextUpdates) {
+          conductorResponse.contextUpdates = {};
+        }
+        
+      } catch (parseError) {
+        console.warn('Failed to parse conductor response, using fallback');
+        conductorResponse = {
+          reasoning: "Fallback response due to parsing error",
+          workflows: [],
+          contextUpdates: {},
+          eventBusMessages: []
+        };
+      }
 
       // Update context memory with this interaction
       context.conversation.push({
@@ -138,13 +161,16 @@ Respond in JSON format with reasoning, workflows, contextUpdates, and eventBusMe
       });
 
       // Emit event bus messages
-      conductorResponse.eventBusMessages.forEach(message => {
-        this.emit('eventBusMessage', message);
-      });
+      if (Array.isArray(conductorResponse.eventBusMessages)) {
+        conductorResponse.eventBusMessages.forEach(message => {
+          this.emit('eventBusMessage', message);
+        });
+      }
 
-      // Execute agent workflows - handle potential undefined/null workflows
-      const workflows = conductorResponse.workflows || [];
-      await this.executeAgentWorkflows(workflows, context);
+      // Execute agent workflows
+      if (Array.isArray(conductorResponse.workflows)) {
+        await this.executeAgentWorkflows(conductorResponse.workflows, context);
+      }
 
       return conductorResponse;
       
@@ -313,8 +339,17 @@ Based on this context, analyze the user's intent and coordinate appropriate agen
   }
 
   private sortWorkflowsByPriority(workflows: AgentWorkflow[]): AgentWorkflow[] {
+    if (!Array.isArray(workflows)) {
+      console.warn('sortWorkflowsByPriority received non-array:', workflows);
+      return [];
+    }
+    
     const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-    return workflows.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+    return workflows.sort((a, b) => {
+      const aPriority = a?.priority || 'medium';
+      const bPriority = b?.priority || 'medium';
+      return priorityOrder[aPriority] - priorityOrder[bPriority];
+    });
   }
 
   private async fetchUserProfile(userId: string): Promise<any> {
