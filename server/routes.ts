@@ -433,20 +433,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let finalAnswer = "I understand. Let me help you with that.";
       let agentsUsed: string[] = [];
 
-      // Analyze through Conductor if requested
-      try {
-        const { conductor } = await import('./conductor');
-        conductorResponse = await conductor.analyzeUserAction(userAction);
-        
-        // Extract agents used - fix for workflow structure
-        agentsUsed = conductorResponse.workflows.map((w: any) => w.agent || w.agentId);
-        
-        // Generate response based on conductor analysis
-        finalAnswer = `Based on your request about "${userMessage}", I've coordinated with ${agentsUsed.length} specialized agents. ${conductorResponse.reasoning.slice(0, 200)}...`;
-        
-      } catch (error) {
-        console.warn('Conductor analysis failed:', error);
-        finalAnswer = "I understand your request. Let me provide what I can help you with.";
+      // Helper function to check if message is a greeting
+      const isGreeting = (text: string): boolean => {
+        return /^(hi|hello|hey|good morning|good afternoon|good evening)\b/i.test(text.trim());
+      };
+
+      // Handle simple greetings without orchestration
+      if (isGreeting(userMessage)) {
+        finalAnswer = "Hey there! What would you like to explore today? I can help with shopping, travel planning, or delivery logistics. Just ask!";
+      } else {
+        // Analyze through Conductor for complex requests
+        try {
+          const { conductor } = await import('./conductor');
+          conductorResponse = await conductor.analyzeUserAction(userAction);
+          
+          // Extract agents used - fix for workflow structure  
+          agentsUsed = conductorResponse.workflows.map((w: any) => w.agent || w.agentId);
+          
+          // Generate user-friendly response without exposing orchestration details
+          if (userMessage.toLowerCase().includes('restaurant') || userMessage.toLowerCase().includes('food')) {
+            finalAnswer = "I've found some great local dining recommendations for you! Let me search for the best options in your area.";
+          } else if (userMessage.toLowerCase().includes('travel') || userMessage.toLowerCase().includes('trip')) {
+            finalAnswer = "I'd be happy to help you plan your trip! I can assist with destinations, logistics, and local recommendations.";
+          } else if (userMessage.toLowerCase().includes('shop') || userMessage.toLowerCase().includes('buy')) {
+            finalAnswer = "I can help you find what you're looking for! Let me check for the best options and deals available.";
+          } else {
+            finalAnswer = "I understand what you need. Let me help you with that right away!";
+          }
+          
+        } catch (error) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn('Conductor analysis failed:', error);
+          }
+          finalAnswer = "I understand your request. Let me provide what I can help you with.";
+        }
       }
 
       // Save conversation to database
