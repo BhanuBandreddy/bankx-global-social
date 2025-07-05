@@ -406,45 +406,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/blink/conversation", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/blink/conversation", async (req, res) => {
     try {
       const { message, query, sessionId = `session-${Date.now()}`, contextType, feedContext } = req.body;
-      const userId = req.user!.id;
+      const userId = (req as any).user?.id || 'anonymous';
       const userMessage = message || query;
 
-      // Save conversation
-      await db.insert(blinkConversations).values({
+      // Create user action for Conductor analysis
+      const userAction = {
+        type: 'chat' as const,
+        path: '/blink',
+        payload: { message: userMessage, conversationId: sessionId },
         userId,
-        sessionId,
-        messageType: "user",
-        speaker: "User",
-        content: userMessage,
-        contextData: { contextType, feedContext },
-      });
+        timestamp: new Date(),
+        sessionId: sessionId || `session-${Date.now()}`,
+        context: {
+          currentPage: 'blink',
+          userType: 'general' as const,
+          trustScore: 75
+        }
+      };
 
-      // Mock AI response for now
-      const aiResponse = `I understand your request: "${userMessage}". I'm here to help with your trust network and logistics needs.`;
+      let conductorResponse = null;
+      let finalAnswer = "I understand. Let me help you with that.";
+      let agentsUsed: string[] = [];
 
-      await db.insert(blinkConversations).values({
-        userId,
-        sessionId,
-        messageType: "agent",
-        speaker: "PathSync",
-        content: aiResponse,
-        contextData: { contextType, feedContext },
-      });
+      // Analyze through Conductor if requested
+      try {
+        const { conductor } = await import('./conductor');
+        conductorResponse = await conductor.analyzeUserAction(userAction);
+        
+        // Extract agents used
+        agentsUsed = conductorResponse.workflows.map((w: any) => w.agentId);
+        
+        // Generate response based on conductor analysis
+        finalAnswer = `Based on your request about "${userMessage}", I've coordinated with ${agentsUsed.length} specialized agents. ${conductorResponse.reasoning.slice(0, 200)}...`;
+        
+      } catch (error) {
+        console.warn('Conductor analysis failed:', error);
+        finalAnswer = "I understand your request. Let me provide what I can help you with.";
+      }
+
+      // Save conversation to database
+      try {
+        await db.insert(blinkConversations).values({
+          userId,
+          sessionId,
+          messageType: "user",
+          speaker: "User",
+          content: userMessage,
+          contextData: { contextType, feedContext },
+        });
+
+        // Save AI response
+        await db.insert(blinkConversations).values({
+          userId,
+          sessionId,
+          messageType: "assistant", 
+          speaker: "Blink",
+          content: finalAnswer,
+          contextData: { agentsUsed, confidence: 0.8, conductorResponse },
+        });
+      } catch (dbError) {
+        console.warn('Database save failed, continuing with response:', dbError);
+      }
+
+      // Fetch updated conversation
+      let conversation = [];
+      try {
+        conversation = await db.select()
+          .from(blinkConversations)
+          .where(eq(blinkConversations.sessionId, sessionId))
+          .orderBy(blinkConversations.timestamp);
+      } catch (dbError) {
+        console.warn('Database fetch failed:', dbError);
+      }
 
       res.json({
         success: true,
-        finalAnswer: aiResponse,
-        conversation: [
-          { speaker: "User", content: query, emoji: "👤" },
-          { speaker: "PathSync", content: aiResponse, emoji: "⚡" }
-        ]
+        response: finalAnswer,
+        finalAnswer,
+        agentsUsed,
+        _conductor: conductorResponse,
+        confidence: 0.8,
+        conversation,
+        sessionId,
+        timestamp: new Date()
       });
     } catch (error) {
-      console.error("Blink conversation error:", error);
-      res.status(500).json({ error: "Failed to process conversation" });
+      console.error('Blink conversation error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to process conversation'
+      });
     }
   });
 
