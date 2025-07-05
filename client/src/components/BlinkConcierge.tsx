@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useConductorContext } from "@/hooks/useConductorContext";
+// Note: Conductor integration is backend-only
 import { useToast } from "@/hooks/use-toast";
 import { 
   MessageSquare, 
@@ -83,7 +83,6 @@ export const BlinkConcierge = ({ isMinimized = false, onToggle }: {
   const [isTestMode, setIsTestMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const { getLatestInsight, sendWebhook } = useConductorContext();
 
   // Send message to Blink conversation API
   const sendMessageMutation = useMutation({
@@ -143,7 +142,7 @@ export const BlinkConcierge = ({ isMinimized = false, onToggle }: {
             ...updated[existingIndex],
             messages: [...updated[existingIndex].messages, userMessage, assistantMessage],
             lastActivity: new Date(),
-            eventTypes: [...new Set([...updated[existingIndex].eventTypes, userMessage.eventType].filter(Boolean))] as ('past' | 'current' | 'future')[]
+            eventTypes: [...updated[existingIndex].eventTypes, userMessage.eventType].filter((t, i, arr) => t && arr.indexOf(t) === i) as ('past' | 'current' | 'future')[]
           };
           return updated;
         } else {
@@ -160,18 +159,6 @@ export const BlinkConcierge = ({ isMinimized = false, onToggle }: {
       });
 
       setActiveConversationId(conversationId);
-      
-      // Send to Conductor via webhook for additional analysis
-      if (data._conductor) {
-        sendWebhook({
-          type: 'blink_conversation',
-          conversationId,
-          userMessage: variables.message,
-          assistantResponse: data.finalAnswer,
-          conductorInsights: data._conductor,
-          timestamp: new Date()
-        }).catch(err => console.warn('Webhook failed:', err));
-      }
     },
     onError: (error) => {
       toast({
@@ -206,7 +193,6 @@ export const BlinkConcierge = ({ isMinimized = false, onToggle }: {
   };
 
   const activeConversation = conversations.find(c => c.id === activeConversationId);
-  const latestConductorInsight = getLatestInsight();
 
   if (isMinimized) {
     return (
@@ -422,18 +408,6 @@ export const BlinkConcierge = ({ isMinimized = false, onToggle }: {
         </CardContent>
       </Card>
 
-      {/* Conductor Connection Indicator */}
-      {latestConductorInsight && (
-        <div className="mt-2 p-2 bg-purple-100 border-2 border-black shadow-[4px_4px_0px_0px_#000] text-xs">
-          <div className="flex items-center space-x-1">
-            <Zap className="w-3 h-3 text-purple-600" />
-            <span className="font-bold text-purple-600">CONDUCTOR ACTIVE</span>
-            <span className="text-gray-600">
-              {latestConductorInsight.workflows.length} workflows running
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

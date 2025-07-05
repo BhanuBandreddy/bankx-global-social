@@ -374,10 +374,10 @@ Agent Coordination Analysis:
 ${this.analyzeAgentCoordination(results)}
 
 Interaction Pattern Analysis:
-${this.analyzeInteractionPatterns(results)}
+${this.analyzeInteractionPatternsResults(results)}
 
 Emergent Behavior Analysis:
-${this.analyzeEmergentBehaviors(results)}
+${this.analyzeEmergentBehaviorsResults(results)}
 `);
   }
 
@@ -394,7 +394,7 @@ ${this.analyzeEmergentBehaviors(results)}
       .join('\n');
   }
 
-  private analyzeInteractionPatterns(results: TestResult[]): string {
+  private analyzeInteractionPatternsResults(results: TestResult[]): string {
     const patternCounts = results.reduce((acc, result) => {
       result.interactionPatterns.forEach(pattern => {
         acc[pattern] = (acc[pattern] || 0) + 1;
@@ -407,7 +407,7 @@ ${this.analyzeEmergentBehaviors(results)}
       .join('\n');
   }
 
-  private analyzeEmergentBehaviors(results: TestResult[]): string {
+  private analyzeEmergentBehaviorsResults(results: TestResult[]): string {
     const emergentCounts = results.reduce((acc, result) => {
       result.emergentBehavior.forEach(behavior => {
         acc[behavior] = (acc[behavior] || 0) + 1;
