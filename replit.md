@@ -4,6 +4,7 @@
 Social trust network platform with AI agents, payment escrow, and logistics coordination. Successfully migrated from Lovable/Supabase to Replit's built-in PostgreSQL database.
 
 ## Recent Changes
+- **OpenAI Agents-SDK Conductor Implementation (July 2025)**: Implemented centralized AI orchestration engine that analyzes all user actions (click/chat/webhook) using GPT-4o, coordinates specialized agent workflows, maintains context memory, and feeds real-time events through event bus to AgentTorch batch processing with crowd-heat feedback loops
 - **Multi-Agent Orchestration Framework Documentation (July 2025)**: Documented comprehensive multi-agent system architecture combining NANDA network integration (external agents), local AI agent system (TrustPay, GlobeGuides, LocaleLens, PathSync), JSON-RPC protocol bridge, and Blink conversation orchestration engine with 89% success rate
 - **Product Requirements Document Complete (July 2025)**: Created comprehensive PRD defining user personas (General Users, Business Users, Traveler Users), technical requirements, implementation roadmap, and success metrics focusing on content creation enhancement and social commerce platform evolution
 - **UI Design Analysis Complete (July 2025)**: Analyzed existing neobrutalism design system, evaluated user personas (general vs business users), documented global feed architecture, and created strategic design plan focusing on content creation, photo capture, and enhanced social commerce flows
@@ -71,6 +72,8 @@ Social trust network platform with AI agents, payment escrow, and logistics coor
 - `/api/nanda`: Agent discovery system
 
 ### Key Features
+- **OpenAI Agents-SDK Conductor**: Central AI orchestrator that analyzes all user actions and coordinates agent workflows with GPT-4o reasoning
+- **Event Bus Architecture**: Real-time pub/sub system for agent coordination with AgentTorch batch processing
 - **Complete Workflow System**: Global feed → product selection → escrow → delivery options
 - **Social Commerce Feed**: Real-time posts with product integration and engagement metrics
 - **Multi-Modal Delivery**: In-store pickup, merchant shipping, and peer delivery options
@@ -81,6 +84,8 @@ Social trust network platform with AI agents, payment escrow, and logistics coor
 - **Payment Escrow**: Secure transaction handling with release conditions
 - **Social Logistics**: Peer-to-peer delivery and logistics coordination
 - **Travel Support**: Itinerary processing and travel planning assistance
+- **Real-time Context Memory**: Persistent conversation and workflow context across user sessions
+- **Crowd Heat Intelligence**: AgentTorch predictions fed back into UI badges and agent planning
 
 ### Environment Variables Required
 - `JWT_SECRET`: For authentication tokens

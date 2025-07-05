@@ -38,6 +38,34 @@ class AgentTorchSimulator {
     this.initializeSimulation();
   }
 
+  // Update simulation with real event data
+  updateFromRealEvents(events: any[]): void {
+    console.log(`🔄 AgentTorch updating simulation with ${events.length} real events`);
+    
+    // Extract location-based activity from events
+    const locationActivity = events.reduce((acc, event) => {
+      const location = event.payload?.location || 'Tokyo'; // Default fallback
+      if (!acc[location]) acc[location] = 0;
+      acc[location]++;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Update simulation data based on real activity
+    this.simulationData = this.simulationData.map(data => {
+      const realActivity = locationActivity[data.city] || 0;
+      if (realActivity > 0) {
+        // Boost demand score based on real activity
+        data.demand_score = Math.min(100, data.demand_score + (realActivity * 5));
+        data.trend = realActivity > 2 ? 'rising' : data.trend;
+        data.confidence = Math.min(0.98, data.confidence + 0.1);
+      }
+      return data;
+    });
+
+    this.lastUpdate = new Date();
+    console.log(`✅ AgentTorch simulation updated with real event boost`);
+  }
+
   private initializeSimulation() {
     // Generate simulation ID
     this.simulationId = createHash('sha256')
@@ -202,6 +230,92 @@ class AgentTorchSimulator {
 
 // Singleton instance for the application
 export const agentTorchSimulator = new AgentTorchSimulator();
+
+// Enhanced AgentTorch integration with event bus
+export class AgentTorchEventProcessor {
+  async processBatchEvents(events: any[]): Promise<any> {
+    console.log(`🔄 AgentTorch processing ${events.length} events`);
+    
+    // Group events by location and category
+    const locationGroups = this.groupEventsByLocation(events);
+    
+    // Generate crowd heat predictions
+    const predictions = await this.generateCrowdHeatPredictions(locationGroups);
+    
+    // Update simulator with real event data
+    agentTorchSimulator.updateFromRealEvents(events);
+    
+    return {
+      processedEvents: events.length,
+      predictions,
+      crowdHeatUpdates: predictions.length,
+      timestamp: new Date()
+    };
+  }
+
+  private groupEventsByLocation(events: any[]): Record<string, any[]> {
+    return events.reduce((groups, event) => {
+      const location = event.payload?.location || event.payload?.context?.location || 'unknown';
+      if (!groups[location]) {
+        groups[location] = [];
+      }
+      groups[location].push(event);
+      return groups;
+    }, {} as Record<string, any[]>);
+  }
+
+  private async generateCrowdHeatPredictions(locationGroups: Record<string, any[]>): Promise<any[]> {
+    const predictions = [];
+    
+    for (const [location, events] of Object.entries(locationGroups)) {
+      if (location === 'unknown') continue;
+      
+      // Analyze event patterns
+      const userActions = events.filter(e => e.topic.startsWith('user.'));
+      const agentActions = events.filter(e => e.topic.startsWith('agent.'));
+      
+      // Generate prediction based on activity level
+      const activityScore = this.calculateActivityScore(userActions, agentActions);
+      
+      predictions.push({
+        location,
+        predicted_demand: activityScore,
+        trend: activityScore > 60 ? 'rising' : activityScore < 30 ? 'falling' : 'stable',
+        confidence: Math.min(0.9, events.length / 10),
+        factors: this.extractActivityFactors(events),
+        timestamp: new Date()
+      });
+    }
+    
+    return predictions;
+  }
+
+  private calculateActivityScore(userActions: any[], agentActions: any[]): number {
+    // Weight user actions more heavily than agent actions
+    const userWeight = 0.7;
+    const agentWeight = 0.3;
+    
+    const userScore = Math.min(100, userActions.length * 10);
+    const agentScore = Math.min(100, agentActions.length * 5);
+    
+    return Math.round(userScore * userWeight + agentScore * agentWeight);
+  }
+
+  private extractActivityFactors(events: any[]): string[] {
+    const factors = new Set<string>();
+    
+    events.forEach(event => {
+      if (event.topic.includes('purchase')) factors.add('high_purchase_activity');
+      if (event.topic.includes('travel')) factors.add('travel_activity');
+      if (event.topic.includes('chat')) factors.add('social_engagement');
+      if (event.topic.includes('delivery')) factors.add('logistics_demand');
+    });
+    
+    return Array.from(factors);
+  }
+}
+
+export const agentTorchEventProcessor = new AgentTorchEventProcessor();
 
 // Helper functions for integration
 export function formatCrowdBadge(heatData: CrowdHeatData): string {
