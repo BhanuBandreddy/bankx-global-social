@@ -6,12 +6,15 @@ import { Hero } from "@/components/Hero";
 import { SocialFeed } from "@/components/SocialFeed";
 import { TrustMetrics } from "@/components/TrustMetrics";
 import { AgentDashboard } from "@/components/AgentDashboard";
-import { BlinkConcierge } from "@/components/BlinkConcierge";
+import { ChatSidebar } from "@/components/ChatSidebar";
 import { CustomIcons } from "@/components/CustomIcons";
+import { Button } from "@/components/ui/button";
+import { MessageSquare } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("feed");
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
