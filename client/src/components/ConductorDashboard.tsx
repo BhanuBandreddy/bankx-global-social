@@ -60,7 +60,7 @@ export const ConductorDashboard = () => {
     } catch (error) {
       toast({
         title: "❌ Batch Processing Failed",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Unknown error',
         variant: "destructive",
       });
     }
@@ -148,7 +148,7 @@ export const ConductorDashboard = () => {
               <div className="flex flex-wrap gap-1 mt-2">
                 {latestInsight.workflows.map((workflow, idx) => (
                   <Badge key={idx} className="text-xs bg-white border-black">
-                    {agentIcons[workflow.agent]} {workflow.agent}
+                    {agentIcons[workflow.agent as keyof typeof agentIcons] || "🤖"} {workflow.agent}
                   </Badge>
                 ))}
               </div>

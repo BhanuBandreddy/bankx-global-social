@@ -229,7 +229,7 @@ Based on this context, analyze the user's intent and coordinate appropriate agen
         this.emit('workflowError', {
           agentId: workflow.agentId,
           action: workflow.action,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           timestamp: new Date()
         });
       }
@@ -357,7 +357,7 @@ Based on this context, analyze the user's intent and coordinate appropriate agen
   cleanupOldContexts(maxAgeHours: number = 24): void {
     const cutoff = new Date(Date.now() - (maxAgeHours * 60 * 60 * 1000));
     
-    for (const [key, context] of this.contextMemory.entries()) {
+    for (const [key, context] of Array.from(this.contextMemory.entries())) {
       const lastActivity = context.conversation[context.conversation.length - 1]?.timestamp;
       if (lastActivity && lastActivity < cutoff) {
         this.contextMemory.delete(key);
