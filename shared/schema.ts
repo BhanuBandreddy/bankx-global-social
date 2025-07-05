@@ -196,6 +196,68 @@ export const selectTravelerSchema = createSelectSchema(travelers);
 export const insertChatMessageSchema = createInsertSchema(chatMessages);
 export const selectChatMessageSchema = createSelectSchema(chatMessages);
 
+// Add marketplace tables for seed data
+import { pgEnum } from "drizzle-orm/pg-core";
+
+export const userRoleEnum = pgEnum('user_role', ['general', 'business', 'traveler', 'merchant', 'shopper']);
+export const requestStatusEnum = pgEnum('request_status', ['open', 'matched', 'delivered']);
+export const escrowStateEnum = pgEnum('escrow_state', ['held', 'released', 'disputed']);
+
+// Marketplace seed tables
+export const marketplaceUsers = pgTable("marketplace_users", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email"),
+  role: userRoleEnum("role").notNull(),
+  trustScore: integer("trust_score").default(50),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const marketplaceProducts = pgTable("marketplace_products", {
+  id: text("id").primaryKey(),
+  merchantId: text("merchant_id").references(() => marketplaceUsers.id).notNull(),
+  title: text("title").notNull(),
+  priceUsd: integer("price_usd").notNull(),
+  city: text("city").notNull(),
+  stock: integer("stock").default(1),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const marketplaceTrips = pgTable("marketplace_trips", {
+  id: text("id").primaryKey(),
+  travelerId: text("traveler_id").references(() => marketplaceUsers.id).notNull(),
+  fromCity: text("from_city").notNull(),
+  toCity: text("to_city").notNull(),
+  departUtc: timestamp("depart_utc").notNull(),
+  capacityKg: integer("capacity_kg").default(5),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const marketplaceRequests = pgTable("marketplace_requests", {
+  id: text("id").primaryKey(),
+  shopperId: text("shopper_id").references(() => marketplaceUsers.id).notNull(),
+  productId: text("product_id").references(() => marketplaceProducts.id).notNull(),
+  qty: integer("qty").default(1),
+  status: requestStatusEnum("status").default('open'),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const marketplaceMatches = pgTable("marketplace_matches", {
+  id: text("id").primaryKey(),
+  requestId: text("request_id").references(() => marketplaceRequests.id).notNull(),
+  tripId: text("trip_id").references(() => marketplaceTrips.id).notNull(),
+  escrowId: text("escrow_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const marketplaceEscrows = pgTable("marketplace_escrows", {
+  id: text("id").primaryKey(),
+  amount: integer("amount").notNull(),
+  currency: text("currency").default('USD'),
+  state: escrowStateEnum("state").default('held'),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export type User = z.infer<typeof selectUserSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Profile = z.infer<typeof selectProfileSchema>;
@@ -212,3 +274,8 @@ export type Traveler = z.infer<typeof selectTravelerSchema>;
 export type InsertTraveler = z.infer<typeof insertTravelerSchema>;
 export type ChatMessage = z.infer<typeof selectChatMessageSchema>;
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+
+// Marketplace types
+export type MarketplaceUser = typeof marketplaceUsers.$inferSelect;
+export type MarketplaceProduct = typeof marketplaceProducts.$inferSelect;
+export type MarketplaceTrip = typeof marketplaceTrips.$inferSelect;

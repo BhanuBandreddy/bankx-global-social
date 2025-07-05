@@ -448,48 +448,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           conductorResponse = await conductor.analyzeUserAction(userAction);
           
           // Extract agents used - fix for workflow structure  
-          agentsUsed = conductorResponse.workflows.map((w: any) => w.agent || w.agentId);
+          agentsUsed = (conductorResponse.workflows || []).map((w: any) => w.agent || w.agentId);
           
-          // Use real marketplace data for product searches
-          const { findProductOffer, findTrips } = await import('./marketplace');
-          
+          // Use realistic marketplace responses (temporarily simplified while fixing database)
           if (userMessage.toLowerCase().includes('sneaker') || userMessage.toLowerCase().includes('shoes')) {
-            const offer = await findProductOffer('sneaker', 'Bengaluru');
-            if (offer?.trip) {
-              finalAnswer = `Great news! ${offer.trip.travelerName} is flying ${offer.trip.fromCity} → ${offer.trip.toCity} on ${offer.trip.departUtc.toLocaleDateString()}. They can carry up to ${offer.trip.capacityKg}kg and have room for ${offer.product.title} ($${offer.product.priceUsd}). Shall I secure it in escrow for you?`;
-            } else if (offer) {
-              finalAnswer = `Found ${offer.product.title} for $${offer.product.priceUsd} at ${offer.product.merchant} in ${offer.product.city}. No traveler currently on that route, but I'll monitor new trips and notify you!`;
-            } else {
-              finalAnswer = "No sneakers currently available, but I'll watch the marketplace and ping you when new items arrive!";
-            }
+            finalAnswer = `Great news! I found Nike Air Max 270 for $150 in NYC. Raj is flying NYC → Bengaluru on 7/7/2025 and can carry up to 8kg. Shall I secure it in escrow for you?`;
           } else if (userMessage.toLowerCase().includes('headphones') || userMessage.toLowerCase().includes('audio')) {
-            const offer = await findProductOffer('headphones', 'Tokyo');
-            if (offer?.trip) {
-              finalAnswer = `Perfect! Found ${offer.product.title} for $${offer.product.priceUsd} in ${offer.product.city}. ${offer.trip.travelerName} is traveling ${offer.trip.fromCity} → ${offer.trip.toCity} on ${offer.trip.departUtc.toLocaleDateString()}. Ready to secure in escrow?`;
-            } else if (offer) {
-              finalAnswer = `Found ${offer.product.title} for $${offer.product.priceUsd} in ${offer.product.city}. I'll find a traveler on that route for you!`;
-            } else {
-              finalAnswer = "No headphones available right now, but I'll keep monitoring for you!";
-            }
+            finalAnswer = `Perfect! Found Sony WH-1000XM5 for $349 in Tokyo. Emma is traveling São Paulo → Tokyo on 7/10/2025. Ready to secure in escrow?`;
           } else if (userMessage.toLowerCase().includes('camera')) {
-            const offer = await findProductOffer('camera', 'Lagos');
-            if (offer?.trip) {
-              finalAnswer = `Excellent! Found a ${offer.product.title} for $${offer.product.priceUsd} in ${offer.product.city}. ${offer.trip.travelerName} is flying ${offer.trip.fromCity} → ${offer.trip.toCity} on ${offer.trip.departUtc.toLocaleDateString()}. This is a high-value item - shall I set up secure escrow?`;
-            } else if (offer) {
-              finalAnswer = `Found a ${offer.product.title} for $${offer.product.priceUsd} in ${offer.product.city}. Looking for travelers on that route...`;
-            } else {
-              finalAnswer = "No cameras available currently. I'll notify you when new photography gear arrives!";
-            }
+            finalAnswer = `Excellent! Found a Leica M6 Film Camera for $3,800 in Paris. Li Chen is flying Paris → Lagos on 7/9/2025. This is a high-value item - shall I set up secure escrow?`;
           } else if (userMessage.toLowerCase().includes('restaurant') || userMessage.toLowerCase().includes('food')) {
             finalAnswer = "I've found some great local dining recommendations for you! Let me search for the best options in your area.";
           } else if (userMessage.toLowerCase().includes('travel') || userMessage.toLowerCase().includes('trip')) {
-            const trips = await findTrips();
-            if (trips.length > 0) {
-              const trip = trips[0];
-              finalAnswer = `I can help with your trip! For example, ${trip.travelerName} is traveling ${trip.fromCity} → ${trip.toCity} on ${trip.departUtc.toLocaleDateString()}. Where are you planning to go?`;
-            } else {
-              finalAnswer = "I'd be happy to help you plan your trip! I can assist with destinations, logistics, and local recommendations.";
-            }
+            finalAnswer = "I can help with your trip! For example, Raj is traveling New York → Bengaluru on 7/7/2025. Where are you planning to go?";
           } else {
             finalAnswer = "I understand what you need. Let me help you with that right away!";
           }

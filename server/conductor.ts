@@ -142,8 +142,9 @@ Respond in JSON format with reasoning, workflows, contextUpdates, and eventBusMe
         this.emit('eventBusMessage', message);
       });
 
-      // Execute agent workflows
-      await this.executeAgentWorkflows(conductorResponse.workflows, context);
+      // Execute agent workflows - handle potential undefined/null workflows
+      const workflows = conductorResponse.workflows || [];
+      await this.executeAgentWorkflows(workflows, context);
 
       return conductorResponse;
       
