@@ -75,21 +75,32 @@ const Index = () => {
           ))}
         </div>
 
-        {/* Dynamic Content */}
-        <div className="transition-all duration-300">
+        {/* Content Based on Active Tab */}
+        <div className={`relative transition-all duration-300 ${isChatOpen ? 'mr-96' : ''}`}>
           {activeTab === "feed" && <SocialFeed />}
           {activeTab === "agents" && <AgentDashboard />}
           {activeTab === "trust" && <TrustMetrics />}
         </div>
       </div>
 
-      {/* Floating Blink Concierge - Only show on non-feed tabs as a contextual helper */}
-      {activeTab !== "feed" && (
-        <BlinkConcierge 
-          contextType="generic"
-          isFloating={true}
+        {/* Floating Chat Button */}
+        {!isChatOpen && (
+          <div className="fixed bottom-6 right-6 z-50">
+            <Button
+              onClick={() => setIsChatOpen(true)}
+              className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 border-4 border-black shadow-[4px_4px_0px_0px_#000] font-black uppercase rounded-none"
+            >
+              <MessageSquare className="w-5 h-5 mr-2" />
+              Chat
+            </Button>
+          </div>
+        )}
+
+        {/* Chat Sidebar */}
+        <ChatSidebar 
+          isOpen={isChatOpen} 
+          onToggle={() => setIsChatOpen(!isChatOpen)} 
         />
-      )}
     </div>
   );
 };
