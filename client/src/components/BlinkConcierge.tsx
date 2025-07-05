@@ -1,445 +1,483 @@
+// Blink Conversational Concierge - Interaction-Centric Multi-Agent System
+// Following MIT principles: interaction patterns drive intelligence, not individual agent sophistication
 
-import { useState, useEffect, useRef } from "react";
-import { apiClient } from "@/lib/api";
+import { useState, useRef, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useConductorContext } from "@/hooks/useConductorContext";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, MessageCircle, X, Minimize2, Send } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { ChatBubbleAgent } from "./blink/ChatBubbleAgent";
-import { ChatBubbleUser } from "./blink/ChatBubbleUser";
-import { LoadingIndicator } from "./blink/LoadingIndicator";
-import { ContextPreview } from "./blink/ContextPreview";
+import { 
+  MessageSquare, 
+  Send, 
+  Clock, 
+  MapPin, 
+  ShoppingBag, 
+  Plane,
+  Brain,
+  Zap,
+  History,
+  Eye,
+  Calendar,
+  X
+} from "lucide-react";
 
-interface ChatMessage {
+interface BlinkMessage {
   id: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
-  agentName?: string;
-}
-
-interface BlinkResponse {
-  finalAnswer: string;
-  conversation: any[];
-  workflow?: string;
-  success: boolean;
-  error?: string;
-}
-
-interface BlinkConciergeProps {
-  contextType?: 'generic' | 'feed';
-  feedContext?: {
-    postId: string;
-    action: string;
-    productData?: any;
-    userAction?: string;
+  eventType?: 'past' | 'current' | 'future';
+  triggerredAgents?: string[];
+  conductorInsights?: any;
+  metadata?: {
+    location?: string;
+    intent?: string;
+    confidence?: number;
   };
-  onClose?: () => void;
-  isFloating?: boolean;
-  isDrawer?: boolean;
 }
 
-export const BlinkConcierge = ({ 
-  contextType = 'generic', 
-  feedContext, 
-  onClose,
-  isFloating = false,
-  isDrawer = false
-}: BlinkConciergeProps) => {
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random()}`);
-  const [isExpanded, setIsExpanded] = useState(!isFloating);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [hasInitialized, setHasInitialized] = useState(false);
-  const [lastQuery, setLastQuery] = useState("");
-  const [lastQueryTime, setLastQueryTime] = useState(0);
+interface BlinkConversation {
+  id: string;
+  title: string;
+  messages: BlinkMessage[];
+  lastActivity: Date;
+  eventTypes: ('past' | 'current' | 'future')[];
+}
+
+// Predefined test scenarios based on the three event types
+const TEST_SCENARIOS = {
+  past: [
+    "Show me my recent purchases from Tokyo",
+    "What was on my wishlist last month?",
+    "Check if my refund for the electronics purchase went through",
+    "Review my travel expenses from my Europe trip",
+    "What products did I save but never bought?"
+  ],
+  current: [
+    "What's trending in my current city right now?",
+    "Find the nearest train station to my location",
+    "What are the best restaurants within walking distance?",
+    "Show me local events happening today",
+    "What's the current crowd heat in electronics stores nearby?"
+  ],
+  future: [
+    "Here's my flight itinerary, help me plan my trip",
+    "Check my flight status for tomorrow",
+    "Book me a cab to the airport at 6 AM",
+    "What do I need to know about my destination city?",
+    "Set up delivery for my purchases to arrive after I return"
+  ]
+};
+
+export const BlinkConcierge = ({ isMinimized = false, onToggle }: { 
+  isMinimized?: boolean; 
+  onToggle?: () => void; 
+}) => {
+  const [conversations, setConversations] = useState<BlinkConversation[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [currentMessage, setCurrentMessage] = useState("");
+  const [isTestMode, setIsTestMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
-  const { profile } = useUserProfile();
+  const { getLatestInsight, sendWebhook } = useConductorContext();
 
-  // Auto-scroll to bottom when new messages arrive
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, loading]);
-
-  // Initialize with contextual query for feed actions
-  useEffect(() => {
-    if (contextType === 'feed' && feedContext && !hasInitialized) {
-      const contextualQuery = getContextualQuery();
-      if (contextualQuery) {
-        setQuery(contextualQuery);
-        setHasInitialized(true);
-        // Auto-submit after a brief moment
-        setTimeout(() => {
-          handleSubmitWithQuery(contextualQuery);
-        }, 1000);
-      }
-    } else if (contextType === 'generic' && user && !hasInitialized && isExpanded) {
-      loadChatHistory();
-      setHasInitialized(true);
-    }
-  }, [contextType, feedContext, user, isExpanded, hasInitialized]);
-
-  const loadChatHistory = async () => {
-    if (!user || contextType === 'feed') return;
-
-    try {
-      // For now, start with empty chat history since we're migrating away from Supabase
-      // Chat history will be built as users interact with the new system
-      console.log('Chat history loading disabled during migration - starting fresh');
-    } catch (error) {
-      console.error('Error loading chat history:', error);
-    }
-  };
-
-
-
-  const getContextualQuery = () => {
-    if (contextType === 'feed' && feedContext) {
-      switch (feedContext.action) {
-        case 'purchase':
-          return `I want to purchase ${feedContext.productData?.name || 'this item'}. Can you help me with the buying process and payment options?`;
-        case 'inquire':
-          return `I need more information about ${feedContext.productData?.name || 'this item'}. Can you provide details, pricing, and availability?`;
-        case 'travel':
-          return "I need help planning travel arrangements for this destination. Can you assist with logistics, requirements, and recommendations?";
-        case 'sell':
-          return "I'm interested in selling similar products. Can you guide me through the selling process and marketplace options?";
-        default:
-          return `Can you help me with ${feedContext.productData?.name || 'this item'}?`;
-      }
-    }
-    return "";
-  };
-
-  const getContextualPlaceholder = () => {
-    if (contextType === 'feed' && feedContext) {
-      switch (feedContext.action) {
-        case 'purchase':
-          return `Ask about purchasing ${feedContext.productData?.name || 'this item'}...`;
-        case 'inquire':
-          return `Ask questions about ${feedContext.productData?.name || 'this item'}...`;
-        case 'travel':
-          return "Ask about travel arrangements, logistics, or requirements...";
-        case 'sell':
-          return "Ask about selling products, pricing, or marketplace guidance...";
-        default:
-          return "How can I help with this item?";
-      }
-    }
-    return `Hi ${profile?.username || 'there'}! How can I assist you today?`;
-  };
-
-  const isDuplicateQuery = (queryText: string): boolean => {
-    const now = Date.now();
-    const timeDiff = now - lastQueryTime;
-    
-    if (queryText.trim() === lastQuery && timeDiff < 5000) {
-      return true;
-    }
-    
-    setLastQuery(queryText.trim());
-    setLastQueryTime(now);
-    return false;
-  };
-
-  const processAgentResponses = (conversation: any[]): ChatMessage[] => {
-    const agentMessages: ChatMessage[] = [];
-    
-    conversation.forEach((msg, index) => {
-      if (msg.speaker !== 'User') {
-        agentMessages.push({
-          id: `agent-${Date.now()}-${index}`,
-          role: 'assistant',
-          content: msg.content,
-          timestamp: new Date(),
-          agentName: msg.speaker
-        });
-      }
-    });
-    
-    return agentMessages;
-  };
-
-  const handleSubmitWithQuery = async (queryText: string) => {
-    if (!queryText.trim() || !user || loading) return;
-
-    // Check for duplicate queries
-    if (isDuplicateQuery(queryText)) {
-      toast({
-        title: "Already asking that",
-        description: "Please wait for the current response...",
-        variant: "default",
+  // Send message to Blink conversation API
+  const sendMessageMutation = useMutation({
+    mutationFn: async ({ message, conversationId }: { message: string; conversationId?: string }) => {
+      const response = await fetch('/api/blink/conversation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message,
+          conversationId,
+          includeContext: true,
+          requestConductorAnalysis: true
+        })
       });
-      return;
-    }
 
-    setLoading(true);
-    
-    // Add user message to chat
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content: queryText.trim(),
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
+      if (!response.ok) {
+        throw new Error(`Failed to send message: ${response.statusText}`);
+      }
 
-    try {
-      const response: BlinkResponse = await apiClient.sendBlinkMessage({
-        query: queryText.trim(),
-        sessionId,
-        contextType,
-        feedContext
-      });
+      return response.json();
+    },
+    onSuccess: (data, variables) => {
+      // Update conversation with response
+      const conversationId = variables.conversationId || generateConversationId();
       
-      if (response.success) {
-        // Process individual agent responses
-        if (response.conversation && response.conversation.length > 0) {
-          const agentMessages = processAgentResponses(response.conversation);
-          setMessages(prev => [...prev, ...agentMessages]);
-        } else if (response.finalAnswer) {
-          // Fallback to final answer if no conversation
-          const assistantMessage: ChatMessage = {
-            id: `assistant-${Date.now()}`,
-            role: 'assistant',
-            content: response.finalAnswer,
-            timestamp: new Date(),
-            agentName: 'PathSync'
+      const userMessage: BlinkMessage = {
+        id: generateMessageId(),
+        role: 'user',
+        content: variables.message,
+        timestamp: new Date(),
+        eventType: detectEventType(variables.message),
+        metadata: {
+          intent: variables.message.slice(0, 50),
+          confidence: 0.9
+        }
+      };
+
+      const assistantMessage: BlinkMessage = {
+        id: generateMessageId(),
+        role: 'assistant',
+        content: data.finalAnswer || data.response || "I understand. Let me help you with that.",
+        timestamp: new Date(),
+        triggerredAgents: data.agentsUsed || [],
+        conductorInsights: data._conductor,
+        metadata: {
+          confidence: data.confidence || 0.8
+        }
+      };
+
+      setConversations(prev => {
+        const existingIndex = prev.findIndex(c => c.id === conversationId);
+        
+        if (existingIndex >= 0) {
+          // Update existing conversation
+          const updated = [...prev];
+          updated[existingIndex] = {
+            ...updated[existingIndex],
+            messages: [...updated[existingIndex].messages, userMessage, assistantMessage],
+            lastActivity: new Date(),
+            eventTypes: [...new Set([...updated[existingIndex].eventTypes, userMessage.eventType].filter(Boolean))] as ('past' | 'current' | 'future')[]
           };
-          
-          setMessages(prev => [...prev, assistantMessage]);
+          return updated;
+        } else {
+          // Create new conversation
+          const newConversation: BlinkConversation = {
+            id: conversationId,
+            title: generateConversationTitle(variables.message),
+            messages: [userMessage, assistantMessage],
+            lastActivity: new Date(),
+            eventTypes: [userMessage.eventType].filter(Boolean) as ('past' | 'current' | 'future')[]
+          };
+          return [newConversation, ...prev];
         }
-        
-        setQuery("");
-        
-        toast({
-          title: "✨ Response Ready",
-          description: "Your request has been processed successfully",
-        });
-
-        if (response.workflow) {
-          toast({
-            title: "🔔 Action Initiated",
-            description: "You'll be notified when complete",
-          });
-        }
-      } else {
-        throw new Error(response.error || 'Unknown error');
-      }
-    } catch (error) {
-      console.error('Blink error:', error);
-      toast({
-        title: "❌ Error",
-        description: error.message || "Failed to process request",
-        variant: "destructive",
       });
-    } finally {
-      setLoading(false);
+
+      setActiveConversationId(conversationId);
+      
+      // Send to Conductor via webhook for additional analysis
+      if (data._conductor) {
+        sendWebhook({
+          type: 'blink_conversation',
+          conversationId,
+          userMessage: variables.message,
+          assistantResponse: data.finalAnswer,
+          conductorInsights: data._conductor,
+          timestamp: new Date()
+        }).catch(err => console.warn('Webhook failed:', err));
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Conversation Error",
+        description: error instanceof Error ? error.message : "Failed to send message",
+        variant: "destructive"
+      });
     }
+  });
+
+  // Auto-scroll to bottom of messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [conversations, activeConversationId]);
+
+  const handleSendMessage = async () => {
+    if (!currentMessage.trim()) return;
+
+    await sendMessageMutation.mutateAsync({
+      message: currentMessage,
+      conversationId: activeConversationId || undefined
+    });
+
+    setCurrentMessage("");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await handleSubmitWithQuery(query);
+  const handleTestScenario = async (scenario: string, eventType: 'past' | 'current' | 'future') => {
+    await sendMessageMutation.mutateAsync({
+      message: `[TEST ${eventType.toUpperCase()}] ${scenario}`,
+      conversationId: activeConversationId || undefined
+    });
   };
 
-  const handleMinimize = () => {
-    if (onClose) {
-      onClose();
-    } else if (isFloating) {
-      setIsExpanded(false);
-    } else {
-      setIsMinimized(true);
-    }
-  };
+  const activeConversation = conversations.find(c => c.id === activeConversationId);
+  const latestConductorInsight = getLatestInsight();
 
-  const handleClose = () => {
-    if (onClose) {
-      onClose();
-    } else if (isFloating) {
-      setIsExpanded(false);
-    } else {
-      setIsMinimized(true);
-    }
-  };
-
-  const handleRestore = () => {
-    if (isFloating) {
-      setIsExpanded(true);
-    } else {
-      setIsMinimized(false);
-    }
-  };
-
-  // Show minimized state for non-floating version
-  if (!isFloating && !isDrawer && isMinimized) {
+  if (isMinimized) {
     return (
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-4 left-4 z-50">
         <Button
-          onClick={handleRestore}
-          className="flex items-center space-x-2 bg-purple-500 text-white border-4 border-black font-bold shadow-[4px_4px_0px_0px_#000] hover:shadow-[6px_6px_0px_0px_#000] transition-all duration-200"
+          onClick={onToggle}
+          className="relative bg-cyan-500 hover:bg-cyan-600 text-white border-4 border-black shadow-[4px_4px_0px_0px_#000]"
         >
-          <Sparkles className="w-5 h-5" />
-          <span>Blink Assistant</span>
+          <MessageSquare className="w-5 h-5 mr-2" />
+          Blink
+          {conversations.length > 0 && (
+            <div className="absolute -top-2 -right-2 w-5 h-5 bg-orange-400 border-2 border-black rounded-full text-xs flex items-center justify-center font-bold">
+              {conversations.length}
+            </div>
+          )}
         </Button>
       </div>
     );
   }
-
-  if (isFloating && !isExpanded) {
-    return (
-      <div className="fixed bottom-6 right-6 z-50">
-        <Button
-          onClick={() => setIsExpanded(true)}
-          className="w-16 h-16 rounded-full bg-purple-500 text-white border-4 border-black font-bold shadow-[4px_4px_0px_0px_#000] hover:shadow-[8px_8px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-2px] hover:translate-y-[-2px]"
-        >
-          <Sparkles className="w-8 h-8" />
-        </Button>
-      </div>
-    );
-  }
-
-  const containerClasses = isDrawer 
-    ? 'w-full h-full' 
-    : isFloating 
-      ? 'fixed bottom-6 right-6 w-96 h-[600px] z-50 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] rounded-lg overflow-hidden'
-      : 'w-full max-w-4xl mx-auto bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] rounded-lg overflow-hidden';
-
-  const chatContainerClasses = isDrawer 
-    ? 'h-[calc(100vh-280px)]'
-    : isFloating 
-      ? 'h-96'
-      : 'h-80';
 
   return (
-    <div className={`${containerClasses} ${isDrawer ? 'sm:w-full md:w-[60%] md:max-w-none md:mx-auto' : ''}`}>
-      {/* Header */}
-      <div className="p-4 border-b-4 border-black bg-gradient-to-r from-purple-100 to-blue-100 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Sparkles className="w-6 h-6 text-purple-600" />
-          <div>
-            <h3 className="text-lg font-black text-black uppercase tracking-tight">
-              Blink Assistant
-            </h3>
-            <p className="text-xs text-gray-700 font-medium">
-              {contextType === 'feed' ? 'Contextual AI Helper' : 'Your AI Assistant'}
-            </p>
+    <div className="fixed bottom-4 left-4 z-50 w-96 max-h-[80vh] flex flex-col">
+      <Card className="border-4 border-black shadow-[8px_8px_0px_0px_#000] bg-white flex-1 flex flex-col">
+        {/* Header */}
+        <CardHeader className="pb-4 border-b-4 border-black bg-cyan-100 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <MessageSquare className="w-6 h-6 text-cyan-600" />
+              <div>
+                <CardTitle className="text-lg font-black text-black uppercase">Blink</CardTitle>
+                <div className="text-sm text-gray-700">Conversational Concierge</div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsTestMode(!isTestMode)}
+                className={`text-xs border-2 border-black ${isTestMode ? 'bg-yellow-200' : 'bg-gray-100'}`}
+              >
+                {isTestMode ? 'TEST ON' : 'TEST OFF'}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onToggle}
+                className="text-black hover:bg-gray-200"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
-        </div>
-        
-        {!isDrawer && (
-          <div className="flex items-center space-x-2">
-            <Button
-              onClick={handleMinimize}
-              variant="ghost"
-              size="sm"
-              className="p-2 hover:bg-purple-200 border-2 border-transparent hover:border-black transition-all rounded"
-              title="Minimize"
-            >
-              <Minimize2 className="w-4 h-4" />
-            </Button>
-            <Button
-              onClick={handleClose}
-              variant="ghost"
-              size="sm"
-              className="w-8 h-8 p-0 hover:bg-red-200 border-2 border-transparent hover:border-black transition-all rounded"
-              title="Close"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+        </CardHeader>
+
+        <CardContent className="p-0 flex-1 flex flex-col min-h-0">
+          {/* Test Scenarios Panel */}
+          {isTestMode && (
+            <div className="p-3 bg-yellow-50 border-b-2 border-black">
+              <div className="text-xs font-bold text-black uppercase mb-2">Test Scenarios</div>
+              <div className="grid grid-cols-3 gap-1 text-xs">
+                {/* Past Events */}
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-1">
+                    <History className="w-3 h-3 text-blue-600" />
+                    <span className="font-bold text-blue-600">PAST</span>
+                  </div>
+                  {TEST_SCENARIOS.past.slice(0, 2).map((scenario, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleTestScenario(scenario, 'past')}
+                      className="block w-full text-left p-1 bg-blue-100 border border-black text-xs hover:bg-blue-200 truncate"
+                      title={scenario}
+                    >
+                      {scenario.slice(0, 20)}...
+                    </button>
+                  ))}
+                </div>
+
+                {/* Current Events */}
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-1">
+                    <Eye className="w-3 h-3 text-green-600" />
+                    <span className="font-bold text-green-600">NOW</span>
+                  </div>
+                  {TEST_SCENARIOS.current.slice(0, 2).map((scenario, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleTestScenario(scenario, 'current')}
+                      className="block w-full text-left p-1 bg-green-100 border border-black text-xs hover:bg-green-200 truncate"
+                      title={scenario}
+                    >
+                      {scenario.slice(0, 20)}...
+                    </button>
+                  ))}
+                </div>
+
+                {/* Future Events */}
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-1">
+                    <Calendar className="w-3 h-3 text-purple-600" />
+                    <span className="font-bold text-purple-600">FUTURE</span>
+                  </div>
+                  {TEST_SCENARIOS.future.slice(0, 2).map((scenario, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleTestScenario(scenario, 'future')}
+                      className="block w-full text-left p-1 bg-purple-100 border border-black text-xs hover:bg-purple-200 truncate"
+                      title={scenario}
+                    >
+                      {scenario.slice(0, 20)}...
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
+            {!activeConversation ? (
+              <div className="text-center text-gray-500 py-8">
+                <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <div className="text-sm font-medium">Start a conversation</div>
+                <div className="text-xs text-gray-400 mt-1">
+                  Test past, current, or future events
+                </div>
+              </div>
+            ) : (
+              activeConversation.messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[80%] p-3 border-2 border-black ${
+                      message.role === 'user'
+                        ? 'bg-cyan-100 shadow-[2px_2px_0px_0px_#000]'
+                        : 'bg-white shadow-[2px_2px_0px_0px_#000]'
+                    }`}
+                  >
+                    <div className="text-sm font-medium text-black">{message.content}</div>
+                    
+                    {/* Message metadata */}
+                    <div className="flex items-center justify-between mt-2 text-xs text-gray-600">
+                      <div className="flex items-center space-x-2">
+                        {message.eventType && (
+                          <Badge className={`text-xs ${
+                            message.eventType === 'past' ? 'bg-blue-100 text-blue-800' :
+                            message.eventType === 'current' ? 'bg-green-100 text-green-800' :
+                            'bg-purple-100 text-purple-800'
+                          }`}>
+                            {message.eventType}
+                          </Badge>
+                        )}
+                        {message.triggerredAgents && message.triggerredAgents.length > 0 && (
+                          <Badge className="bg-orange-100 text-orange-800 text-xs">
+                            {message.triggerredAgents.length} agents
+                          </Badge>
+                        )}
+                      </div>
+                      <span>{message.timestamp.toLocaleTimeString().slice(0, 5)}</span>
+                    </div>
+
+                    {/* Conductor insights preview */}
+                    {message.conductorInsights && (
+                      <div className="mt-2 p-2 bg-gray-50 border border-gray-300 rounded text-xs">
+                        <div className="flex items-center space-x-1 mb-1">
+                          <Brain className="w-3 h-3 text-purple-600" />
+                          <span className="font-bold text-purple-600">CONDUCTOR</span>
+                        </div>
+                        <div className="text-gray-700 truncate">
+                          {message.conductorInsights.reasoning?.slice(0, 80)}...
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+            
+            {sendMessageMutation.isPending && (
+              <div className="flex justify-start">
+                <div className="max-w-[80%] p-3 bg-white border-2 border-black shadow-[2px_2px_0px_0px_#000]">
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
           </div>
-        )}
 
-        {isDrawer && (
-          <Button
-            onClick={handleClose}
-            variant="ghost"
-            size="sm"
-            className="w-8 h-8 p-0 hover:bg-red-200 border-2 border-transparent hover:border-black transition-all rounded"
-            title="Close"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        )}
-      </div>
+          {/* Input */}
+          <div className="p-3 border-t-4 border-black bg-gray-50 flex-shrink-0">
+            <div className="flex space-x-2">
+              <Input
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                placeholder="Ask about past purchases, current locations, or future plans..."
+                className="flex-1 border-2 border-black shadow-[2px_2px_0px_0px_#000]"
+                disabled={sendMessageMutation.isPending}
+              />
+              <Button
+                onClick={handleSendMessage}
+                disabled={!currentMessage.trim() || sendMessageMutation.isPending}
+                className="bg-cyan-500 hover:bg-cyan-600 text-white border-2 border-black shadow-[2px_2px_0px_0px_#000]"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Context Preview */}
-      {contextType === 'feed' && feedContext && (
-        <div className="px-4 pt-2">
-          <ContextPreview 
-            productName={feedContext.productData?.name}
-            price={feedContext.productData?.price}
-            action={feedContext.action}
-          />
+      {/* Conductor Connection Indicator */}
+      {latestConductorInsight && (
+        <div className="mt-2 p-2 bg-purple-100 border-2 border-black shadow-[4px_4px_0px_0px_#000] text-xs">
+          <div className="flex items-center space-x-1">
+            <Zap className="w-3 h-3 text-purple-600" />
+            <span className="font-bold text-purple-600">CONDUCTOR ACTIVE</span>
+            <span className="text-gray-600">
+              {latestConductorInsight.workflows.length} workflows running
+            </span>
+          </div>
         </div>
       )}
-
-      {/* Chat Messages */}
-      <div className={`${chatContainerClasses} overflow-y-auto p-4 bg-gray-50 flex flex-col`}>
-        {messages.length === 0 && !loading && (
-          <div className="text-center py-8 flex-1 flex flex-col justify-center">
-            <Sparkles className="w-12 h-12 mx-auto text-purple-400 mb-4" />
-            <p className="text-gray-600 font-medium">
-              {contextType === 'feed' ? 'Ready to help with your request...' : 'Start a conversation with your AI assistant'}
-            </p>
-          </div>
-        )}
-
-        <div className="flex-1">
-          {messages.map((message) => (
-            message.role === 'user' ? (
-              <ChatBubbleUser 
-                key={message.id}
-                content={message.content}
-                timestamp={message.timestamp}
-              />
-            ) : (
-              <ChatBubbleAgent 
-                key={message.id}
-                agentName={message.agentName || 'PathSync'}
-                content={message.content}
-                timestamp={message.timestamp}
-              />
-            )
-          ))}
-
-          {loading && <LoadingIndicator />}
-        </div>
-        
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input Section */}
-      <div className="p-4 border-t-4 border-black bg-white">
-        <form onSubmit={handleSubmit} className="flex space-x-2">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={getContextualPlaceholder()}
-            className="flex-1 p-3 border-4 border-black rounded text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            disabled={loading}
-          />
-          
-          <Button
-            type="submit"
-            disabled={loading || !query.trim()}
-            className="bg-purple-500 text-white border-4 border-black font-bold px-4 py-3 hover:bg-purple-600 shadow-[2px_2px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-1px] hover:translate-y-[-1px] rounded"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </form>
-      </div>
     </div>
   );
 };
+
+// Helper functions
+function detectEventType(message: string): 'past' | 'current' | 'future' | undefined {
+  const lowerMessage = message.toLowerCase();
+  
+  // Past indicators
+  if (lowerMessage.includes('recent') || lowerMessage.includes('last') || 
+      lowerMessage.includes('previous') || lowerMessage.includes('history') ||
+      lowerMessage.includes('purchased') || lowerMessage.includes('bought') ||
+      lowerMessage.includes('refund') || lowerMessage.includes('wishlist')) {
+    return 'past';
+  }
+  
+  // Future indicators
+  if (lowerMessage.includes('book') || lowerMessage.includes('schedule') ||
+      lowerMessage.includes('plan') || lowerMessage.includes('tomorrow') ||
+      lowerMessage.includes('next') || lowerMessage.includes('flight') ||
+      lowerMessage.includes('itinerary') || lowerMessage.includes('cab')) {
+    return 'future';
+  }
+  
+  // Current indicators (default for location/now queries)
+  if (lowerMessage.includes('current') || lowerMessage.includes('now') ||
+      lowerMessage.includes('nearest') || lowerMessage.includes('today') ||
+      lowerMessage.includes('trending') || lowerMessage.includes('location')) {
+    return 'current';
+  }
+  
+  return undefined;
+}
+
+function generateConversationId(): string {
+  return `conv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+function generateMessageId(): string {
+  return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+function generateConversationTitle(firstMessage: string): string {
+  const short = firstMessage.slice(0, 30);
+  if (firstMessage.length > 30) return short + '...';
+  return short;
+}

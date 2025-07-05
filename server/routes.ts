@@ -832,6 +832,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
 
+  // Conductor orchestration endpoints
+  app.post("/api/conductor/webhook", async (req, res) => {
+    const { webhookConductorHandler } = await import('./middleware/conductor-middleware');
+    await webhookConductorHandler(req, res, () => {});
+  });
+  
+  app.get("/api/conductor/status", async (req, res) => {
+    const { conductor } = await import('./conductor');
+    const { eventBus } = await import('./event-bus');
+    res.json({
+      conductor: {
+        activeContexts: 'available',
+        uptime: process.uptime()
+      },
+      eventBus: eventBus.getStatus()
+    });
+  });
+
+  // AgentTorch batch processing endpoint
+  app.post("/api/agenttorch/batch", async (req, res) => {
+    try {
+      const { eventBus } = await import('./event-bus');
+      const batchResults = await eventBus.triggerAgentTorchBatch();
+      res.json({
+        success: true,
+        ...batchResults
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Test Conductor endpoint - manually trigger analysis
+  app.post("/api/conductor/test", async (req, res) => {
+    try {
+      const { conductor } = await import('./conductor');
+      const { action, userId = 'test-user' } = req.body;
+      
+      const testAction = {
+        type: 'api_call' as const,
+        path: '/test',
+        payload: action,
+        userId,
+        timestamp: new Date(),
+        sessionId: 'test-session',
+        context: {
+          currentPage: 'test',
+          userType: 'general' as const,
+          trustScore: 75
+        }
+      };
+
+      const result = await conductor.analyzeUserAction(testAction);
+      
+      res.json({
+        success: true,
+        analysis: result,
+        timestamp: new Date()
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Blink Test Engine endpoints
+  app.post("/api/blink/test/scenario/:scenarioId", async (req, res) => {
+    try {
+      const { blinkTestEngine } = await import('./blink-test-engine');
+      const { scenarioId } = req.params;
+      const { userId = 'test-user' } = req.body;
+      
+      const result = await blinkTestEngine.runTestScenario(scenarioId, userId);
+      
+      res.json({
+        success: true,
+        result,
+        timestamp: new Date()
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  app.post("/api/blink/test/suite", async (req, res) => {
+    try {
+      const { blinkTestEngine } = await import('./blink-test-engine');
+      const { filter } = req.body;
+      
+      const results = await blinkTestEngine.runTestSuite(filter);
+      
+      res.json({
+        success: true,
+        results,
+        summary: {
+          total: results.length,
+          successful: results.filter(r => r.success).length,
+          avgDuration: results.reduce((sum, r) => sum + r.duration, 0) / results.length
+        },
+        timestamp: new Date()
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  app.get("/api/blink/test/scenarios", async (req, res) => {
+    try {
+      const { blinkTestEngine } = await import('./blink-test-engine');
+      
+      res.json({
+        success: true,
+        scenarios: blinkTestEngine.getScenarios(),
+        timestamp: new Date()
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // NANDA Agent Endpoint - Required for registry validation
   app.get("/api/agents", async (req, res) => {
     try {

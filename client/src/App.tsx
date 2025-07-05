@@ -1,11 +1,13 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ConductorDashboard } from "@/components/ConductorDashboard";
+import { BlinkConcierge } from "@/components/BlinkConcierge";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Demo from "./pages/Demo";
@@ -25,6 +27,8 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  const [isBlinkMinimized, setIsBlinkMinimized] = useState(true);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -42,6 +46,13 @@ const App = () => {
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            
+            {/* Global UI Components */}
+            <ConductorDashboard />
+            <BlinkConcierge 
+              isMinimized={isBlinkMinimized}
+              onToggle={() => setIsBlinkMinimized(!isBlinkMinimized)}
+            />
           </BrowserRouter>
         </AuthProvider>
       </TooltipProvider>
