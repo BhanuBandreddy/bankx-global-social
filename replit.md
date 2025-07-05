@@ -4,6 +4,7 @@
 Social trust network platform with AI agents, payment escrow, and logistics coordination. Successfully migrated from Lovable/Supabase to Replit's built-in PostgreSQL database.
 
 ## Recent Changes
+- **Purple Blink Component Removed (July 2025)**: Removed user-facing Blink orchestration UI component as per user feedback - users should only see results, not internal coordination thinking; Conductor orchestration now happens completely backend-only with no frontend exposure of agent coordination processes
 - **Blink Conversational Concierge Redesign (July 2025)**: Redesigned Blink as interaction-centric multi-agent testing platform following MIT principles, with comprehensive test scenarios covering past/current/future events, automated test engine, and real-time Conductor orchestration validation through conversational interface
 - **OpenAI Agents-SDK Conductor Implementation (July 2025)**: Implemented centralized AI orchestration engine that analyzes all user actions (click/chat/webhook) using GPT-4o, coordinates specialized agent workflows, maintains context memory, and feeds real-time events through event bus to AgentTorch batch processing with crowd-heat feedback loops
 - **Multi-Agent Orchestration Framework Documentation (July 2025)**: Documented comprehensive multi-agent system architecture combining NANDA network integration (external agents), local AI agent system (TrustPay, GlobeGuides, LocaleLens, PathSync), JSON-RPC protocol bridge, and Blink conversation orchestration engine with 89% success rate

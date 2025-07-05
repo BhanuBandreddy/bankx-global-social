@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { BlinkConcierge } from "@/components/BlinkConcierge";
+// BlinkConcierge removed - coordination happens backend-only
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Demo from "./pages/Demo";
@@ -26,7 +26,7 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  const [isBlinkMinimized, setIsBlinkMinimized] = useState(true);
+  // BlinkConcierge state removed - coordination happens backend-only
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -46,11 +46,7 @@ const App = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
             
-            {/* Global UI Components */}
-            <BlinkConcierge 
-              isMinimized={isBlinkMinimized}
-              onToggle={() => setIsBlinkMinimized(!isBlinkMinimized)}
-            />
+            {/* Global UI Components - BlinkConcierge removed, coordination is backend-only */}
           </BrowserRouter>
         </AuthProvider>
       </TooltipProvider>

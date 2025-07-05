@@ -409,7 +409,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/blink/conversation", async (req, res) => {
     try {
       const { message, query, sessionId = `session-${Date.now()}`, contextType, feedContext } = req.body;
-      const userId = (req as any).user?.id || 'anonymous';
+      // Generate a proper UUID for anonymous users
+      const { randomUUID } = await import('crypto');
+      const userId = (req as any).user?.id || randomUUID();
       const userMessage = message || query;
 
       // Create user action for Conductor analysis
@@ -436,8 +438,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { conductor } = await import('./conductor');
         conductorResponse = await conductor.analyzeUserAction(userAction);
         
-        // Extract agents used
-        agentsUsed = conductorResponse.workflows.map((w: any) => w.agentId);
+        // Extract agents used - fix for workflow structure
+        agentsUsed = conductorResponse.workflows.map((w: any) => w.agent || w.agentId);
         
         // Generate response based on conductor analysis
         finalAnswer = `Based on your request about "${userMessage}", I've coordinated with ${agentsUsed.length} specialized agents. ${conductorResponse.reasoning.slice(0, 200)}...`;
@@ -472,12 +474,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Fetch updated conversation
-      let conversation = [];
+      let conversation: any[] = [];
       try {
         conversation = await db.select()
           .from(blinkConversations)
           .where(eq(blinkConversations.sessionId, sessionId))
-          .orderBy(blinkConversations.timestamp);
+          .orderBy(blinkConversations.createdAt);
       } catch (dbError) {
         console.warn('Database fetch failed:', dbError);
       }
