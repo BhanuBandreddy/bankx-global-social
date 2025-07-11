@@ -271,11 +271,11 @@ export default function TravelerWorldMapNew() {
         />
       </div>
 
-      {/* Quick City Buttons */}
+      {/* Quick City Buttons - More Visible */}
       <div className="absolute bottom-6 left-6 z-10">
-        <Card className="bg-black/80 backdrop-blur-sm border-gray-800">
+        <Card className="bg-white/95 backdrop-blur-sm border-2 border-blue-500 shadow-lg">
           <CardContent className="p-4">
-            <h3 className="text-sm font-semibold mb-3 text-white">Quick Cities</h3>
+            <h3 className="text-sm font-bold mb-3 text-black">Quick Cities</h3>
             <div className="flex flex-wrap gap-2">
               {["New York", "London", "Tokyo", "Mumbai", "Dubai", "Paris"].map(city => (
                 <Button
@@ -283,7 +283,11 @@ export default function TravelerWorldMapNew() {
                   size="sm"
                   variant={targetCity === city ? "default" : "outline"}
                   onClick={() => setTargetCity(city)}
-                  className="text-xs border-gray-600"
+                  className={`text-xs font-semibold ${
+                    targetCity === city 
+                      ? "bg-blue-600 text-white border-blue-600" 
+                      : "bg-white text-black border-gray-400 hover:bg-gray-100"
+                  }`}
                 >
                   {city}
                 </Button>

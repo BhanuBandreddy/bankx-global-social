@@ -83,7 +83,7 @@ const Index = () => {
           {activeTab === "trust" && <TrustMetrics />}
           {activeTab === "travelers" && (
             <div className="text-center py-12">
-              <h2 className="text-3xl font-bold text-white mb-4">3D Traveler Discovery</h2>
+              <h2 className="text-3xl font-bold text-white mb-4">Connections</h2>
               <p className="text-gray-300 mb-8">Interactive 3D map to discover travelers coming to any city worldwide</p>
               <Button 
                 onClick={() => navigate('/traveler-world-map')}
@@ -96,7 +96,7 @@ const Index = () => {
         </div>
       </div>
 
-        {/* Floating Chat Button */}
+        {/* Floating Blink Button */}
         {!isChatOpen && (
           <div className="fixed bottom-6 right-6 z-50">
             <Button
@@ -104,7 +104,7 @@ const Index = () => {
               className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 border-4 border-black shadow-[4px_4px_0px_0px_#000] font-black uppercase rounded-none"
             >
               <MessageSquare className="w-5 h-5 mr-2" />
-              Chat
+              BLINK
             </Button>
           </div>
         )}
