@@ -86,7 +86,7 @@ const Index = () => {
               <h2 className="text-3xl font-bold text-white mb-4">3D Traveler Discovery</h2>
               <p className="text-gray-300 mb-8">Interactive 3D map to discover travelers coming to your city</p>
               <Button 
-                onClick={() => navigate('/traveler-discovery')}
+                onClick={() => navigate('/traveler-world-map')}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 border-4 border-black shadow-[4px_4px_0px_0px_#000] font-black uppercase rounded-none"
               >
                 🌍 Launch 3D Map

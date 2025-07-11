@@ -46,7 +46,7 @@ export default function TravelerWorldMap() {
   const [animationSpeed, setAnimationSpeed] = useState(1000);
 
   // Get user's location for map centering
-  const { data: userLocation } = useQuery<{location: {city: string, country: string, coordinates: [number, number]}}}>({
+  const { data: userLocation } = useQuery<{location: {city: string, country: string, coordinates: [number, number]}}>({
     queryKey: ['/api/traveler-discovery/location'],
     queryFn: async () => {
       const res = await fetch('/api/traveler-discovery/location');
@@ -225,7 +225,7 @@ export default function TravelerWorldMap() {
                 <div className="w-3 h-1 bg-yellow-500 rounded"></div>
                 <span className="text-gray-300">Shopping & Delivery</span>
               </div>
-              <div className="fill items-center space-x-2">
+              <div className="flex items-center space-x-2">
                 <div className="w-3 h-1 bg-purple-500 rounded"></div>
                 <span className="text-gray-300">Cultural Exchange</span>
               </div>
