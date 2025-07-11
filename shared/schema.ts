@@ -144,7 +144,7 @@ export const paymentEvents = pgTable("payment_events", {
 // Blink conversations
 export const blinkConversations = pgTable("blink_conversations", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").notNull().references(() => users.id),
+  userId: uuid("user_id").references(() => users.id), // Nullable for anonymous users
   sessionId: text("session_id").default('default-session'),
   messageType: text("message_type").notNull(),
   speaker: text("speaker").notNull(),

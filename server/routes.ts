@@ -488,8 +488,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Save conversation to database
       try {
+        // For anonymous users, use null userId (now allowed by schema)
+        const validUserId = (req as any).user?.id || null;
+
         await db.insert(blinkConversations).values({
-          userId,
+          userId: validUserId,
           sessionId,
           messageType: "user",
           speaker: "User",
@@ -499,7 +502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Save AI response
         await db.insert(blinkConversations).values({
-          userId,
+          userId: validUserId,
           sessionId,
           messageType: "assistant", 
           speaker: "Blink",
