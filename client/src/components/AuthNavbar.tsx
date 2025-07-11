@@ -45,7 +45,7 @@ export const AuthNavbar = () => {
       <Button
         onClick={signOut}
         variant="outline"
-        className="border-2 border-white text-white hover:bg-white hover:text-black font-bold"
+        className="border-2 border-white text-white hover:bg-white hover:text-black font-bold bg-[#e7b008]"
       >
         LOGOUT
       </Button>
