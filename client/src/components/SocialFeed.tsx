@@ -394,13 +394,7 @@ export const SocialFeed = () => {
                     >
                       Buy Now
                     </Button>
-                    <FeedActionTrigger
-                      action="inquire"
-                      postId={post.id}
-                      productData={post.product}
-                      label="Ask Blink"
-                      className="px-3 py-2 bg-purple-500 text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-1px] hover:translate-y-[-1px] text-sm"
-                    />
+
                   </div>
                 </div>
                 

@@ -97,7 +97,7 @@ export const ChatSidebar = ({ isOpen, onToggle }: ChatSidebarProps) => {
         {!isMinimized && (
           <div className="flex items-center space-x-2">
             <MessageSquare className="w-5 h-5 text-cyan-600" />
-            <h3 className="font-black text-black uppercase">Chat</h3>
+            <h3 className="font-black text-black uppercase">Blink</h3>
           </div>
         )}
         <div className="flex items-center space-x-2">
