@@ -13,6 +13,7 @@ import Demo from "./pages/Demo";
 import Logistics from "./pages/Logistics";
 import Workflow from "./pages/Workflow";
 import AgentDashboardPage from "./pages/AgentDashboardPage";
+import TravelerDiscovery from "./pages/TravelerDiscovery";
 import NotFound from "./pages/NotFound";
 
 // Create QueryClient outside of component to prevent recreation on re-renders
@@ -42,6 +43,7 @@ const App = () => {
               <Route path="/logistics" element={<Logistics />} />
               <Route path="/workflow" element={<Workflow />} />
               <Route path="/agent-dashboard" element={<AgentDashboardPage />} />
+              <Route path="/traveler-discovery" element={<TravelerDiscovery />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

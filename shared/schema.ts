@@ -166,6 +166,82 @@ export const blinkWorkflows = pgTable("blink_workflows", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// Travel itineraries for 3D map discovery
+export const travelItineraries = pgTable("travel_itineraries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  travelerId: text("traveler_id").notNull(), // For referencing traveler profiles
+  fromCity: text("from_city").notNull(),
+  toCity: text("to_city").notNull(),
+  fromCountry: text("from_country").notNull(),
+  toCountry: text("to_country").notNull(),
+  fromCoordinates: jsonb("from_coordinates").notNull(), // [lat, lng]
+  toCoordinates: jsonb("to_coordinates").notNull(), // [lat, lng]
+  fromAirport: text("from_airport"), // IATA code (e.g., JFK)
+  toAirport: text("to_airport"), // IATA code (e.g., CDG)
+  departureDate: timestamp("departure_date").notNull(),
+  arrivalDate: timestamp("arrival_date").notNull(),
+  airline: text("airline"),
+  flightNumber: text("flight_number"),
+  maxCarryCapacity: decimal("max_carry_capacity", { precision: 5, scale: 2 }), // kg
+  deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 }),
+  currency: text("currency").default("USD"),
+  availableForConnection: boolean("available_for_connection").default(true),
+  connectionPurpose: text("connection_purpose").array().default(["social", "shopping", "sightseeing"]),
+  travelNote: text("travel_note"),
+  status: text("status").notNull().default("upcoming"), // upcoming, traveling, completed, cancelled
+  trustScore: integer("trust_score").default(100),
+  verificationStatus: text("verification_status").default("pending"), // pending, verified, rejected
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User locations for map centering
+export const userLocations = pgTable("user_locations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  city: text("city").notNull(),
+  country: text("country").notNull(),
+  coordinates: jsonb("coordinates").notNull(), // [lat, lng]
+  timezone: text("timezone"),
+  isPrimary: boolean("is_primary").default(true),
+  detectionMethod: text("detection_method").default("manual"), // manual, ip, gps
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Connection requests between users and travelers
+export const connectionRequests = pgTable("connection_requests", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  requesterId: uuid("requester_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  travelerId: uuid("traveler_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  itineraryId: uuid("itinerary_id").notNull().references(() => travelItineraries.id, { onDelete: "cascade" }),
+  connectionType: text("connection_type").notNull(), // social, shopping, delivery, meetup
+  message: text("message"),
+  proposedMeeting: jsonb("proposed_meeting"), // {location, time, purpose}
+  status: text("status").notNull().default("pending"), // pending, accepted, declined, completed
+  responseMessage: text("response_message"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Airport data for map layers
+export const airports = pgTable("airports", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  iataCode: text("iata_code").notNull().unique(),
+  icaoCode: text("icao_code"),
+  name: text("name").notNull(),
+  city: text("city").notNull(),
+  country: text("country").notNull(),
+  coordinates: jsonb("coordinates").notNull(), // [lat, lng]
+  elevation: integer("elevation"), // in feet
+  timezone: text("timezone"),
+  isInternational: boolean("is_international").default(true),
+  passengerVolume: integer("passenger_volume"), // annual passengers
+  runwayCount: integer("runway_count"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Blink notifications
 export const blinkNotifications = pgTable("blink_notifications", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -195,6 +271,14 @@ export const insertTravelerSchema = createInsertSchema(travelers);
 export const selectTravelerSchema = createSelectSchema(travelers);
 export const insertChatMessageSchema = createInsertSchema(chatMessages);
 export const selectChatMessageSchema = createSelectSchema(chatMessages);
+export const insertTravelItinerarySchema = createInsertSchema(travelItineraries);
+export const selectTravelItinerarySchema = createSelectSchema(travelItineraries);
+export const insertUserLocationSchema = createInsertSchema(userLocations);
+export const selectUserLocationSchema = createSelectSchema(userLocations);
+export const insertConnectionRequestSchema = createInsertSchema(connectionRequests);
+export const selectConnectionRequestSchema = createSelectSchema(connectionRequests);
+export const insertAirportSchema = createInsertSchema(airports);
+export const selectAirportSchema = createSelectSchema(airports);
 
 // Add marketplace tables for seed data
 import { pgEnum } from "drizzle-orm/pg-core";
@@ -274,6 +358,14 @@ export type Traveler = z.infer<typeof selectTravelerSchema>;
 export type InsertTraveler = z.infer<typeof insertTravelerSchema>;
 export type ChatMessage = z.infer<typeof selectChatMessageSchema>;
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type TravelItinerary = z.infer<typeof selectTravelItinerarySchema>;
+export type InsertTravelItinerary = z.infer<typeof insertTravelItinerarySchema>;
+export type UserLocation = z.infer<typeof selectUserLocationSchema>;
+export type InsertUserLocation = z.infer<typeof insertUserLocationSchema>;
+export type ConnectionRequest = z.infer<typeof selectConnectionRequestSchema>;
+export type InsertConnectionRequest = z.infer<typeof insertConnectionRequestSchema>;
+export type Airport = z.infer<typeof selectAirportSchema>;
+export type InsertAirport = z.infer<typeof insertAirportSchema>;
 
 // Marketplace types
 export type MarketplaceUser = typeof marketplaceUsers.$inferSelect;

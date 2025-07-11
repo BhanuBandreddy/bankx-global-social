@@ -4,8 +4,8 @@ import { randomBytes, createHash } from "crypto";
 import { storage } from "./storage";
 import { signUp, signIn, getUser, authMiddleware, AuthenticatedRequest } from "./auth";
 import { db, escrowTransactions, paymentEvents, blinkConversations, blinkWorkflows, blinkNotifications } from "./db";
-import { products, feedPosts, deliveryOptions, travelers, chatMessages, users, profiles } from "../shared/schema";
-import { insertProductSchema, insertFeedPostSchema, insertDeliveryOptionSchema, insertTravelerSchema, insertChatMessageSchema } from "../shared/schema";
+import { products, feedPosts, deliveryOptions, travelers, chatMessages, users, profiles, travelItineraries, userLocations, connectionRequests, airports } from "../shared/schema";
+import { insertProductSchema, insertFeedPostSchema, insertDeliveryOptionSchema, insertTravelerSchema, insertChatMessageSchema, insertTravelItinerarySchema, insertUserLocationSchema, insertConnectionRequestSchema } from "../shared/schema";
 import { eq, and, desc, asc, ilike } from "drizzle-orm";
 import { agentTorchSimulator } from "./agenttorch";
 import { perplexityLocaleLens, getSmartPricing } from "./perplexity";
@@ -1105,6 +1105,286 @@ export async function registerRoutes(app: Express): Promise<Server> {
       uptime: process.uptime(),
       agent_id: "globalsocial-001"
     });
+  });
+
+  // Traveler Discovery API for 3D Map System
+  
+  // Get user's current location for map centering
+  app.get("/api/traveler-discovery/location", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      const userLocation = await db.select().from(userLocations)
+        .where(and(eq(userLocations.userId, userId), eq(userLocations.isPrimary, true)))
+        .limit(1);
+      
+      if (userLocation.length === 0) {
+        // Default to New York if no location set
+        return res.json({
+          success: true,
+          location: {
+            city: "New York",
+            country: "United States",
+            coordinates: [40.7128, -74.0060]
+          }
+        });
+      }
+      
+      res.json({
+        success: true,
+        location: {
+          city: userLocation[0].city,
+          country: userLocation[0].country,
+          coordinates: userLocation[0].coordinates
+        }
+      });
+    } catch (error) {
+      console.error("Location fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch user location" });
+    }
+  });
+
+  // Set user's location
+  app.post("/api/traveler-discovery/location", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      const { city, country, coordinates, timezone } = req.body;
+      
+      // Disable any existing primary location
+      await db.update(userLocations)
+        .set({ isPrimary: false })
+        .where(eq(userLocations.userId, userId));
+      
+      // Insert new primary location
+      const locationData = {
+        userId,
+        city,
+        country,
+        coordinates,
+        timezone,
+        isPrimary: true,
+        detectionMethod: "manual"
+      };
+      
+      const newLocation = await db.insert(userLocations).values(locationData).returning();
+      res.json({ success: true, location: newLocation[0] });
+    } catch (error) {
+      console.error("Location set error:", error);
+      res.status(500).json({ error: "Failed to set user location" });
+    }
+  });
+
+  // Get travelers arriving to user's city
+  app.get("/api/traveler-discovery/incoming", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      const { filter, date_range, connection_type } = req.query;
+      
+      // Get user's primary location
+      const userLocation = await db.select().from(userLocations)
+        .where(and(eq(userLocations.userId, userId), eq(userLocations.isPrimary, true)))
+        .limit(1);
+      
+      if (userLocation.length === 0) {
+        return res.json({ success: true, travelers: [], totalCount: 0 });
+      }
+      
+      const targetCity = userLocation[0].city;
+      
+      // Get travel itineraries to user's city
+      const travelersToCity = await db.select({
+        id: travelItineraries.id,
+        travelerId: travelItineraries.travelerId,
+        fromCity: travelItineraries.fromCity,
+        toCity: travelItineraries.toCity,
+        fromCountry: travelItineraries.fromCountry,
+        toCountry: travelItineraries.toCountry,
+        fromCoordinates: travelItineraries.fromCoordinates,
+        toCoordinates: travelItineraries.toCoordinates,
+        fromAirport: travelItineraries.fromAirport,
+        toAirport: travelItineraries.toAirport,
+        departureDate: travelItineraries.departureDate,
+        arrivalDate: travelItineraries.arrivalDate,
+        airline: travelItineraries.airline,
+        flightNumber: travelItineraries.flightNumber,
+        maxCarryCapacity: travelItineraries.maxCarryCapacity,
+        deliveryFee: travelItineraries.deliveryFee,
+        currency: travelItineraries.currency,
+        connectionPurpose: travelItineraries.connectionPurpose,
+        travelNote: travelItineraries.travelNote,
+        status: travelItineraries.status,
+        trustScore: travelItineraries.trustScore,
+        verificationStatus: travelItineraries.verificationStatus,
+        createdAt: travelItineraries.createdAt,
+        traveler: {
+          id: users.id,
+          name: profiles.fullName,
+          trustScore: profiles.trustScore,
+          level: profiles.level,
+          avatarUrl: profiles.avatarUrl
+        }
+      })
+      .from(travelItineraries)
+      .leftJoin(users, eq(travelItineraries.userId, users.id))
+      .leftJoin(profiles, eq(users.id, profiles.id))
+      .where(and(
+        eq(travelItineraries.toCity, targetCity),
+        eq(travelItineraries.availableForConnection, true),
+        eq(travelItineraries.status, "upcoming")
+      ))
+      .orderBy(asc(travelItineraries.arrivalDate))
+      .limit(50);
+      
+      res.json({
+        success: true,
+        travelers: travelersToCity,
+        totalCount: travelersToCity.length,
+        targetCity,
+        filters: {
+          applied: { filter, date_range, connection_type },
+          available: {
+            purposes: ["social", "shopping", "sightseeing", "business", "delivery"],
+            timeframes: ["this_week", "this_month", "next_month", "all"]
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Incoming travelers fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch incoming travelers" });
+    }
+  });
+
+  // Get global travel patterns for 3D visualization
+  app.get("/api/traveler-discovery/global-patterns", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { time_range = "week" } = req.query;
+      
+      // Get all active travel itineraries
+      const globalTravelers = await db.select({
+        id: travelItineraries.id,
+        fromCity: travelItineraries.fromCity,
+        toCity: travelItineraries.toCity,
+        fromCountry: travelItineraries.fromCountry,
+        toCountry: travelItineraries.toCountry,
+        fromCoordinates: travelItineraries.fromCoordinates,
+        toCoordinates: travelItineraries.toCoordinates,
+        departureDate: travelItineraries.departureDate,
+        arrivalDate: travelItineraries.arrivalDate,
+        status: travelItineraries.status,
+        trustScore: travelItineraries.trustScore
+      })
+      .from(travelItineraries)
+      .where(eq(travelItineraries.status, "upcoming"))
+      .orderBy(asc(travelItineraries.departureDate))
+      .limit(200);
+      
+      // Group by routes for visualization
+      const routePatterns = globalTravelers.reduce((acc, travel) => {
+        const routeKey = `${travel.fromCity}-${travel.toCity}`;
+        if (!acc[routeKey]) {
+          acc[routeKey] = {
+            route: routeKey,
+            fromCity: travel.fromCity,
+            toCity: travel.toCity,
+            fromCountry: travel.fromCountry,
+            toCountry: travel.toCountry,
+            fromCoordinates: travel.fromCoordinates,
+            toCoordinates: travel.toCoordinates,
+            count: 0,
+            avgTrustScore: 0,
+            nextDeparture: null
+          };
+        }
+        acc[routeKey].count++;
+        acc[routeKey].avgTrustScore += travel.trustScore;
+        if (!acc[routeKey].nextDeparture || travel.departureDate < acc[routeKey].nextDeparture) {
+          acc[routeKey].nextDeparture = travel.departureDate;
+        }
+        return acc;
+      }, {});
+      
+      // Calculate averages
+      Object.values(routePatterns).forEach((pattern: any) => {
+        pattern.avgTrustScore = Math.round(pattern.avgTrustScore / pattern.count);
+      });
+      
+      res.json({
+        success: true,
+        patterns: Object.values(routePatterns),
+        totalRoutes: Object.keys(routePatterns).length,
+        totalTravelers: globalTravelers.length,
+        timeRange: time_range
+      });
+    } catch (error) {
+      console.error("Global patterns fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch global travel patterns" });
+    }
+  });
+
+  // Send connection request to traveler
+  app.post("/api/traveler-discovery/connect", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const requesterId = req.user!.id;
+      const { itineraryId, travelerId, connectionType, message, proposedMeeting } = req.body;
+      
+      const connectionData = {
+        requesterId,
+        travelerId,
+        itineraryId,
+        connectionType,
+        message,
+        proposedMeeting: proposedMeeting || {},
+        status: "pending"
+      };
+      
+      const newConnection = await db.insert(connectionRequests).values(connectionData).returning();
+      
+      res.json({
+        success: true,
+        connectionRequest: newConnection[0],
+        message: "Connection request sent successfully"
+      });
+    } catch (error) {
+      console.error("Connection request error:", error);
+      res.status(500).json({ error: "Failed to send connection request" });
+    }
+  });
+
+  // Get connection requests for current user
+  app.get("/api/traveler-discovery/connections", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      const { type = "all" } = req.query; // sent, received, all
+      
+      let connections;
+      
+      if (type === "sent") {
+        connections = await db.select().from(connectionRequests)
+          .where(eq(connectionRequests.requesterId, userId))
+          .orderBy(desc(connectionRequests.createdAt));
+      } else if (type === "received") {
+        connections = await db.select().from(connectionRequests)
+          .where(eq(connectionRequests.travelerId, userId))
+          .orderBy(desc(connectionRequests.createdAt));
+      } else {
+        connections = await db.select().from(connectionRequests)
+          .where(and(
+            eq(connectionRequests.requesterId, userId),
+            eq(connectionRequests.travelerId, userId)
+          ))
+          .orderBy(desc(connectionRequests.createdAt));
+      }
+      
+      res.json({
+        success: true,
+        connections,
+        type,
+        count: connections.length
+      });
+    } catch (error) {
+      console.error("Connections fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch connections" });
+    }
   });
 
   return httpServer;
