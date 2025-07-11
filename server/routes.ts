@@ -643,16 +643,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // NANDA agent discovery
-  app.post("/api/nanda", async (req, res) => {
+  app.get("/api/nanda/agents", async (req, res) => {
     try {
-      const { path } = req.body;
-
-      if (path === "/health") {
-        return res.json({ ok: true, timestamp: new Date().toISOString() });
+      const NANDA_REGISTRY = 'https://nanda-registry.com';
+      
+      // Try to fetch from real NANDA registry first
+      try {
+        const response = await fetch(`${NANDA_REGISTRY}/api/agents`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'GlobalSocial-Agent-Discovery/1.0'
+          }
+        });
+        
+        if (response.ok) {
+          const realAgents = await response.json();
+          console.log(`✅ Fetched ${realAgents.length} agents from NANDA registry`);
+          
+          return res.json({
+            success: true,
+            agents: realAgents,
+            source: 'nanda_registry',
+            count: realAgents.length,
+            registry_url: NANDA_REGISTRY
+          });
+        }
+      } catch (registryError) {
+        console.warn('Real NANDA registry unavailable, using fallback:', registryError.message);
       }
-
-      if (path.startsWith("/discover")) {
-        const mockAgents = [
+      
+      // Fallback to mock data if real registry unavailable
+      const mockAgents = [
           {
             id: "agent-globalsocial",
             name: "GlobalSocial Trust Network",
@@ -727,13 +748,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         ];
 
-        return res.json(mockAgents);
-      }
-
-      res.status(404).json({ error: "Route not found", path });
+        return res.json({
+          success: true,
+          agents: mockAgents,
+          source: 'fallback_mock',
+          count: mockAgents.length,
+          registry_url: 'fallback'
+        });
+        
     } catch (error) {
-      console.error("NANDA API error:", error);
-      res.status(500).json({ error: "Internal server error" });
+      console.error("NANDA discovery error:", error);
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to discover NANDA agents",
+        details: error.message 
+      });
     }
   });
 

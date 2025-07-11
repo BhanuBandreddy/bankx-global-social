@@ -15,11 +15,10 @@ interface AgentRegistration {
   icon: string;
 }
 
-// NANDA Registry expects agent_id and agent_url format
+// Real NANDA Registry format based on official API
 const GLOBALSOCIAL_AGENT_NANDA = {
-  agent_id: "globalsocial-001",
-  agent_url: process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS}/api/agents` : "https://your-app.replit.app/api/agents",
   name: "GlobalSocial Trust Network",
+  description: "Social trust network platform with AI agents, payment escrow, and logistics coordination for seamless travel commerce",
   capabilities: [
     "social_commerce", 
     "trust_escrow", 
@@ -28,12 +27,15 @@ const GLOBALSOCIAL_AGENT_NANDA = {
     "multi_agent_orchestration",
     "conversational_ai"
   ],
-  owner: "did:web:globalsocial.network",
-  description: "Social trust network platform with AI agents, payment escrow, and logistics coordination for seamless travel commerce",
+  endpoint: process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS}/api/agents` : "https://your-app.replit.app/api/agents",
   version: "1.0.0",
-  region: "Global",
-  performance_score: 95.0,
-  icon: "globe-2"
+  metadata: {
+    owner: "did:web:globalsocial.network",
+    region: "Global",
+    performance_score: 95.0,
+    icon: "globe-2",
+    contact: "admin@globalsocial.network"
+  }
 };
 
 // Keep original format for compatibility
@@ -57,21 +59,19 @@ const GLOBALSOCIAL_AGENT: AgentRegistration = {
 };
 
 async function registerAgent() {
-  const NANDA_BASE_URL = process.env.NANDA_BASE_URL || 'https://chat.nanda-registry.com:6900';
+  const NANDA_BASE_URL = process.env.NANDA_BASE_URL || 'https://nanda-registry.com';
   
-  console.log('🚀 Registering GlobalSocial agent with NANDA registry...');
-  console.log('Agent data:', JSON.stringify(GLOBALSOCIAL_AGENT, null, 2));
+  console.log('🚀 Registering GlobalSocial agent with real NANDA registry...');
+  console.log('Registry URL:', NANDA_BASE_URL);
+  console.log('Agent data:', JSON.stringify(GLOBALSOCIAL_AGENT_NANDA, null, 2));
   
   try {
-    // Use discovered NANDA registry format
-    console.log('Using NANDA registry format with agent_id and agent_url...');
-    console.log('NANDA data:', JSON.stringify(GLOBALSOCIAL_AGENT_NANDA, null, 2));
-    
-    const response = await fetch(`${NANDA_BASE_URL}/register`, {
+    const response = await fetch(`${NANDA_BASE_URL}/api/agents`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'GlobalSocial-Agent-Registration/1.0'
+        'User-Agent': 'GlobalSocial-Agent-Registration/1.0',
+        'Accept': 'application/json'
       },
       body: JSON.stringify(GLOBALSOCIAL_AGENT_NANDA)
     });
@@ -86,36 +86,61 @@ async function registerAgent() {
 
     const result = await response.json();
     console.log('✅ Agent registered successfully!');
+    console.log('Assigned Agent ID:', result.agent_id);
     console.log('Registry response:', result);
     
+    // Store the assigned agent_id for future use
+    if (result.agent_id) {
+      console.log(`📝 Store this agent_id for future operations: ${result.agent_id}`);
+    }
+    
     // Verify registration by querying back
-    await verifyRegistration();
+    await verifyRegistration(result.agent_id);
     
   } catch (error) {
     console.error('❌ Registration failed:', error);
-    
-    // Fallback to mock for development
-    console.log('📝 Registration failed, falling back to development mode...');
-    console.log('Agent would be registered as:', GLOBALSOCIAL_AGENT_NANDA);
+    console.log('🔍 This might be due to:');
+    console.log('- Missing authentication credentials');
+    console.log('- Network connectivity issues');
+    console.log('- Registry API changes');
+    console.log('- Endpoint validation failures');
   }
 }
 
-async function verifyRegistration() {
-  const NANDA_BASE_URL = process.env.NANDA_BASE_URL || 'https://chat.nanda-registry.com:6900';
+async function verifyRegistration(agentId?: string) {
+  const NANDA_BASE_URL = process.env.NANDA_BASE_URL || 'https://nanda-registry.com';
   
   console.log('🔍 Verifying agent registration...');
   
   try {
-    const response = await fetch(`${NANDA_BASE_URL}/api/v1/agents?owner=globalsocial.network`);
-    const agents = await response.json();
+    if (agentId) {
+      // Query specific agent by ID
+      const response = await fetch(`${NANDA_BASE_URL}/api/agents/${agentId}`);
+      if (response.ok) {
+        const agent = await response.json();
+        console.log('✅ Agent found in registry!');
+        console.log('Agent details:', agent);
+        return;
+      }
+    }
     
-    const ourAgent = agents.find((agent: any) => agent.name === GLOBALSOCIAL_AGENT.name);
-    
-    if (ourAgent) {
-      console.log('✅ Agent found in registry!');
-      console.log('Agent ID:', ourAgent.id);
-    } else {
-      console.log('⚠️ Agent not found in registry results');
+    // Query all agents and find ours
+    const response = await fetch(`${NANDA_BASE_URL}/api/agents`);
+    if (response.ok) {
+      const agents = await response.json();
+      const ourAgent = agents.find((agent: any) => 
+        agent.name === GLOBALSOCIAL_AGENT_NANDA.name ||
+        agent.endpoint?.includes(process.env.REPLIT_DOMAINS || 'replit.dev')
+      );
+      
+      if (ourAgent) {
+        console.log('✅ Agent found in registry!');
+        console.log('Agent ID:', ourAgent.agent_id || ourAgent.id);
+        console.log('Status:', ourAgent.status);
+      } else {
+        console.log('⚠️ Agent not found in registry results');
+        console.log('Available agents:', agents.length);
+      }
     }
     
   } catch (error) {

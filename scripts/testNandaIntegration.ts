@@ -7,7 +7,7 @@ const BASE_URL = process.env.REPLIT_DOMAINS
   ? `https://${process.env.REPLIT_DOMAINS}` 
   : 'http://localhost:5000';
 
-const NANDA_REGISTRY = 'https://chat.nanda-registry.com:6900';
+const NANDA_REGISTRY = 'https://nanda-registry.com';
 
 interface TestResult {
   test: string;
@@ -187,6 +187,19 @@ class NANDAIntegrationTester {
     
     try {
       const response = await fetch(`${BASE_URL}/api/nanda/agents`);
+      
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const textResponse = await response.text();
+        this.addResult(
+          'Agent Discovery',
+          'FAIL',
+          `Discovery test failed: Expected JSON but got ${contentType}. Response: ${textResponse.slice(0, 100)}`
+        );
+        return;
+      }
+      
       const data = await response.json();
       
       if (response.ok && data.success && Array.isArray(data.agents)) {
