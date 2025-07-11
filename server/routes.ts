@@ -1110,33 +1110,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Traveler Discovery API for 3D Map System
   
   // Get user's current location for map centering
-  app.get("/api/traveler-discovery/location", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/traveler-discovery/location", async (req, res) => {
     try {
-      const userId = req.user!.id;
+      const { city = "New York" } = req.query;
       
-      const userLocation = await db.select().from(userLocations)
-        .where(and(eq(userLocations.userId, userId), eq(userLocations.isPrimary, true)))
-        .limit(1);
+      // Simple city coordinate lookup for demo
+      const cityCoords: Record<string, {city: string, country: string, coordinates: [number, number]}> = {
+        "New York": { city: "New York", country: "United States", coordinates: [40.7128, -74.0060] },
+        "London": { city: "London", country: "United Kingdom", coordinates: [51.5074, -0.1278] },
+        "Paris": { city: "Paris", country: "France", coordinates: [48.8566, 2.3522] },
+        "Tokyo": { city: "Tokyo", country: "Japan", coordinates: [35.6762, 139.6503] },
+        "Mumbai": { city: "Mumbai", country: "India", coordinates: [19.0760, 72.8777] },
+        "Dubai": { city: "Dubai", country: "UAE", coordinates: [25.2048, 55.2708] }
+      };
       
-      if (userLocation.length === 0) {
-        // Default to New York if no location set
-        return res.json({
-          success: true,
-          location: {
-            city: "New York",
-            country: "United States",
-            coordinates: [40.7128, -74.0060]
-          }
-        });
-      }
+      const locationData = cityCoords[city as string] || cityCoords["New York"];
       
       res.json({
         success: true,
-        location: {
-          city: userLocation[0].city,
-          country: userLocation[0].country,
-          coordinates: userLocation[0].coordinates
-        }
+        location: locationData
       });
     } catch (error) {
       console.error("Location fetch error:", error);
@@ -1175,21 +1167,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get travelers arriving to user's city
-  app.get("/api/traveler-discovery/incoming", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/traveler-discovery/incoming", async (req, res) => {
     try {
-      const userId = req.user!.id;
-      const { filter, date_range, connection_type } = req.query;
+      const { city = "New York", filter, date_range, connection_type } = req.query;
       
-      // Get user's primary location
-      const userLocation = await db.select().from(userLocations)
-        .where(and(eq(userLocations.userId, userId), eq(userLocations.isPrimary, true)))
-        .limit(1);
-      
-      if (userLocation.length === 0) {
-        return res.json({ success: true, travelers: [], totalCount: 0 });
-      }
-      
-      const targetCity = userLocation[0].city;
+      const targetCity = city as string;
       
       // Get travel itineraries to user's city
       const travelersToCity = await db.select({
