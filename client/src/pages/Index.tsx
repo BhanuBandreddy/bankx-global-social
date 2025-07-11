@@ -53,7 +53,7 @@ const Index = () => {
             { id: "feed", label: "Global Feed", icon: "🌐" },
             { id: "agents", label: "AI Agents", icon: <CustomIcons.Sparkle className="w-6 h-6" /> },
             { id: "trust", label: "Trust Network", icon: "🔐" },
-            { id: "travelers", label: "3D Traveler Discovery", icon: "✈️" },
+            { id: "travelers", label: "Connections", icon: "✈️" },
           ].map((tab) => (
             <button
               key={tab.id}
