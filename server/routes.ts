@@ -10,6 +10,8 @@ import { eq, and, desc, asc, ilike } from "drizzle-orm";
 import { agentTorchSimulator } from "./agenttorch";
 import { perplexityLocaleLens, getSmartPricing } from "./perplexity";
 import { openaiParser } from "./openai-parser";
+import { mcpTransport } from "./mcp-transport";
+import { a2aProtocol } from "./a2a-protocol";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -1091,6 +1093,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // NANDA 2025: MCP Transport Endpoints
+  app.get("/api/agents/mcp/sse/:agentId", (req, res) => {
+    const agentId = req.params.agentId;
+    mcpTransport.setupSSE(req, res, agentId);
+  });
+
+  app.post("/api/agents/mcp/stream", (req, res) => {
+    const stream = mcpTransport.setupStreaming(req, res);
+    // Handle streaming messages here
+    stream.send({
+      jsonrpc: '2.0',
+      method: 'connection/established',
+      params: { transport: 'streaming' }
+    });
+    stream.end();
+  });
+
+  // NANDA 2025: A2A Protocol Endpoint
+  app.post("/api/agents/a2a", async (req, res) => {
+    try {
+      const response = await a2aProtocol.handleIncomingMessage(req.body);
+      res.json(response);
+    } catch (error) {
+      res.status(500).json({
+        protocol: 'a2a/1.0',
+        type: 'response',
+        error: {
+          code: -32603,
+          message: 'Internal error',
+          data: error.message
+        }
+      });
+    }
+  });
+
+  // Network status endpoint
+  app.get("/api/agents/network/status", (req, res) => {
+    const mcpStatus = mcpTransport.getConnectionStatus();
+    const a2aStatus = a2aProtocol.getNetworkStatus();
+    
+    res.json({
+      success: true,
+      mcp: mcpStatus,
+      a2a: a2aStatus,
+      compliance: '2025',
+      protocols: ['JSON-RPC 2.0', 'MCP', 'A2A']
+    });
+  });
+
   // NANDA Agent Endpoint - Required for registry validation
   app.get("/api/agents", async (req, res) => {
     try {
@@ -1118,6 +1169,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         supported_protocols: ["HTTP", "JSON-RPC"],
         rpc_endpoint: `${req.protocol}://${req.get('host')}/api/agents/rpc`,
         methods_endpoint: `${req.protocol}://${req.get('host')}/api/agents/methods`,
+        mcp_sse_endpoint: `${req.protocol}://${req.get('host')}/api/agents/mcp/sse`,
+        mcp_stream_endpoint: `${req.protocol}://${req.get('host')}/api/agents/mcp/stream`,
+        a2a_endpoint: `${req.protocol}://${req.get('host')}/api/agents/a2a`,
+        network_status_endpoint: `${req.protocol}://${req.get('host')}/api/agents/network/status`,
         registration_time: new Date().toISOString()
       };
 

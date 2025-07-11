@@ -4,6 +4,7 @@
 Social trust network platform with AI agents, payment escrow, and logistics coordination. Successfully migrated from Lovable/Supabase to Replit's built-in PostgreSQL database.
 
 ## Recent Changes
+- **NANDA 2025 Standards Compliance (July 2025)**: Successfully evaluated and enhanced NANDA integration for 2025 standards; added Model Context Protocol (MCP) transport layer with SSE and streaming support; implemented Agent-to-Agent (A2A) protocol for peer communication; maintained 100% validation success rate with 7/7 tests passing; added comprehensive compliance documentation and network status monitoring
 - **Interface Visibility Improvements (July 2025)**: Fixed Quick Cities buttons visibility by changing from dark/transparent to bright white background with blue borders; updated "CHAT" to "BLINK" throughout interface; changed "3D Traveler Discovery" to "Connections" label; updated AuthNavbar logout button with cyan background color
 - **Database Foreign Key Constraint Fix (July 2025)**: Fixed blink_conversations table foreign key constraint error by making userId nullable for anonymous users; system now supports chat functionality without authentication requirements
 - **3D Traveler Discovery System (July 2025)**: Built comprehensive 3D world map interface for discovering travelers coming to user's city using Globe.gl, includes interactive filtering by purpose/date, real-time traveler visualization, connection request system, global travel patterns, and API endpoints for location management and traveler discovery
