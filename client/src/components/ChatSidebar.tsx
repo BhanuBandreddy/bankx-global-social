@@ -90,7 +90,7 @@ export const ChatSidebar = ({ isOpen, onToggle }: ChatSidebarProps) => {
 
   return (
     <div className={`fixed right-0 top-0 h-full bg-white border-l-4 border-black shadow-[-8px_0_0_0_#000] z-40 transition-all duration-300 ${
-      isMinimized ? 'w-12' : 'w-96'
+      isMinimized ? 'w-12' : 'w-96 max-w-[95vw] sm:w-96'
     }`}>
       {/* Header */}
       <div className="p-4 border-b-4 border-black bg-cyan-100 flex items-center justify-between">
@@ -123,7 +123,7 @@ export const ChatSidebar = ({ isOpen, onToggle }: ChatSidebarProps) => {
       {!isMinimized && (
         <>
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 h-[calc(100vh-140px)]">
+          <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 h-[calc(100vh-140px)]">
             {messages.length === 0 && (
               <div className="text-center text-gray-500 mt-8">
                 <Bot className="w-8 h-8 mx-auto mb-2 text-gray-400" />
@@ -138,19 +138,19 @@ export const ChatSidebar = ({ isOpen, onToggle }: ChatSidebarProps) => {
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] p-3 border-2 border-black ${
+                  className={`max-w-[85%] sm:max-w-[80%] p-2 sm:p-3 border-2 border-black rounded-sm ${
                     message.role === 'user'
                       ? 'bg-cyan-100 shadow-[2px_2px_0px_0px_#000]'
                       : 'bg-white shadow-[2px_2px_0px_0px_#000]'
                   }`}
                 >
-                  <div className="flex items-start space-x-2">
-                    {message.role === 'assistant' && <Bot className="w-4 h-4 mt-1 text-cyan-600" />}
-                    {message.role === 'user' && <User className="w-4 h-4 mt-1 text-cyan-600" />}
-                    <div className="flex-1">
-                      <p className="text-sm text-black">{message.content}</p>
+                  <div className="flex items-start space-x-1 sm:space-x-2">
+                    {message.role === 'assistant' && <Bot className="w-3 h-3 sm:w-4 sm:h-4 mt-1 text-cyan-600 flex-shrink-0" />}
+                    {message.role === 'user' && <User className="w-3 h-3 sm:w-4 sm:h-4 mt-1 text-cyan-600 flex-shrink-0" />}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm text-black break-words">{message.content}</p>
                       <p className="text-xs text-gray-500 mt-1">
-                        {message.timestamp.toLocaleTimeString()}
+                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                   </div>
@@ -177,22 +177,23 @@ export const ChatSidebar = ({ isOpen, onToggle }: ChatSidebarProps) => {
           </div>
 
           {/* Input */}
-          <div className="p-4 border-t-4 border-black bg-white">
-            <div className="flex space-x-2">
+          <div className="p-2 sm:p-4 border-t-4 border-black bg-white">
+            <div className="flex space-x-1 sm:space-x-2">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type your message..."
                 disabled={isLoading}
-                className="flex-1 border-2 border-black focus:ring-0 focus:border-cyan-600"
+                className="flex-1 border-2 border-black focus:ring-0 focus:border-cyan-600 text-xs sm:text-sm"
               />
               <Button
                 onClick={sendMessage}
                 disabled={!input.trim() || isLoading}
-                className="bg-cyan-600 hover:bg-cyan-700 text-white border-2 border-black shadow-[2px_2px_0px_0px_#000] font-bold"
+                className="bg-cyan-600 hover:bg-cyan-700 text-white border-2 border-black shadow-[2px_2px_0px_0px_#000] font-bold px-2 sm:px-3"
+                size="sm"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-3 h-3 sm:w-4 sm:h-4" />
               </Button>
             </div>
           </div>

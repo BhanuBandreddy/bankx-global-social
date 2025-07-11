@@ -447,10 +447,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const { conductor } = await import('./conductor');
           conductorResponse = await conductor.analyzeUserAction(userAction);
           
-          // Extract agents used - handle multiple workflow formats
-          agentsUsed = (conductorResponse.workflows || []).map((w: any) => {
-            return w.agent || w.agentId || (w.workflow ? w.workflow.agent : null);
-          }).filter(Boolean);
+          // Extract agents used - handle multiple workflow formats safely
+          agentsUsed = [];
+          try {
+            if (Array.isArray(conductorResponse.workflows)) {
+              agentsUsed = conductorResponse.workflows.map((w: any) => {
+                return w.agent || w.agentId || (w.workflow ? w.workflow.agent : null);
+              }).filter(Boolean);
+            } else if (conductorResponse.workflows && typeof conductorResponse.workflows === 'object') {
+              // Handle object format like {"TrustPay": {...}}
+              agentsUsed = Object.keys(conductorResponse.workflows);
+            }
+          } catch (err) {
+            console.warn('Error extracting agents from workflows:', err);
+            agentsUsed = [];
+          }
           
           // Process based on conductor analysis and marketplace data
           try {
