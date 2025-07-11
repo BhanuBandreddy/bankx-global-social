@@ -26,90 +26,39 @@ class OpenAIItineraryParser {
   }
 
   async parseItinerary(base64PDF: string, filename: string): Promise<OpenAIParseResult> {
-    // Smart destination detection from filename
-    let suggestedDestination = "Paris"; // Default
-    const fname = filename.toLowerCase();
-    
-    if (fname.includes('tokyo') || fname.includes('nrt') || fname.includes('hnd')) {
-      suggestedDestination = "Tokyo";
-    } else if (fname.includes('london') || fname.includes('lhr') || fname.includes('lgw')) {
-      suggestedDestination = "London";
-    } else if (fname.includes('dubai') || fname.includes('dxb')) {
-      suggestedDestination = "Dubai";
-    } else if (fname.includes('singapore') || fname.includes('sin')) {
-      suggestedDestination = "Singapore";
-    } else if (fname.includes('bangkok') || fname.includes('bkk')) {
-      suggestedDestination = "Bangkok";
-    }
-
-    // If no API key, use smart filename parsing
+    // Validate API key first
     if (!this.apiKey) {
-      console.log('No OpenAI API key configured, using filename parsing');
+      console.log('No OpenAI API key configured');
       return {
-        success: true,
-        itinerary: {
-          route: `Document → ${suggestedDestination}`,
-          date: new Date().toLocaleDateString(),
-          weather: "Smart parsing from filename",
-          alerts: "Filename-based destination detection (OpenAI not configured)",
-          departureTime: "Processing...",
-          arrivalTime: "Processing...",
-          gate: "TBD", 
-          flight: "Document uploaded",
-          destination: suggestedDestination
-        }
+        success: false,
+        error: 'OpenAI API key not configured. Please provide OPENAI_API_KEY to enable PDF parsing.'
       };
     }
 
-    // Only skip OpenAI if specifically marked as large_file
-    if (base64PDF === 'large_file') {
-      console.log('File marked as large, using filename parsing');
-      return {
-        success: true,
-        itinerary: {
-          route: `Document → ${suggestedDestination}`,
-          date: new Date().toLocaleDateString(),
-          weather: "Large file - filename parsing used",
-          alerts: "File size optimization applied",
-          departureTime: "Processing...",
-          arrivalTime: "Processing...",
-          gate: "TBD", 
-          flight: "Document uploaded",
-          destination: suggestedDestination
-        }
-      };
-    }
+    // Validate file size (32MB limit as per OpenAI docs)
+    const fileSizeBytes = (base64PDF.length * 3) / 4; // Approximate size from base64
+    const maxSizeBytes = 32 * 1024 * 1024; // 32MB
     
-    console.log(`Sending ${base64PDF.length} character base64 PDF to OpenAI GPT-4o for real parsing...`);
+    if (fileSizeBytes > maxSizeBytes) {
+      console.log(`File too large: ${fileSizeBytes} bytes (max: ${maxSizeBytes})`);
+      return {
+        success: false,
+        error: `File size (${Math.round(fileSizeBytes / 1024 / 1024)}MB) exceeds OpenAI's 32MB limit.`
+      };
+    }
 
-    const prompt = `Analyze this travel document content and extract specific travel information. The document contains real travel itinerary data.
+    // Skip OpenAI if specifically marked as large_file
+    if (base64PDF === 'large_file') {
+      return {
+        success: false,
+        error: 'File marked as too large for processing.'
+      };
+    }
 
-From the base64 content provided, extract actual:
-- Specific city names and destinations
-- Real travel dates mentioned in the document
-- Actual flight numbers, hotel names, or transport details
-- Specific locations, attractions, or activities listed
-
-Important: Return actual data from the document, not generic placeholders.
-
-Return JSON with real extracted data:
-{
-  "route": "actual departure city → actual destination city",
-  "date": "actual date from document", 
-  "weather": "season info or weather conditions mentioned",
-  "alerts": "actual activities, hotels, or important notes from document",
-  "departureTime": "actual time if found in document",
-  "arrivalTime": "actual arrival time if found",
-  "gate": "actual gate/terminal if mentioned",
-  "flight": "actual flight number or transport mode",
-  "destination": "actual primary destination city from document"
-}
-
-Extract real information from the document content, not template responses.`;
+    console.log(`Processing ${Math.round(fileSizeBytes / 1024)}KB PDF with OpenAI GPT-4o-mini...`);
 
     try {
-      console.log('Making actual OpenAI API call to GPT-4o with document content...');
-      
+      // Use proper OpenAI PDF parsing API structure
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
@@ -117,22 +66,38 @@ Extract real information from the document content, not template responses.`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o', // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+          model: 'gpt-4o-mini', // Using gpt-4o-mini for cost efficiency with vision capabilities
           messages: [
             {
               role: 'system',
-              content: 'You are a travel document parser. Extract itinerary information from travel documents and return valid JSON format.'
+              content: 'You are a travel document parser. Extract actual itinerary information from travel documents. Only return real data found in the document, never fabricate information.'
             },
             {
               role: 'user',
               content: [
                 {
-                  type: 'text',
-                  text: prompt
+                  type: 'file',
+                  file: {
+                    filename: filename,
+                    file_data: `data:application/pdf;base64,${base64PDF}`
+                  }
                 },
                 {
-                  type: 'text', 
-                  text: `Please analyze this travel document content and extract real travel information. Document contains: ${base64PDF.length} characters of base64 PDF data with actual travel itinerary content.`
+                  type: 'text',
+                  text: `Extract real travel information from this document. Return JSON with actual data found:
+{
+  "route": "actual departure → actual destination",
+  "date": "actual travel date",
+  "weather": "season/weather info if mentioned",
+  "alerts": "actual hotels, activities, or important notes",
+  "departureTime": "actual departure time",
+  "arrivalTime": "actual arrival time",
+  "gate": "actual gate/terminal",
+  "flight": "actual flight number",
+  "destination": "primary destination city"
+}
+
+Important: Only include information actually found in the document. Use "Not specified" for missing information.`
                 }
               ]
             }
@@ -146,11 +111,13 @@ Extract real information from the document content, not template responses.`;
       console.log('OpenAI API response received, status:', response.status);
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('OpenAI API error:', response.status, errorText);
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('Full OpenAI response:', JSON.stringify(data, null, 2));
+      console.log('OpenAI API call successful');
       
       const content = data.choices[0]?.message?.content;
       console.log('OpenAI extracted content:', content);
@@ -162,6 +129,11 @@ Extract real information from the document content, not template responses.`;
       const parsedItinerary = JSON.parse(content);
       console.log('Successfully parsed travel itinerary from OpenAI:', parsedItinerary);
       
+      // Validate that we got real data, not placeholders
+      if (parsedItinerary.route && parsedItinerary.route.includes('actual')) {
+        throw new Error('OpenAI returned template response instead of real data');
+      }
+      
       return {
         success: true,
         itinerary: parsedItinerary
@@ -169,20 +141,10 @@ Extract real information from the document content, not template responses.`;
     } catch (error) {
       console.error('OpenAI parsing error:', error);
       
-      // Fallback to smart filename-based parsing
+      // Return honest error instead of fake data
       return {
-        success: true,
-        itinerary: {
-          route: `Document → ${suggestedDestination}`,
-          date: new Date().toLocaleDateString(),
-          weather: "Fallback parsing from filename",
-          alerts: "Smart destination detection from filename",
-          departureTime: "Processing...",
-          arrivalTime: "Processing...",
-          gate: "TBD",
-          flight: "Document uploaded",
-          destination: suggestedDestination
-        }
+        success: false,
+        error: `PDF parsing failed: ${error.message}. Please ensure the document contains readable travel information.`
       };
     }
   }

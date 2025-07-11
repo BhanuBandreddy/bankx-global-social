@@ -359,40 +359,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Fallback to smart filename parsing if OpenAI failed or returned templates
+      // If OpenAI failed or returned templates, return honest error
       if (!result || !result.success) {
-        console.log('Using fallback filename parsing...');
-        const fname = filename.toLowerCase();
-        let destination = "London"; // Based on your PDF content showing London→Paris
-        
-        if (fname.includes('tokyo') || fname.includes('nrt') || fname.includes('hnd')) {
-          destination = "Tokyo";
-        } else if (fname.includes('london') || fname.includes('lhr') || fname.includes('lgw') || fname.includes('travel') || fname.includes('doc')) {
-          destination = "London";
-        } else if (fname.includes('dubai') || fname.includes('dxb')) {
-          destination = "Dubai";
-        } else if (fname.includes('singapore') || fname.includes('sin')) {
-          destination = "Singapore";
-        } else if (fname.includes('bangkok') || fname.includes('bkk')) {
-          destination = "Bangkok";
-        } else if (fname.includes('paris') || fname.includes('cdg') || fname.includes('ory')) {
-          destination = "Paris";
-        }
-
-        result = {
-          success: true,
-          itinerary: {
-            route: `London → Paris`, // Based on your actual PDF content
-            date: "June 2025",
-            weather: "European summer travel season",
-            alerts: "Multi-city itinerary with London and Paris destinations, hotels and attractions included",
-            departureTime: "Check document for specific times",
-            arrivalTime: "Varies by segment",
-            gate: "Check boarding passes",
-            flight: "Multiple transport modes",
-            destination: destination
-          }
-        };
+        console.log('PDF parsing failed, returning error');
+        return res.status(400).json({
+          success: false,
+          error: result?.error || 'PDF parsing failed. Please ensure the document contains readable travel information and try again.'
+        });
       }
       
       console.log('Returning result:', result);
