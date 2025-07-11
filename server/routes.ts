@@ -12,6 +12,7 @@ import { perplexityLocaleLens, getSmartPricing } from "./perplexity";
 import { openaiParser } from "./openai-parser";
 import { mcpTransport } from "./mcp-transport";
 import { a2aProtocol } from "./a2a-protocol";
+import { nandaSecurity, rateLimit, validateAgentSignature, sanitizeInput, corsPolicy, validateRequestSize } from "./security-middleware";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -1093,6 +1094,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Apply NANDA security middleware to all agent endpoints
+  app.use("/api/agents", corsPolicy, validateRequestSize, rateLimit);
+  app.use("/api/agents/rpc", sanitizeInput, validateAgentSignature);
+
   // NANDA 2025: MCP Transport Endpoints
   app.get("/api/agents/mcp/sse/:agentId", (req, res) => {
     const agentId = req.params.agentId;
@@ -1139,6 +1144,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       a2a: a2aStatus,
       compliance: '2025',
       protocols: ['JSON-RPC 2.0', 'MCP', 'A2A']
+    });
+  });
+
+  // Security monitoring endpoint (admin only)
+  app.get("/api/agents/security/status", authMiddleware, (req: AuthenticatedRequest, res) => {
+    const securityMetrics = nandaSecurity.getSecurityMetrics();
+    
+    res.json({
+      success: true,
+      security: securityMetrics,
+      protections: [
+        'Rate Limiting',
+        'Agent Signature Validation', 
+        'Input Sanitization',
+        'CORS Policy',
+        'Request Size Limits',
+        'Timestamp Validation'
+      ],
+      compliance: 'OWASP + NANDA Standards'
     });
   });
 
