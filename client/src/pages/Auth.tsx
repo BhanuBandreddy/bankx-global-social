@@ -48,45 +48,14 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-lime-400 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Global Flags Montage Background */}
-      <div className="absolute inset-0 opacity-30">
-        {/* Row 1 - Top */}
-        <div className="absolute top-4 left-4 w-16 h-12 bg-white border-4 border-black rotate-12 text-2xl flex items-center justify-center">🇺🇸</div>
-        <div className="absolute top-8 left-32 w-20 h-14 bg-white border-4 border-black -rotate-6 text-3xl flex items-center justify-center">🇬🇧</div>
-        <div className="absolute top-2 left-60 w-14 h-10 bg-white border-4 border-black rotate-45 text-xl flex items-center justify-center">🇫🇷</div>
-        <div className="absolute top-12 right-32 w-18 h-12 bg-white border-4 border-black -rotate-12 text-2xl flex items-center justify-center">🇩🇪</div>
-        <div className="absolute top-6 right-8 w-16 h-12 bg-white border-4 border-black rotate-30 text-2xl flex items-center justify-center">🇯🇵</div>
-        
-        {/* Row 2 - Middle Left */}
-        <div className="absolute top-1/4 left-2 w-14 h-10 bg-white border-4 border-black -rotate-45 text-xl flex items-center justify-center">🇧🇷</div>
-        <div className="absolute top-1/3 left-20 w-20 h-14 bg-white border-4 border-black rotate-15 text-3xl flex items-center justify-center">🇮🇳</div>
-        <div className="absolute top-1/4 left-48 w-16 h-12 bg-white border-4 border-black -rotate-30 text-2xl flex items-center justify-center">🇦🇺</div>
-        
-        {/* Row 3 - Middle Right */}
-        <div className="absolute top-1/3 right-4 w-18 h-12 bg-white border-4 border-black rotate-45 text-2xl flex items-center justify-center">🇨🇦</div>
-        <div className="absolute top-1/4 right-28 w-14 h-10 bg-white border-4 border-black -rotate-15 text-xl flex items-center justify-center">🇰🇷</div>
-        <div className="absolute top-2/5 right-52 w-16 h-12 bg-white border-4 border-black rotate-60 text-2xl flex items-center justify-center">🇮🇹</div>
-        
-        {/* Row 4 - Lower Middle */}
-        <div className="absolute top-1/2 left-8 w-20 h-14 bg-white border-4 border-black rotate-30 text-3xl flex items-center justify-center">🇪🇸</div>
-        <div className="absolute top-3/5 left-36 w-14 h-10 bg-white border-4 border-black -rotate-45 text-xl flex items-center justify-center">🇲🇽</div>
-        <div className="absolute top-1/2 right-12 w-16 h-12 bg-white border-4 border-black rotate-15 text-2xl flex items-center justify-center">🇳🇱</div>
-        <div className="absolute top-3/5 right-40 w-18 h-12 bg-white border-4 border-black -rotate-30 text-2xl flex items-center justify-center">🇸🇪</div>
-        
-        {/* Row 5 - Bottom */}
-        <div className="absolute bottom-20 left-6 w-16 h-12 bg-white border-4 border-black rotate-45 text-2xl flex items-center justify-center">🇨🇭</div>
-        <div className="absolute bottom-16 left-28 w-14 h-10 bg-white border-4 border-black -rotate-15 text-xl flex items-center justify-center">🇳🇴</div>
-        <div className="absolute bottom-24 left-52 w-20 h-14 bg-white border-4 border-black rotate-30 text-3xl flex items-center justify-center">🇿🇦</div>
-        <div className="absolute bottom-12 right-20 w-16 h-12 bg-white border-4 border-black -rotate-45 text-2xl flex items-center justify-center">🇸🇬</div>
-        <div className="absolute bottom-28 right-8 w-18 h-12 bg-white border-4 border-black rotate-60 text-2xl flex items-center justify-center">🇳🇿</div>
-        
-        {/* Additional scattered flags for density */}
-        <div className="absolute top-1/6 left-1/3 w-12 h-8 bg-white border-4 border-black rotate-75 text-lg flex items-center justify-center">🇦🇷</div>
-        <div className="absolute top-2/3 left-1/4 w-14 h-10 bg-white border-4 border-black -rotate-60 text-xl flex items-center justify-center">🇨🇱</div>
-        <div className="absolute top-1/2 left-3/4 w-16 h-12 bg-white border-4 border-black rotate-45 text-2xl flex items-center justify-center">🇹🇭</div>
-        <div className="absolute top-3/4 right-1/3 w-12 h-8 bg-white border-4 border-black -rotate-30 text-lg flex items-center justify-center">🇻🇳</div>
-        <div className="absolute top-1/8 right-1/4 w-14 h-10 bg-white border-4 border-black rotate-15 text-xl flex items-center justify-center">🇵🇭</div>
+    <div className="min-h-screen bg-lime-400 flex items-center justify-center p-4 relative">
+      {/* Neo-brutalist Background Pattern */}
+      <div className="absolute inset-0">
+        <div className="absolute top-10 left-10 w-20 h-20 bg-black border-4 border-black rotate-12"></div>
+        <div className="absolute top-32 right-20 w-16 h-16 bg-blue-500 border-4 border-black -rotate-45"></div>
+        <div className="absolute bottom-20 left-20 w-24 h-24 bg-red-500 border-4 border-black rotate-45"></div>
+        <div className="absolute bottom-40 right-10 w-12 h-12 bg-yellow-400 border-4 border-black -rotate-12"></div>
+        <div className="absolute top-1/2 left-1/4 w-8 h-8 bg-purple-500 border-4 border-black"></div>
       </div>
 
       <div className="w-full max-w-lg border-8 border-black bg-white shadow-[16px_16px_0px_0px_#000] relative z-10">
