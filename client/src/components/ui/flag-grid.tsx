@@ -13,22 +13,14 @@ export const FlagGrid = () => {
     { country: "South Korea", emoji: "🇰🇷", color: "bg-blue-300" },
     { country: "Italy", emoji: "🇮🇹", color: "bg-green-600" },
     { country: "Spain", emoji: "🇪🇸", color: "bg-yellow-500" },
-    { country: "Mexico", emoji: "🇲🇽", color: "bg-green-400" },
-    { country: "Netherlands", emoji: "🇳🇱", color: "bg-orange-400" },
-    { country: "Sweden", emoji: "🇸🇪", color: "bg-yellow-400" },
-    { country: "Switzerland", emoji: "🇨🇭", color: "bg-red-300" },
   ];
 
   return (
-    <div className="grid grid-cols-8 gap-2 mb-6 opacity-20">
+    <div className="grid grid-cols-6 gap-1 mb-4">
       {flags.map((flag, index) => (
         <div
           key={flag.country}
-          className={`w-8 h-6 ${flag.color} border-2 border-black flex items-center justify-center text-xs font-black animate-pulse`}
-          style={{
-            animationDelay: `${index * 0.1}s`,
-            animationDuration: '3s'
-          }}
+          className={`w-10 h-7 ${flag.color} border-2 border-white flex items-center justify-center text-lg font-black`}
         >
           {flag.emoji}
         </div>

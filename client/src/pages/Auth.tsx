@@ -48,164 +48,146 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-20 text-6xl">🌍</div>
-        <div className="absolute top-40 right-32 text-4xl">✈️</div>
-        <div className="absolute bottom-32 left-16 text-5xl">🗺️</div>
-        <div className="absolute bottom-20 right-20 text-3xl">🛂</div>
-        <div className="absolute top-1/3 left-1/2 text-7xl transform -translate-x-1/2">🌐</div>
+    <div className="min-h-screen bg-lime-400 flex items-center justify-center p-4 relative">
+      {/* Neo-brutalist Background Pattern */}
+      <div className="absolute inset-0">
+        <div className="absolute top-10 left-10 w-20 h-20 bg-black border-4 border-black rotate-12"></div>
+        <div className="absolute top-32 right-20 w-16 h-16 bg-blue-500 border-4 border-black -rotate-45"></div>
+        <div className="absolute bottom-20 left-20 w-24 h-24 bg-red-500 border-4 border-black rotate-45"></div>
+        <div className="absolute bottom-40 right-10 w-12 h-12 bg-yellow-400 border-4 border-black -rotate-12"></div>
+        <div className="absolute top-1/2 left-1/4 w-8 h-8 bg-purple-500 border-4 border-black"></div>
       </div>
 
-      <PassportStamp>
-        <Card className="w-full max-w-lg border-6 border-black bg-white shadow-2xl transform hover:scale-105 transition-transform duration-300">
-          {/* Header with International Theme */}
-          <CardHeader className="text-center bg-gradient-to-r from-blue-50 to-purple-50 border-b-4 border-black">
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <Globe className="w-8 h-8 text-blue-600" />
-              <Shield className="w-8 h-8 text-purple-600" />
-              <Users className="w-8 h-8 text-green-600" />
+      <div className="w-full max-w-lg border-8 border-black bg-white shadow-[16px_16px_0px_0px_#000] relative z-10">
+        {/* Neo-brutalist Header */}
+        <div className="bg-black text-white p-6 border-b-8 border-black">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-blue-500 border-4 border-white flex items-center justify-center">
+              <Globe className="w-6 h-6 text-white" />
             </div>
-            
-            <FlagGrid />
-            
-            <CardTitle className="text-4xl font-black uppercase tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              GLOBAL SOCIAL
-            </CardTitle>
-            <CardDescription className="text-gray-700 font-bold text-lg">
-              {isLogin ? '🛂 PASSPORT CONTROL' : '🌍 JOIN THE NETWORK'}
-            </CardDescription>
-            <div className="text-sm font-medium text-gray-600 mt-2">
-              {isLogin ? 'Welcome back, Global Citizen' : 'Connect • Travel • Trade'}
+            <div className="w-12 h-12 bg-red-500 border-4 border-white flex items-center justify-center">
+              <Shield className="w-6 h-6 text-white" />
             </div>
-          </CardHeader>
+            <div className="w-12 h-12 bg-green-500 border-4 border-white flex items-center justify-center">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+          </div>
           
-          <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {!isLogin && (
-                <div>
-                  <Label htmlFor="fullName" className="font-black text-gray-800 flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    FULL NAME
-                  </Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required={!isLogin}
-                    className="border-3 border-black font-medium text-lg h-12 focus:border-blue-500 transition-colors"
-                    placeholder="Enter your passport name"
-                  />
-                </div>
-              )}
-            
+          <FlagGrid />
+          
+          <h1 className="text-5xl font-black uppercase tracking-tight text-center text-white mb-2">
+            GLOBAL SOCIAL
+          </h1>
+          <div className="text-center text-lime-400 font-black text-xl uppercase">
+            {isLogin ? 'PASSPORT CONTROL' : 'JOIN THE NETWORK'}
+          </div>
+          <div className="text-center text-white font-bold text-sm mt-2 uppercase tracking-wide">
+            {isLogin ? 'ENTER CREDENTIALS' : 'REGISTER NOW'}
+          </div>
+        </div>
+          
+        {/* Neo-brutalist Form */}
+        <div className="p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {!isLogin && (
               <div>
-                <Label htmlFor="email" className="font-black text-gray-800 flex items-center gap-2">
-                  <Globe className="w-4 h-4" />
-                  EMAIL ADDRESS
+                <Label htmlFor="fullName" className="font-black text-black text-lg uppercase tracking-wide block mb-2">
+                  FULL NAME
                 </Label>
                 <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="border-3 border-black font-medium text-lg h-12 focus:border-purple-500 transition-colors"
-                  placeholder="citizen@globalsocial.com"
+                  id="fullName"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required={!isLogin}
+                  className="w-full h-14 border-4 border-black text-xl font-bold placeholder:text-gray-400 focus:shadow-[8px_8px_0px_0px_#000] transition-shadow"
+                  placeholder="ENTER NAME"
                 />
               </div>
+            )}
+          
+            <div>
+              <Label htmlFor="email" className="font-black text-black text-lg uppercase tracking-wide block mb-2">
+                EMAIL
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full h-14 border-4 border-black text-xl font-bold placeholder:text-gray-400 focus:shadow-[8px_8px_0px_0px_#000] transition-shadow"
+                placeholder="EMAIL@DOMAIN.COM"
+              />
+            </div>
 
-              <div>
-                <Label htmlFor="password" className="font-black text-gray-800 flex items-center gap-2">
-                  <Shield className="w-4 h-4" />
-                  SECURITY CODE
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="border-3 border-black font-medium text-lg h-12 focus:border-green-500 transition-colors"
-                  placeholder="••••••••"
-                  minLength={6}
-                />
+            <div>
+              <Label htmlFor="password" className="font-black text-black text-lg uppercase tracking-wide block mb-2">
+                PASSWORD
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full h-14 border-4 border-black text-xl font-bold placeholder:text-gray-400 focus:shadow-[8px_8px_0px_0px_#000] transition-shadow"
+                placeholder="••••••••"
+                minLength={6}
+              />
+            </div>
+
+            {message && (
+              <div className="bg-red-500 text-white p-4 border-4 border-black font-black text-lg uppercase shadow-[4px_4px_0px_0px_#000]">
+                ERROR: {message}
               </div>
+            )}
 
-              {message && (
-                <div className="text-red-600 text-sm font-bold bg-red-50 p-4 border-3 border-red-500 rounded-lg shadow-lg">
-                  🚨 {message}
-                </div>
-              )}
+            <Button 
+              type="submit" 
+              className="w-full h-16 bg-black text-lime-400 hover:bg-gray-800 font-black text-2xl uppercase border-4 border-black shadow-[8px_8px_0px_0px_#000] hover:shadow-[12px_12px_0px_0px_#000] transition-all disabled:opacity-50"
+              disabled={loading}
+            >
+              {loading ? 'PROCESSING...' : (isLogin ? 'ENTER' : 'REGISTER')}
+            </Button>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 font-black py-4 text-lg border-3 border-black shadow-lg transform hover:scale-105 transition-all duration-200"
-                disabled={loading}
+            <div className="text-center pt-6 border-t-4 border-black">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setMessage('');
+                  setEmail('');
+                  setPassword('');
+                  setFullName('');
+                }}
+                className="bg-blue-500 text-white px-6 py-3 border-4 border-black font-black text-lg uppercase shadow-[4px_4px_0px_0px_#000] hover:shadow-[6px_6px_0px_0px_#000] transition-all"
               >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <Plane className="w-5 h-5 animate-spin" />
-                    PROCESSING...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    {isLogin ? (
-                      <>
-                        <Shield className="w-5 h-5" />
-                        ENTER NETWORK
-                      </>
-                    ) : (
-                      <>
-                        <Globe className="w-5 h-5" />
-                        JOIN GLOBAL SOCIAL
-                      </>
-                    )}
-                  </div>
-                )}
-              </Button>
+                {isLogin ? "REGISTER" : "LOGIN"}
+              </button>
+            </div>
 
-              <div className="text-center pt-4 border-t-3 border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsLogin(!isLogin);
-                    setMessage('');
-                    setEmail('');
-                    setPassword('');
-                    setFullName('');
-                  }}
-                  className="text-blue-600 hover:text-purple-600 font-bold underline text-lg flex items-center gap-2 mx-auto group"
-                >
-                  <Users className="w-4 h-4 group-hover:animate-bounce" />
-                  {isLogin ? "New Citizen? Register Here" : "Returning? Access Network"}
-                </button>
-              </div>
-
-              {/* International Network Info */}
-              <div className="mt-6 text-center text-xs text-gray-500 border-t-2 border-gray-100 pt-4">
-                <div className="font-medium mb-2">🌍 CONNECTING GLOBAL CITIZENS</div>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div>
-                    <div className="font-bold text-blue-600">200+</div>
-                    <div>COUNTRIES</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-purple-600">50K+</div>
-                    <div>TRAVELERS</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-green-600">24/7</div>
-                    <div>NETWORK</div>
-                  </div>
+            {/* Network Stats - Neo-brutalist */}
+            <div className="mt-8 border-4 border-black bg-yellow-400 p-4">
+              <div className="font-black text-black text-center text-lg uppercase mb-3">GLOBAL NETWORK</div>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="bg-white border-4 border-black p-2">
+                  <div className="font-black text-2xl text-black">200+</div>
+                  <div className="font-bold text-black text-sm">COUNTRIES</div>
+                </div>
+                <div className="bg-white border-4 border-black p-2">
+                  <div className="font-black text-2xl text-black">50K+</div>
+                  <div className="font-bold text-black text-sm">USERS</div>
+                </div>
+                <div className="bg-white border-4 border-black p-2">
+                  <div className="font-black text-2xl text-black">24/7</div>
+                  <div className="font-bold text-black text-sm">ACTIVE</div>
                 </div>
               </div>
-            </form>
-          </CardContent>
-        </Card>
-      </PassportStamp>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };
