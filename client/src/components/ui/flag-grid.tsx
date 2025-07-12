@@ -1,18 +1,24 @@
 // SVG Flag Component for International Passport Theme
 export const FlagGrid = () => {
   const flags = [
-    { country: "USA", emoji: "🇺🇸", color: "bg-blue-500" },
-    { country: "UK", emoji: "🇬🇧", color: "bg-blue-600" },
-    { country: "France", emoji: "🇫🇷", color: "bg-blue-700" },
-    { country: "Germany", emoji: "🇩🇪", color: "bg-red-500" },
-    { country: "Japan", emoji: "🇯🇵", color: "bg-red-600" },
-    { country: "Brazil", emoji: "🇧🇷", color: "bg-green-500" },
-    { country: "India", emoji: "🇮🇳", color: "bg-orange-500" },
-    { country: "Australia", emoji: "🇦🇺", color: "bg-blue-400" },
-    { country: "Canada", emoji: "🇨🇦", color: "bg-red-400" },
-    { country: "South Korea", emoji: "🇰🇷", color: "bg-blue-300" },
-    { country: "Italy", emoji: "🇮🇹", color: "bg-green-600" },
-    { country: "Spain", emoji: "🇪🇸", color: "bg-yellow-500" },
+    { country: "USA", emoji: "🇺🇸" },
+    { country: "UK", emoji: "🇬🇧" },
+    { country: "France", emoji: "🇫🇷" },
+    { country: "Germany", emoji: "🇩🇪" },
+    { country: "Japan", emoji: "🇯🇵" },
+    { country: "Brazil", emoji: "🇧🇷" },
+    { country: "India", emoji: "🇮🇳" },
+    { country: "Australia", emoji: "🇦🇺" },
+    { country: "Canada", emoji: "🇨🇦" },
+    { country: "South Korea", emoji: "🇰🇷" },
+    { country: "Italy", emoji: "🇮🇹" },
+    { country: "Spain", emoji: "🇪🇸" },
+    { country: "Mexico", emoji: "🇲🇽" },
+    { country: "Netherlands", emoji: "🇳🇱" },
+    { country: "Sweden", emoji: "🇸🇪" },
+    { country: "Switzerland", emoji: "🇨🇭" },
+    { country: "Norway", emoji: "🇳🇴" },
+    { country: "South Africa", emoji: "🇿🇦" },
   ];
 
   return (
@@ -20,7 +26,7 @@ export const FlagGrid = () => {
       {flags.map((flag, index) => (
         <div
           key={flag.country}
-          className={`w-10 h-7 ${flag.color} border-2 border-white flex items-center justify-center text-lg font-black`}
+          className="w-10 h-7 bg-white border-2 border-white flex items-center justify-center text-lg font-black"
         >
           {flag.emoji}
         </div>
