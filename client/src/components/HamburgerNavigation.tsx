@@ -1,27 +1,27 @@
 import { useState } from 'react';
-import { useLocation } from 'wouter';
+import { useNavigate } from 'react-router-dom';
 import { Menu, X, Globe, Bot, Shield, Users } from 'lucide-react';
 
 export const HamburgerNavigation = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [location, setLocation] = useLocation();
+  const navigate = useNavigate();
 
   const navigationItems = [
     {
       title: 'GLOBAL FEED',
-      path: '/',
+      path: '/feed',
       icon: Globe,
       description: 'Social commerce feed'
     },
     {
       title: 'AI AGENTS',
-      path: '/?tab=agents',
+      path: '/agents',
       icon: Bot,
       description: 'NANDA network agents'
     },
     {
       title: 'TRUST NETWORK',
-      path: '/?tab=trust',
+      path: '/trust',
       icon: Shield,
       description: 'Trust metrics & scores'
     },
@@ -34,13 +34,13 @@ export const HamburgerNavigation = () => {
   ];
 
   const handleNavigation = (path: string) => {
-    setLocation(path);
+    navigate(path);
     setIsOpen(false);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    setLocation('/auth');
+    navigate('/auth');
     setIsOpen(false);
   };
 

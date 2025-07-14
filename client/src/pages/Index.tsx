@@ -41,7 +41,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black" style={{ fontFamily: 'Roboto Mono, monospace' }}>
+    <>
       {/* Music Reactive Hero Section - Full Screen */}
       <MusicReactiveHero />
       
@@ -63,7 +63,7 @@ const Index = () => {
         isOpen={isChatOpen} 
         onToggle={() => setIsChatOpen(!isChatOpen)} 
       />
-    </div>
+    </>
   );
 };
 

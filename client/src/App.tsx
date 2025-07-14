@@ -17,6 +17,9 @@ import TravelerDiscovery from "./pages/TravelerDiscovery";
 import TravelerWorldMap from "./pages/TravelerWorldMap";
 import TravelerWorldMapNew from "./pages/TravelerWorldMapNew";
 import NotFound from "./pages/NotFound";
+import { SocialFeed } from "./components/SocialFeed";
+import { AgentDashboard } from "./components/AgentDashboard";
+import { TrustMetrics } from "./components/TrustMetrics";
 
 // Create QueryClient outside of component to prevent recreation on re-renders
 const queryClient = new QueryClient({
@@ -41,6 +44,9 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/feed" element={<SocialFeed />} />
+              <Route path="/agents" element={<AgentDashboard />} />
+              <Route path="/trust" element={<TrustMetrics />} />
               <Route path="/demo" element={<Demo />} />
               <Route path="/logistics" element={<Logistics />} />
               <Route path="/workflow" element={<Workflow />} />
