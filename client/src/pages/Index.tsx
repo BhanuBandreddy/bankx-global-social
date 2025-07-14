@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { SocialFeed } from "@/components/SocialFeed";
@@ -17,6 +17,7 @@ const Index = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -24,6 +25,13 @@ const Index = () => {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+
+  // Handle tab navigation from hamburger menu
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
 
   // Show loading while checking auth
   if (loading) {
@@ -46,35 +54,18 @@ const Index = () => {
       {/* Hero Section */}
       <Hero />
       
-      {/* Main Navigation Tabs */}
+      {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-wrap gap-6 mb-8 justify-center">
-          {[
-            { id: "feed", label: "Global Feed", icon: "🌐" },
-            { id: "agents", label: "AI Agents", icon: <CustomIcons.Sparkle className="w-6 h-6" /> },
-            { id: "trust", label: "Trust Network", icon: "🔐" },
-            { id: "travelers", label: "Connections", icon: "✈️" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`neo-brutalist px-8 py-4 font-black text-lg uppercase ${
-                activeTab === tab.id
-                  ? "bg-lime-400 text-black"
-                  : "bg-white text-black"
-              }`}
-              style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}
-            >
-              <span className="mr-3 flex items-center">
-                {typeof tab.icon === 'string' ? (
-                  <span className="text-xl">{tab.icon}</span>
-                ) : (
-                  tab.icon
-                )}
-              </span>
-              {tab.label}
-            </button>
-          ))}
+        {/* Current Tab Indicator */}
+        <div className="mb-8 text-center">
+          <div className="neo-brutalist bg-white text-black px-6 py-3 inline-block">
+            <span className="font-black text-xl uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
+              {activeTab === "feed" && "🌐 GLOBAL FEED"}
+              {activeTab === "agents" && "🤖 AI AGENTS"}
+              {activeTab === "trust" && "🔐 TRUST NETWORK"}
+              {activeTab === "travelers" && "✈️ CONNECTIONS"}
+            </span>
+          </div>
         </div>
 
         {/* Content Based on Active Tab */}
@@ -84,37 +75,42 @@ const Index = () => {
           {activeTab === "trust" && <TrustMetrics />}
           {activeTab === "travelers" && (
             <div className="text-center py-12">
-              <h2 className="text-3xl font-bold text-white mb-4">Connections</h2>
-              <p className="text-gray-300 mb-8">Interactive 3D map to discover travelers coming to any city worldwide</p>
-              <Button 
-                onClick={() => navigate('/traveler-world-map')}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 border-4 border-black shadow-[4px_4px_0px_0px_#000] font-black uppercase rounded-none"
-              >
-                🌍 Launch 3D Map
-              </Button>
+              <div className="neo-brutalist bg-white p-8 max-w-2xl mx-auto">
+                <h2 className="text-3xl font-black text-black mb-4 uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
+                  Traveler Connections
+                </h2>
+                <p className="text-black font-bold mb-8">Interactive 3D map to discover travelers coming to any city worldwide</p>
+                <Button 
+                  onClick={() => navigate('/traveler-world-map')}
+                  className="neo-brutalist bg-lime-400 text-black hover:bg-lime-500 px-8 py-4 font-black uppercase"
+                  style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}
+                >
+                  🌍 Launch 3D Map
+                </Button>
+              </div>
             </div>
           )}
         </div>
       </div>
 
-        {/* Floating Blink Button */}
-        {!isChatOpen && (
-          <div className="fixed bottom-6 right-6 z-50">
-            <Button
-              onClick={() => setIsChatOpen(true)}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 border-4 border-black shadow-[4px_4px_0px_0px_#000] font-black uppercase rounded-none"
-            >
-              <MessageSquare className="w-5 h-5 mr-2" />
-              BLINK
-            </Button>
-          </div>
-        )}
+      {/* Floating Blink Button */}
+      {!isChatOpen && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <Button
+            onClick={() => setIsChatOpen(true)}
+            className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 border-4 border-black shadow-[4px_4px_0px_0px_#000] font-black uppercase rounded-none"
+          >
+            <MessageSquare className="w-5 h-5 mr-2" />
+            BLINK
+          </Button>
+        </div>
+      )}
 
-        {/* Chat Sidebar */}
-        <ChatSidebar 
-          isOpen={isChatOpen} 
-          onToggle={() => setIsChatOpen(!isChatOpen)} 
-        />
+      {/* Chat Sidebar */}
+      <ChatSidebar 
+        isOpen={isChatOpen} 
+        onToggle={() => setIsChatOpen(!isChatOpen)} 
+      />
     </div>
   );
 };
