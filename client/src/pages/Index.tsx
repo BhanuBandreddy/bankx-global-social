@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { MusicReactiveHero } from "@/components/MusicReactiveHero";
+import PostLoginHero from "@/components/PostLoginHero";
 import { SocialFeed } from "@/components/SocialFeed";
 import { TrustMetrics } from "@/components/TrustMetrics";
 import { AgentDashboard } from "@/components/AgentDashboard";
@@ -40,10 +41,15 @@ const Index = () => {
     return null;
   }
 
+  const handleLaunchSpace = () => {
+    // You can add navigation logic here or other actions
+    console.log('Launching space...');
+  };
+
   return (
     <div className="min-h-screen">
-      {/* New Music Reactive Hero - Full Screen */}
-      <MusicReactiveHero />
+      {/* New Post-Login Hero with Template Design - Full Screen */}
+      <PostLoginHero onLaunchSpace={handleLaunchSpace} />
       
       {/* Hidden legacy content - accessible via hamburger menu navigation */}
       <div className="hidden">
