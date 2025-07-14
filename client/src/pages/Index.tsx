@@ -30,6 +30,8 @@ const Index = () => {
   useEffect(() => {
     if (location.state?.activeTab) {
       setActiveTab(location.state.activeTab);
+      // Clear the state to prevent re-triggering
+      window.history.replaceState({}, '', window.location.pathname);
     }
   }, [location.state]);
 

@@ -11,12 +11,17 @@ export const HamburgerMenu = () => {
   const toggleMenu = () => setIsOpen(!isOpen);
 
   const handleNavigation = (path: string, tabId?: string) => {
-    if (tabId) {
-      navigate(path, { state: { activeTab: tabId } });
-    } else {
-      navigate(path);
-    }
+    // Close menu first to prevent flickering
     setIsOpen(false);
+    
+    // Add a small delay to ensure smooth transition
+    setTimeout(() => {
+      if (tabId) {
+        navigate(path, { state: { activeTab: tabId } });
+      } else {
+        navigate(path);
+      }
+    }, 100);
   };
 
   return (
@@ -40,10 +45,15 @@ export const HamburgerMenu = () => {
 
       {/* Menu Panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 bg-white border-l-4 border-black transform transition-transform duration-300 ease-in-out z-50 ${
+        className={`fixed top-0 right-0 h-full w-80 bg-white border-l-4 border-black z-50 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
-        style={{ fontFamily: 'Roboto Mono, monospace' }}
+        style={{ 
+          fontFamily: 'Roboto Mono, monospace',
+          transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.3s ease-in-out',
+          visibility: isOpen ? 'visible' : 'hidden'
+        }}
       >
         {/* Header */}
         <div className="p-6 border-b-4 border-black bg-gray-100">
@@ -61,7 +71,7 @@ export const HamburgerMenu = () => {
         </div>
 
         {/* Menu Content */}
-        <div className="p-6 overflow-y-auto h-full">
+        <div className="p-6 overflow-y-auto h-full pb-20">
           {/* Main Navigation Cards */}
           <div className="mb-8">
             <h3 className="text-lg font-black text-black uppercase mb-4" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
