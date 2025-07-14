@@ -39,6 +39,14 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
     renderer.setClearColor(0x000000, 0.8);
     canvasRef.current.appendChild(renderer.domElement);
 
+    // Add mouse interaction
+    const mouse = { x: 0.5, y: 0.5 };
+    const handleMouseMove = (event: MouseEvent) => {
+      mouse.x = event.clientX / window.innerWidth;
+      mouse.y = 1.0 - (event.clientY / window.innerHeight);
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+
     // Create shader material for music visualization
     const geometry = new THREE.PlaneGeometry(2, 2);
     const shaderMaterial = new THREE.ShaderMaterial({
@@ -129,10 +137,12 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
           float audioFactor = (lowFreq + midFreq + highFreq) / 3.0;
           float time = iTime * baseSpeed;
           
-          // Create waves based on audio
-          float wave1 = sin(p.x * 10.0 + time * 2.0 + lowFreq * 5.0) * waveIntensity;
-          float wave2 = sin(p.y * 8.0 + time * 1.5 + midFreq * 4.0) * waveIntensity;
-          float wave3 = sin(distance(p, center) * 15.0 - time * 3.0 + highFreq * 6.0) * waveIntensity;
+          // Create waves based on audio and mouse interaction
+          vec2 mouse = iMouse;
+          float mouseEffect = distance(p, mouse) * 2.0;
+          float wave1 = sin(p.x * 10.0 + time * 2.0 + lowFreq * 5.0 + mouseEffect) * waveIntensity;
+          float wave2 = sin(p.y * 8.0 + time * 1.5 + midFreq * 4.0 + mouseEffect * 0.8) * waveIntensity;
+          float wave3 = sin(distance(p, center) * 15.0 - time * 3.0 + highFreq * 6.0 + mouseEffect * 0.6) * waveIntensity;
           
           // Combine waves
           float combinedWave = (wave1 + wave2 + wave3) * transitionFactor;
@@ -170,7 +180,19 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
     const animate = () => {
       animationId = requestAnimationFrame(animate);
       
+      // Update time and mouse uniforms
       shaderMaterial.uniforms.iTime.value = performance.now() * 0.001;
+      shaderMaterial.uniforms.iMouse.value.set(mouse.x, mouse.y);
+      
+      // Add subtle default animation even without audio
+      const time = performance.now() * 0.001;
+      if (!isPlaying) {
+        shaderMaterial.uniforms.lowFreq.value = 0.1 + Math.sin(time * 0.5) * 0.05;
+        shaderMaterial.uniforms.midFreq.value = 0.08 + Math.cos(time * 0.7) * 0.04;
+        shaderMaterial.uniforms.highFreq.value = 0.06 + Math.sin(time * 1.2) * 0.03;
+        shaderMaterial.uniforms.transitionFactor.value = 0.3;
+      }
+      
       renderer.render(scene, camera);
     };
     animate();
@@ -204,6 +226,7 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousemove', handleMouseMove);
       sceneRef.current.cleanup?.();
     };
   }, []);
@@ -323,20 +346,35 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
         <div className="flex flex-col items-center space-y-4">
           <button
             onClick={togglePlayback}
-            className="neo-brutalist bg-white text-black px-8 py-4 font-black uppercase text-lg hover:scale-105 transition-transform duration-150"
+            className={`neo-brutalist px-8 py-4 font-black uppercase text-lg hover:scale-105 transition-all duration-150 ${
+              isPlaying 
+                ? 'bg-red-500 text-white animate-pulse' 
+                : 'bg-white text-black'
+            }`}
             style={{ fontFamily: 'Bebas Neue, sans-serif' }}
           >
             {isPlaying ? '⏸ PAUSE EXPERIENCE' : '▶ START EXPERIENCE'}
           </button>
+          
+          {/* Status Indicator */}
+          <div className="text-center">
+            <p 
+              className={`text-sm font-bold ${isPlaying ? 'text-green-400' : 'text-gray-400'}`}
+              style={{ fontFamily: 'Roboto Mono, monospace' }}
+            >
+              {isPlaying ? '🎵 EXPERIENCE ACTIVE' : '💫 MOVE MOUSE TO INTERACT'}
+            </p>
+          </div>
           
           <audio
             ref={audioRef}
             loop
             preload="metadata"
             className="hidden"
+            crossOrigin="anonymous"
           >
-            <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.wav" type="audio/wav" />
-            <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBCmBzvLZiTkgEmO070+5E4tAn+C" />
+            {/* Fallback to a simple tone generator */}
+            <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBCmBzvLZiTkgEmO070+fEElBn+DHfiEFIXLB7duVQgwRXrfv65lOEAw=" type="audio/wav" />
           </audio>
         </div>
       </div>
