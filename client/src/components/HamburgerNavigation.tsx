@@ -38,6 +38,12 @@ export const HamburgerNavigation = () => {
     setIsOpen(false);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setLocation('/auth');
+    setIsOpen(false);
+  };
+
   return (
     <>
       {/* Hamburger Button */}
@@ -79,12 +85,26 @@ export const HamburgerNavigation = () => {
                   </button>
                 );
               })}
+              
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="nav-item logout-item"
+              >
+                <div className="nav-item-icon">
+                  <X size={24} />
+                </div>
+                <div className="nav-item-content">
+                  <div className="nav-item-title">LOGOUT</div>
+                  <div className="nav-item-description">Sign out of your account</div>
+                </div>
+              </button>
             </div>
           </nav>
         </>
       )}
 
-      <style jsx>{`
+      <style>{`
         .hamburger-button {
           position: fixed;
           top: 24px;
@@ -201,6 +221,16 @@ export const HamburgerNavigation = () => {
           font-size: 0.9rem;
           opacity: 0.7;
           line-height: 1.3;
+        }
+
+        .logout-item {
+          background: rgba(220, 38, 38, 0.1);
+          border-color: rgba(220, 38, 38, 0.3);
+        }
+
+        .logout-item:hover {
+          background: rgba(220, 38, 38, 0.2);
+          border-color: #dc2626;
         }
 
         @media (max-width: 480px) {

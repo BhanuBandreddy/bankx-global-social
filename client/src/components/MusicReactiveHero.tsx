@@ -36,108 +36,169 @@ export const MusicReactiveHero = () => {
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // Three.js music reactive implementation
+    // Three.js music reactive implementation with audio analysis
     const initThreeJS = async () => {
-      const THREE = await import('three');
-      
-      const canvas = canvasRef.current!;
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-      
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setClearColor(0x111111, 1);
-
-      // Create audio-reactive geometry
-      const geometry = new THREE.PlaneGeometry(20, 10, 100, 50);
-      
-      // Shader material for the wave effect
-      const vertexShader = `
-        uniform float uTime;
-        uniform float uAudioData;
-        varying vec2 vUv;
-        varying float vDisplacement;
+      try {
+        const THREE = await import('three');
         
-        void main() {
-          vUv = uv;
-          
-          // Create wave displacement based on audio and time
-          float displacement = sin(position.x * 0.5 + uTime * 2.0) * 
-                              cos(position.y * 0.3 + uTime * 1.5) * 
-                              (0.5 + uAudioData * 2.0);
-          
-          vDisplacement = displacement;
-          
-          vec3 newPosition = position;
-          newPosition.z += displacement;
-          
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-        }
-      `;
-
-      const fragmentShader = `
-        uniform float uTime;
-        uniform float uAudioData;
-        varying vec2 vUv;
-        varying float vDisplacement;
+        const canvas = canvasRef.current!;
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
         
-        void main() {
-          // Create glowing wave colors
-          vec3 color1 = vec3(1.0, 0.8, 0.0); // Gold
-          vec3 color2 = vec3(1.0, 0.4, 0.0); // Orange
-          vec3 color3 = vec3(1.0, 0.0, 0.0); // Red
-          
-          float wave = sin(vUv.x * 10.0 + uTime * 3.0) * cos(vUv.y * 8.0 + uTime * 2.0);
-          float intensity = smoothstep(-0.5, 0.5, wave + vDisplacement * 2.0);
-          
-          vec3 finalColor = mix(color3, color1, intensity);
-          finalColor *= (0.3 + uAudioData * 2.0);
-          
-          gl_FragColor = vec4(finalColor, intensity * 0.8);
-        }
-      `;
-
-      const material = new THREE.ShaderMaterial({
-        vertexShader,
-        fragmentShader,
-        uniforms: {
-          uTime: { value: 0 },
-          uAudioData: { value: 0.3 }
-        },
-        transparent: true,
-        blending: THREE.AdditiveBlending
-      });
-
-      const mesh = new THREE.Mesh(geometry, material);
-      scene.add(mesh);
-
-      camera.position.z = 5;
-
-      // Animation loop
-      const animate = () => {
-        requestAnimationFrame(animate);
-        
-        material.uniforms.uTime.value += 0.016;
-        // Simulate audio reactivity with sine wave
-        material.uniforms.uAudioData.value = 0.3 + Math.sin(Date.now() * 0.01) * 0.2;
-        
-        mesh.rotation.x = Math.sin(Date.now() * 0.001) * 0.1;
-        mesh.rotation.y = Math.cos(Date.now() * 0.001) * 0.1;
-        
-        renderer.render(scene, camera);
-      };
-
-      animate();
-
-      // Handle resize
-      const handleResize = () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-      };
+        renderer.setClearColor(0x111111, 0.8);
 
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
+        // Audio setup
+        let audioContext: AudioContext | null = null;
+        let analyser: AnalyserNode | null = null;
+        let dataArray: Uint8Array | null = null;
+        let audioData = 0.3;
+
+        // Try to get microphone access for real audio reactivity
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioContext = new AudioContext();
+          const source = audioContext.createMediaStreamSource(stream);
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 256;
+          source.connect(analyser);
+          dataArray = new Uint8Array(analyser.frequencyBinCount);
+          console.log('🎵 Audio input connected for music reactivity');
+        } catch (error) {
+          console.log('🎵 Using simulated audio reactivity (mic access denied)');
+        }
+
+        // Create multiple wave planes for depth
+        const waves: THREE.Mesh[] = [];
+        for (let i = 0; i < 3; i++) {
+          const geometry = new THREE.PlaneGeometry(25 + i * 5, 15 + i * 3, 120, 80);
+          
+          const vertexShader = `
+            uniform float uTime;
+            uniform float uAudioData;
+            uniform float uLayer;
+            varying vec2 vUv;
+            varying float vDisplacement;
+            
+            void main() {
+              vUv = uv;
+              
+              float freq1 = uTime * (2.0 + uLayer * 0.5);
+              float freq2 = uTime * (1.5 + uLayer * 0.3);
+              
+              float displacement = sin(position.x * 0.4 + freq1) * 
+                                  cos(position.y * 0.6 + freq2) * 
+                                  (0.8 + uAudioData * 3.0);
+              
+              displacement += sin(position.x * 0.8 + freq2) * 
+                             cos(position.y * 0.4 + freq1) * 
+                             (0.4 + uAudioData * 1.5);
+              
+              vDisplacement = displacement;
+              
+              vec3 newPosition = position;
+              newPosition.z += displacement * (1.0 + uLayer * 0.5);
+              
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+            }
+          `;
+
+          const fragmentShader = `
+            uniform float uTime;
+            uniform float uAudioData;
+            uniform float uLayer;
+            varying vec2 vUv;
+            varying float vDisplacement;
+            
+            void main() {
+              vec3 color1 = vec3(1.0, 0.9, 0.2); // Bright gold
+              vec3 color2 = vec3(1.0, 0.5, 0.0); // Orange
+              vec3 color3 = vec3(0.8, 0.2, 0.0); // Deep red
+              
+              float wave1 = sin(vUv.x * 12.0 + uTime * 4.0) * cos(vUv.y * 10.0 + uTime * 3.0);
+              float wave2 = sin(vUv.x * 8.0 + uTime * 2.0) * cos(vUv.y * 6.0 + uTime * 5.0);
+              
+              float intensity = smoothstep(-0.3, 0.7, wave1 + wave2 + vDisplacement * 1.5);
+              intensity *= (0.4 + uAudioData * 2.5);
+              
+              vec3 finalColor = mix(color3, mix(color2, color1, intensity * 0.8), intensity);
+              finalColor *= (0.6 + uAudioData * 1.5);
+              
+              float alpha = intensity * (0.7 - uLayer * 0.15);
+              gl_FragColor = vec4(finalColor, alpha);
+            }
+          `;
+
+          const material = new THREE.ShaderMaterial({
+            vertexShader,
+            fragmentShader,
+            uniforms: {
+              uTime: { value: 0 },
+              uAudioData: { value: 0.3 },
+              uLayer: { value: i }
+            },
+            transparent: true,
+            blending: THREE.AdditiveBlending
+          });
+
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.position.z = -i * 2;
+          waves.push(mesh);
+          scene.add(mesh);
+        }
+
+        camera.position.z = 8;
+
+        // Animation loop
+        const animate = () => {
+          requestAnimationFrame(animate);
+          
+          // Get real audio data if available
+          if (analyser && dataArray) {
+            analyser.getByteFrequencyData(dataArray);
+            const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+            audioData = average / 255; // Normalize to 0-1
+          } else {
+            // Fallback: simulated audio with more variation
+            audioData = 0.3 + Math.sin(Date.now() * 0.008) * 0.25 + 
+                       Math.sin(Date.now() * 0.013) * 0.15 +
+                       Math.sin(Date.now() * 0.021) * 0.1;
+          }
+          
+          // Update all wave materials
+          waves.forEach((wave, index) => {
+            const material = wave.material as THREE.ShaderMaterial;
+            material.uniforms.uTime.value += 0.016;
+            material.uniforms.uAudioData.value = audioData;
+            
+            // Subtle rotation based on audio
+            wave.rotation.x = Math.sin(Date.now() * 0.002 + index) * 0.1 * (1 + audioData);
+            wave.rotation.y = Math.cos(Date.now() * 0.0015 + index) * 0.05 * (1 + audioData);
+          });
+          
+          renderer.render(scene, camera);
+        };
+
+        animate();
+
+        // Handle resize
+        const handleResize = () => {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => {
+          window.removeEventListener('resize', handleResize);
+          if (audioContext) {
+            audioContext.close();
+          }
+        };
+      } catch (error) {
+        console.error('Three.js initialization failed:', error);
+      }
     };
 
     initThreeJS();
@@ -177,7 +238,7 @@ export const MusicReactiveHero = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .music-reactive-hero {
           position: fixed;
           top: 0;
