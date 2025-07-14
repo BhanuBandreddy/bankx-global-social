@@ -128,42 +128,67 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
         
         void main() {
           vec2 p = vUv;
-          vec2 center = vec2(0.5, 0.5);
           
-          // Background gradient
-          vec3 bgCol = mix(bgColorDown, bgColorUp, p.y);
+          // Dark background like the reference image
+          vec3 bgCol = vec3(0.08, 0.05, 0.03);
           
-          // Audio-reactive elements
-          float audioFactor = (lowFreq + midFreq + highFreq) / 3.0;
+          // Audio-reactive horizontal bands
           float time = iTime * baseSpeed;
+          float y = p.y;
+          float centerY = 0.5;
           
-          // Create waves based on audio and mouse interaction
-          vec2 mouse = iMouse;
-          float mouseEffect = distance(p, mouse) * 2.0;
-          float wave1 = sin(p.x * 10.0 + time * 2.0 + lowFreq * 5.0 + mouseEffect) * waveIntensity;
-          float wave2 = sin(p.y * 8.0 + time * 1.5 + midFreq * 4.0 + mouseEffect * 0.8) * waveIntensity;
-          float wave3 = sin(distance(p, center) * 15.0 - time * 3.0 + highFreq * 6.0 + mouseEffect * 0.6) * waveIntensity;
+          // Create horizontal audio-reactive bands
+          float bandThickness = 0.08;
+          float bandSpacing = 0.2;
           
-          // Combine waves
-          float combinedWave = (wave1 + wave2 + wave3) * transitionFactor;
+          // Multiple horizontal bands at different y positions
+          float band1Y = centerY - bandSpacing;
+          float band2Y = centerY;
+          float band3Y = centerY + bandSpacing;
           
-          // Add kick ripple effect
-          float dist = distance(p, center);
-          float ripple = sin(dist * 20.0 - time * 8.0) * kickEnergy * rippleIntensity;
+          // Make bands wavy and reactive to audio
+          float wave1 = sin(p.x * 8.0 + time * 2.0) * lowFreq * 0.1;
+          float wave2 = sin(p.x * 6.0 + time * 1.5) * midFreq * 0.1;
+          float wave3 = sin(p.x * 10.0 + time * 2.5) * highFreq * 0.1;
           
-          // Create color zones
-          float zone1 = smoothstep(0.2, 0.4, dist + combinedWave + ripple);
-          float zone2 = smoothstep(0.4, 0.6, dist + combinedWave + ripple);
-          float zone3 = smoothstep(0.6, 0.8, dist + combinedWave + ripple);
+          // Adjust band positions with waves
+          band1Y += wave1;
+          band2Y += wave2;
+          band3Y += wave3;
           
-          // Mix colors
-          vec3 color = bgCol;
-          color = mix(color, color1In, zone1 * (1.0 - zone2));
-          color = mix(color, color2In, zone2 * (1.0 - zone3));
-          color = mix(color, color3In, zone3);
+          // Create band intensities
+          float band1 = 1.0 - smoothstep(0.0, bandThickness, abs(y - band1Y));
+          float band2 = 1.0 - smoothstep(0.0, bandThickness, abs(y - band2Y));
+          float band3 = 1.0 - smoothstep(0.0, bandThickness, abs(y - band3Y));
           
-          // Add some noise for texture
-          float noiseVal = smoothNoise(p * 50.0 + time * 0.5) * 0.1;
+          // Add glow effects
+          float glow1 = exp(-abs(y - band1Y) * 15.0) * lowFreq * 2.0;
+          float glow2 = exp(-abs(y - band2Y) * 15.0) * midFreq * 2.0;
+          float glow3 = exp(-abs(y - band3Y) * 15.0) * highFreq * 2.0;
+          
+          // Band colors - orange/yellow gradient like reference
+          vec3 bandColor1 = vec3(1.0, 0.4, 0.1) * (band1 + glow1) * lowFreq * 3.0;
+          vec3 bandColor2 = vec3(1.0, 0.7, 0.2) * (band2 + glow2) * midFreq * 3.0;
+          vec3 bandColor3 = vec3(1.0, 0.5, 0.0) * (band3 + glow3) * highFreq * 3.0;
+          
+          // Enhance intensity when playing
+          float intensity = transitionFactor;
+          bandColor1 *= (0.2 + intensity * 2.0);
+          bandColor2 *= (0.2 + intensity * 2.0);
+          bandColor3 *= (0.2 + intensity * 2.0);
+          
+          // Add horizontal streaking effect
+          float streak = sin(p.x * 30.0 + time * 8.0) * 0.05 * intensity;
+          
+          // Combine all bands
+          vec3 bands = bandColor1 + bandColor2 + bandColor3;
+          bands += vec3(streak, streak * 0.8, streak * 0.3);
+          
+          // Final color
+          vec3 color = bgCol + bands;
+          
+          // Add subtle texture noise
+          float noiseVal = noise(p * 200.0 + time * 0.5) * 0.03;
           color += noiseVal;
           
           gl_FragColor = vec4(color, 1.0);
@@ -184,18 +209,14 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
       shaderMaterial.uniforms.iTime.value = performance.now() * 0.001;
       shaderMaterial.uniforms.iMouse.value.set(mouse.x, mouse.y);
       
-      // Add engaging default animation even without audio
+      // Add subtle default animation to show bands
       const time = performance.now() * 0.001;
       if (!isPlaying) {
-        // More dynamic default animation that responds to mouse
-        const mouseDistance = Math.sqrt((mouse.x - 0.5) ** 2 + (mouse.y - 0.5) ** 2);
-        const mouseInfluence = Math.min(mouseDistance * 2, 1);
-        
-        shaderMaterial.uniforms.lowFreq.value = 0.15 + Math.sin(time * 0.8) * 0.1 + mouseInfluence * 0.2;
-        shaderMaterial.uniforms.midFreq.value = 0.12 + Math.cos(time * 1.1) * 0.08 + mouseInfluence * 0.15;
-        shaderMaterial.uniforms.highFreq.value = 0.08 + Math.sin(time * 1.5) * 0.06 + mouseInfluence * 0.1;
-        shaderMaterial.uniforms.transitionFactor.value = 0.5 + mouseInfluence * 0.3;
-        shaderMaterial.uniforms.kickEnergy.value = Math.sin(time * 2) * 0.3 + mouseInfluence * 0.4;
+        // Gentle animation to show the band effect
+        shaderMaterial.uniforms.lowFreq.value = 0.3 + Math.sin(time * 0.5) * 0.2;
+        shaderMaterial.uniforms.midFreq.value = 0.25 + Math.cos(time * 0.7) * 0.15;
+        shaderMaterial.uniforms.highFreq.value = 0.2 + Math.sin(time * 1.2) * 0.1;
+        shaderMaterial.uniforms.transitionFactor.value = 0.8; // Keep bands visible
       }
       
       renderer.render(scene, camera);
@@ -323,14 +344,15 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
           </p>
         </div>
         
-        {/* User Name - Main Title with Glow Effect */}
+        {/* User Name - Main Title with Audio-Reactive Glow */}
         <div className="mb-8">
           <h1 
-            className="text-6xl md:text-8xl font-black text-white uppercase tracking-tight hover:text-cyan-300 transition-colors duration-500"
+            className="text-6xl md:text-8xl font-black text-white uppercase tracking-tight relative z-10"
             style={{ 
               fontFamily: 'Bebas Neue, sans-serif',
-              textShadow: '4px 4px 0px rgba(0,0,0,0.8), 0 0 30px rgba(0,255,255,0.3)',
-              letterSpacing: '-0.02em'
+              textShadow: '4px 4px 0px rgba(0,0,0,0.9), 0 0 50px rgba(255,255,255,0.2)',
+              letterSpacing: '-0.02em',
+              mixBlendMode: 'overlay'
             }}
           >
             {displayName}
@@ -340,10 +362,14 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
         {/* Personal Status Line */}
         <div className="mb-8">
           <p 
-            className="text-xl font-bold text-yellow-300 max-w-2xl mx-auto animate-bounce"
-            style={{ fontFamily: 'Roboto Mono, monospace' }}
+            className="text-xl font-bold text-white max-w-2xl mx-auto relative z-10"
+            style={{ 
+              fontFamily: 'Inter, sans-serif',
+              textShadow: '0 2px 12px rgba(0,0,0,0.8)',
+              fontStyle: 'italic'
+            }}
           >
-            Your Digital Command Center • Ready for Action
+            When you learn to see the invisible, you create the impossible
           </p>
         </div>
         
