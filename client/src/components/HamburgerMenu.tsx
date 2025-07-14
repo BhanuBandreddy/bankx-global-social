@@ -8,27 +8,32 @@ export const HamburgerMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
-  const toggleMenu = () => setIsOpen(!isOpen);
-
   const handleNavigation = (path: string, tabId?: string) => {
-    // Close menu first to prevent flickering
     setIsOpen(false);
-    
-    // Add a small delay to ensure smooth transition
-    setTimeout(() => {
-      if (tabId) {
-        navigate(path, { state: { activeTab: tabId } });
-      } else {
-        navigate(path);
-      }
-    }, 100);
+    if (tabId) {
+      navigate(path, { state: { activeTab: tabId } });
+    } else {
+      navigate(path);
+    }
   };
+
+  if (!isOpen) {
+    return (
+      <Button
+        onClick={() => setIsOpen(true)}
+        className="neo-brutalist bg-white text-black hover:bg-gray-100 p-3"
+        style={{ fontFamily: 'Roboto Mono, monospace' }}
+      >
+        <Menu size={24} strokeWidth={2.5} />
+      </Button>
+    );
+  }
 
   return (
     <>
       {/* Hamburger Button */}
       <Button
-        onClick={toggleMenu}
+        onClick={() => setIsOpen(false)}
         className="neo-brutalist bg-white text-black hover:bg-gray-100 p-3"
         style={{ fontFamily: 'Roboto Mono, monospace' }}
       >
@@ -36,24 +41,15 @@ export const HamburgerMenu = () => {
       </Button>
 
       {/* Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        onClick={() => setIsOpen(false)}
+      />
 
       {/* Menu Panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 bg-white border-l-4 border-black z-50 ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-        style={{ 
-          fontFamily: 'Roboto Mono, monospace',
-          transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
-          transition: 'transform 0.3s ease-in-out',
-          visibility: isOpen ? 'visible' : 'hidden'
-        }}
+        className="fixed top-0 right-0 h-full w-80 bg-white border-l-4 border-black z-50"
+        style={{ fontFamily: 'Roboto Mono, monospace' }}
       >
         {/* Header */}
         <div className="p-6 border-b-4 border-black bg-gray-100">
