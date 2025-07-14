@@ -92,6 +92,8 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
         uniform vec3 color1Out;
         uniform vec3 color2In;
         uniform vec3 color2Out;
+        uniform vec3 color3In;
+        uniform vec3 color3Out;
         uniform float baseSpeed;
         uniform float lineThickness;
         uniform float waveIntensity;
