@@ -21,7 +21,8 @@ export const AuthNavbar = () => {
       <div className="flex items-center space-x-4">
         <Button
           onClick={() => navigate('/auth')}
-          className="bg-lime-400 text-black border-4 border-black font-black hover:bg-lime-300 shadow-[4px_4px_0px_0px_#000] hover:shadow-[6px_6px_0px_0px_#000] transition-all"
+          className="neo-brutalist bg-lime-400 text-black font-black uppercase"
+          style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}
         >
           LOGIN
         </Button>
@@ -44,8 +45,8 @@ export const AuthNavbar = () => {
       </div>
       <Button
         onClick={signOut}
-        variant="outline"
-        className="border-2 border-white text-white hover:bg-white hover:text-black font-bold bg-[#0891b2]"
+        className="neo-brutalist bg-cyan-500 text-white font-black uppercase border-white"
+        style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}
       >
         LOGOUT
       </Button>

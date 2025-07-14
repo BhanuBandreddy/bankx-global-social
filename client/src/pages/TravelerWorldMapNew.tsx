@@ -154,23 +154,22 @@ export default function TravelerWorldMapNew() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden">
+    <div className="min-h-screen bg-gray-100 text-black overflow-hidden" style={{ fontFamily: 'Roboto Mono, monospace' }}>
       {/* Header with City Search */}
-      <div className="absolute top-0 left-0 right-0 z-10 bg-black/90 backdrop-blur-sm border-b border-gray-800">
+      <div className="absolute top-0 left-0 right-0 z-10 neo-brutalist bg-black text-white">
         <div className="flex items-center justify-between p-6">
           <div className="flex items-center space-x-4">
             <Button
-              variant="outline"
-              size="sm"
               onClick={() => navigate('/')}
-              className="border-gray-600 hover:bg-gray-800"
+              className="neo-brutalist bg-lime-400 text-black font-black uppercase"
+              style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Global Traveler Network</h1>
-              <p className="text-gray-400 text-sm">
+              <h1 className="text-2xl font-black uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>Global Traveler Network</h1>
+              <p className="text-lime-400 text-sm font-bold uppercase">
                 Discover travelers coming to any city
               </p>
             </div>

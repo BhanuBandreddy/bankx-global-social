@@ -38,15 +38,15 @@ export default function Demo() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-100" style={{ fontFamily: 'Roboto Mono, monospace' }}>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-black mb-4">
+            <h1 className="text-4xl font-black text-black mb-4 uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
               AI Agent Demo Platform
             </h1>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg text-black font-bold max-w-3xl mx-auto">
               Experience the complete agentic workflow: PDF processing, real-time local discovery, 
               and crowd intelligence for travel commerce.
             </p>
@@ -56,9 +56,9 @@ export default function Demo() {
           {selectedDemo === 'overview' && (
             <div className="space-y-6">
               {/* Architecture Overview */}
-              <Card className="border-4 border-black">
-                <CardHeader className="bg-gradient-to-r from-gray-100 to-gray-200 border-b-4 border-black">
-                  <CardTitle className="text-2xl font-bold text-black uppercase">
+              <Card className="neo-brutalist">
+                <CardHeader className="bg-yellow-400">
+                  <CardTitle className="text-2xl font-black text-black uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
                     Platform Architecture
                   </CardTitle>
                 </CardHeader>

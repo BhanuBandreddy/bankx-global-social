@@ -76,10 +76,10 @@ const Auth = () => {
           <FlagGrid />
           
           <h1 style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }} className="text-5xl font-black uppercase text-center text-white mb-2">
-            GLOBAL SOCIAL
+            {fullName ? fullName.toUpperCase() : 'GLOBAL SOCIAL'}
           </h1>
           <div className="text-center text-lime-400 font-black text-xl uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
-            {isLogin ? 'PASSPORT CONTROL' : 'JOIN THE NETWORK'}
+            {fullName ? 'INTERNATIONAL CITIZEN' : (isLogin ? 'PASSPORT CONTROL' : 'JOIN THE NETWORK')}
           </div>
           <div className="text-center text-white font-bold text-sm mt-2 uppercase tracking-wide">
             {isLogin ? 'ENTER CREDENTIALS' : 'REGISTER NOW'}

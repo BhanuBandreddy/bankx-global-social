@@ -40,7 +40,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-gray-100" style={{ fontFamily: 'Roboto Mono, monospace' }}>
       <Navbar />
       
       {/* Hero Section */}
@@ -58,11 +58,12 @@ const Index = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-8 py-4 font-black text-lg border-4 transition-all duration-200 transform ${
+              className={`neo-brutalist px-8 py-4 font-black text-lg uppercase ${
                 activeTab === tab.id
-                  ? "bg-lime-400 text-black border-black shadow-[8px_8px_0px_0px_#000] hover:shadow-[12px_12px_0px_0px_#000] translate-x-[-4px] translate-y-[-4px]"
-                  : "bg-white text-black border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[8px_8px_0px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+                  ? "bg-lime-400 text-black"
+                  : "bg-white text-black"
               }`}
+              style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}
             >
               <span className="mr-3 flex items-center">
                 {typeof tab.icon === 'string' ? (
