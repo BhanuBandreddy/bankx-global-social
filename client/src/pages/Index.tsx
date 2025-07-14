@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
-import { MusicReactiveHero } from "@/components/MusicReactiveHero";
+import { AdvancedMusicReactiveHero } from "@/components/AdvancedMusicReactiveHero";
 import { SocialFeed } from "@/components/SocialFeed";
 import { TrustMetrics } from "@/components/TrustMetrics";
 import { AgentDashboard } from "@/components/AgentDashboard";
@@ -43,7 +43,7 @@ const Index = () => {
   return (
     <>
       {/* Music Reactive Hero Section - Full Screen */}
-      <MusicReactiveHero />
+      <AdvancedMusicReactiveHero />
       
       {/* Floating Blink Button */}
       {!isChatOpen && (
