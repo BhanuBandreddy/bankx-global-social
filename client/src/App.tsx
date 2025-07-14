@@ -9,9 +9,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 // BlinkConcierge removed - coordination happens backend-only
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import { Feed } from "./pages/Feed";
-import { Agents } from "./pages/Agents";
-import { Trust } from "./pages/Trust";
 import Demo from "./pages/Demo";
 import Logistics from "./pages/Logistics";
 import Workflow from "./pages/Workflow";
@@ -44,9 +41,6 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/feed" element={<Feed />} />
-              <Route path="/agents" element={<Agents />} />
-              <Route path="/trust" element={<Trust />} />
               <Route path="/demo" element={<Demo />} />
               <Route path="/logistics" element={<Logistics />} />
               <Route path="/workflow" element={<Workflow />} />

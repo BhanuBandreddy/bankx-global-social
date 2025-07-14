@@ -3,8 +3,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
-import { MusicReactiveHero } from "@/components/MusicReactiveHero";
-import PostLoginHero from "@/components/PostLoginHero";
 import { SocialFeed } from "@/components/SocialFeed";
 import { TrustMetrics } from "@/components/TrustMetrics";
 import { AgentDashboard } from "@/components/AgentDashboard";
@@ -41,95 +39,82 @@ const Index = () => {
     return null;
   }
 
-  const handleLaunchSpace = () => {
-    // You can add navigation logic here or other actions
-    console.log('Launching space...');
-  };
-
   return (
-    <div className="min-h-screen">
-      {/* New Post-Login Hero with Template Design - Full Screen */}
-      <PostLoginHero onLaunchSpace={handleLaunchSpace} />
+    <div className="min-h-screen bg-gray-100" style={{ fontFamily: 'Roboto Mono, monospace' }}>
+      <Navbar />
       
-      {/* Hidden legacy content - accessible via hamburger menu navigation */}
-      <div className="hidden">
-        <div className="min-h-screen bg-gray-100" style={{ fontFamily: 'Roboto Mono, monospace' }}>
-          <Navbar />
-          
-          {/* Hero Section */}
-          <Hero />
-          
-          {/* Main Navigation Tabs */}
-          <div className="container mx-auto px-4 py-8">
-            <div className="flex flex-wrap gap-6 mb-8 justify-center">
-              {[
-                { id: "feed", label: "Global Feed", icon: "🌐" },
-                { id: "agents", label: "AI Agents", icon: <CustomIcons.Sparkle className="w-6 h-6" /> },
-                { id: "trust", label: "Trust Network", icon: "🔐" },
-                { id: "travelers", label: "Connections", icon: "✈️" },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`neo-brutalist px-8 py-4 font-black text-lg uppercase ${
-                    activeTab === tab.id
-                      ? "bg-lime-400 text-black"
-                      : "bg-white text-black"
-                  }`}
-                  style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}
-                >
-                  <span className="mr-3 flex items-center">
-                    {typeof tab.icon === 'string' ? (
-                      <span className="text-xl">{tab.icon}</span>
-                    ) : (
-                      tab.icon
-                    )}
-                  </span>
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+      {/* Hero Section */}
+      <Hero />
+      
+      {/* Main Navigation Tabs */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-wrap gap-6 mb-8 justify-center">
+          {[
+            { id: "feed", label: "Global Feed", icon: "🌐" },
+            { id: "agents", label: "AI Agents", icon: <CustomIcons.Sparkle className="w-6 h-6" /> },
+            { id: "trust", label: "Trust Network", icon: "🔐" },
+            { id: "travelers", label: "Connections", icon: "✈️" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`neo-brutalist px-8 py-4 font-black text-lg uppercase ${
+                activeTab === tab.id
+                  ? "bg-lime-400 text-black"
+                  : "bg-white text-black"
+              }`}
+              style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}
+            >
+              <span className="mr-3 flex items-center">
+                {typeof tab.icon === 'string' ? (
+                  <span className="text-xl">{tab.icon}</span>
+                ) : (
+                  tab.icon
+                )}
+              </span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-            {/* Content Based on Active Tab */}
-            <div className={`relative transition-all duration-300 ${isChatOpen ? 'mr-96' : ''}`}>
-              {activeTab === "feed" && <SocialFeed />}
-              {activeTab === "agents" && <AgentDashboard />}
-              {activeTab === "trust" && <TrustMetrics />}
-              {activeTab === "travelers" && (
-                <div className="text-center py-12">
-                  <h2 className="text-3xl font-bold text-white mb-4">Connections</h2>
-                  <p className="text-gray-300 mb-8">Interactive 3D map to discover travelers coming to any city worldwide</p>
-                  <Button 
-                    onClick={() => navigate('/traveler-world-map')}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 border-4 border-black shadow-[4px_4px_0px_0px_#000] font-black uppercase rounded-none"
-                  >
-                    🌍 Launch 3D Map
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Floating Blink Button */}
-          {!isChatOpen && (
-            <div className="fixed bottom-6 right-6 z-50">
-              <Button
-                onClick={() => setIsChatOpen(true)}
-                className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 border-4 border-black shadow-[4px_4px_0px_0px_#000] font-black uppercase rounded-none"
+        {/* Content Based on Active Tab */}
+        <div className={`relative transition-all duration-300 ${isChatOpen ? 'mr-96' : ''}`}>
+          {activeTab === "feed" && <SocialFeed />}
+          {activeTab === "agents" && <AgentDashboard />}
+          {activeTab === "trust" && <TrustMetrics />}
+          {activeTab === "travelers" && (
+            <div className="text-center py-12">
+              <h2 className="text-3xl font-bold text-white mb-4">Connections</h2>
+              <p className="text-gray-300 mb-8">Interactive 3D map to discover travelers coming to any city worldwide</p>
+              <Button 
+                onClick={() => navigate('/traveler-world-map')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 border-4 border-black shadow-[4px_4px_0px_0px_#000] font-black uppercase rounded-none"
               >
-                <MessageSquare className="w-5 h-5 mr-2" />
-                BLINK
+                🌍 Launch 3D Map
               </Button>
             </div>
           )}
-
-          {/* Chat Sidebar */}
-          <ChatSidebar 
-            isOpen={isChatOpen} 
-            onToggle={() => setIsChatOpen(!isChatOpen)} 
-          />
         </div>
       </div>
+
+        {/* Floating Blink Button */}
+        {!isChatOpen && (
+          <div className="fixed bottom-6 right-6 z-50">
+            <Button
+              onClick={() => setIsChatOpen(true)}
+              className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 border-4 border-black shadow-[4px_4px_0px_0px_#000] font-black uppercase rounded-none"
+            >
+              <MessageSquare className="w-5 h-5 mr-2" />
+              BLINK
+            </Button>
+          </div>
+        )}
+
+        {/* Chat Sidebar */}
+        <ChatSidebar 
+          isOpen={isChatOpen} 
+          onToggle={() => setIsChatOpen(!isChatOpen)} 
+        />
     </div>
   );
 };
