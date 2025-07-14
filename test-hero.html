@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Audio Reactive Hero Section</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    body {
+      background: #111;
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+    }
+    #container {
+      position: absolute;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: 1;
+    }
+    .hero-content {
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -30%);
+      z-index: 2;
+      text-align: center;
+      color: #fff;
+      width: 100vw;
+      pointer-events: none;
+      user-select: none;
+    }
+    .hero-content h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin: 0 0 1rem 0;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 12px #0009;
+    }
+    .hero-content .subtitle {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      opacity: 0.8;
+    }
+    .hero-content button {
+      pointer-events: auto;
+      font-size: 1.15rem;
+      padding: 0.75em 2.5em;
+      border: none;
+      border-radius: 2em;
+      background: rgba(255,200,0,0.85);
+      color: #222;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .18s;
+      box-shadow: 0 2px 16px #0003;
+      outline: none;
+    }
+    .hero-content button:hover {
+      background: #fff200;
+    }
+    .hero-content button.playing {
+      background: rgba(255,100,100,0.85);
+      color: #fff;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+    #fps {
+      position: fixed;
+      top: 10px;
+      right: 14px;
+      color: #fff;
+      background: #000a;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: monospace;
+      z-index: 1100;
+      pointer-events: none;
+    }
+    .status {
+      pointer-events: none;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      opacity: 0.7;
+    }
+    @media (max-width: 520px) {
+      .hero-content h1 { font-size: 1.6rem; }
+      .hero-content { top: 16%; }
+      .hero-content button { font-size: 1rem; padding: 0.65em 1.8em; }
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div class="hero-content">
+    <div class="subtitle">INTERNATIONAL CITIZEN</div>
+    <h1>GLOBAL CITIZEN</h1>
+    <button id="playButton">▶ START EXPERIENCE</button>
+    <div class="status" id="status">💫 MOVE MOUSE TO INTERACT</div>
+  </div>
+  <div id="fps">FPS: 0</div>
+  
+  <script type="module">
+    import * as THREE from "https://esm.sh/three@0.175.0";
+
+    // Scene setup
+    let scene, camera, renderer;
+    let shaderMaterial;
+    let isPlaying = false;
+    let audioContext, analyser, dataArray, source;
+    let mouse = { x: 0.5, y: 0.5 };
+    
+    const playButton = document.getElementById('playButton');
+    const status = document.getElementById('status');
+    const fpsElement = document.getElementById('fps');
+
+    // Initialize Three.js
+    function initThree() {
+      const container = document.getElementById('container');
+      
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance'
+      });
+      
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setClearColor(0x000000, 0.8);
+      container.appendChild(renderer.domElement);
+
+      // Create shader material
+      const geometry = new THREE.PlaneGeometry(2, 2);
+      shaderMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+          iTime: { value: 0 },
+          iResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+          iMouse: { value: new THREE.Vector2(0.5, 0.5) },
+          lowFreq: { value: 0 },
+          midFreq: { value: 0 },
+          highFreq: { value: 0 },
+          isPlaying: { value: false },
+          transitionFactor: { value: 0 },
+          kickEnergy: { value: 0 },
+          // Color uniforms
+          bgColorDown: { value: new THREE.Vector3(0.16, 0.08, 0.04) },
+          bgColorUp: { value: new THREE.Vector3(0.08, 0.04, 0.02) },
+          color1In: { value: new THREE.Vector3(1.0, 0.78, 0.0) },
+          color1Out: { value: new THREE.Vector3(1.0, 0.39, 0.0) },
+          color2In: { value: new THREE.Vector3(1.0, 0.39, 0.39) },
+          color2Out: { value: new THREE.Vector3(0.78, 0.20, 0.20) },
+          color3In: { value: new THREE.Vector3(1.0, 0.59, 0.20) },
+          color3Out: { value: new THREE.Vector3(0.78, 0.39, 0.0) },
+          // Animation uniforms
+          baseSpeed: { value: 1.0 },
+          lineThickness: { value: 1.8 },
+          waveIntensity: { value: 0.08 },
+          rippleIntensity: { value: 0.25 }
+        },
+        vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          precision highp float;
+          uniform float iTime;
+          uniform vec2 iResolution;
+          uniform vec2 iMouse;
+          uniform float lowFreq;
+          uniform float midFreq;
+          uniform float highFreq;
+          uniform bool isPlaying;
+          uniform float transitionFactor;
+          uniform float kickEnergy;
+          uniform vec3 bgColorDown;
+          uniform vec3 bgColorUp;
+          uniform vec3 color1In;
+          uniform vec3 color1Out;
+          uniform vec3 color2In;
+          uniform vec3 color2Out;
+          uniform vec3 color3In;
+          uniform vec3 color3Out;
+          uniform float baseSpeed;
+          uniform float lineThickness;
+          uniform float waveIntensity;
+          uniform float rippleIntensity;
+          
+          varying vec2 vUv;
+          
+          float noise(vec2 p) {
+            return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+          }
+          
+          float smoothNoise(vec2 p) {
+            vec2 i = floor(p);
+            vec2 f = fract(p);
+            f = f * f * (3.0 - 2.0 * f);
+            
+            float a = noise(i);
+            float b = noise(i + vec2(1.0, 0.0));
+            float c = noise(i + vec2(0.0, 1.0));
+            float d = noise(i + vec2(1.0, 1.0));
+            
+            return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+          }
+          
+          void main() {
+            vec2 p = vUv;
+            vec2 center = vec2(0.5, 0.5);
+            
+            // Background gradient
+            vec3 bgCol = mix(bgColorDown, bgColorUp, p.y);
+            
+            // Audio-reactive elements
+            float audioFactor = (lowFreq + midFreq + highFreq) / 3.0;
+            float time = iTime * baseSpeed;
+            
+            // Create waves based on audio and mouse interaction
+            vec2 mousePos = iMouse;
+            float mouseEffect = distance(p, mousePos) * 2.0;
+            float wave1 = sin(p.x * 10.0 + time * 2.0 + lowFreq * 5.0 + mouseEffect) * waveIntensity;
+            float wave2 = sin(p.y * 8.0 + time * 1.5 + midFreq * 4.0 + mouseEffect * 0.8) * waveIntensity;
+            float wave3 = sin(distance(p, center) * 15.0 - time * 3.0 + highFreq * 6.0 + mouseEffect * 0.6) * waveIntensity;
+            
+            // Combine waves
+            float combinedWave = (wave1 + wave2 + wave3) * transitionFactor;
+            
+            // Add kick ripple effect
+            float dist = distance(p, center);
+            float ripple = sin(dist * 20.0 - time * 8.0) * kickEnergy * rippleIntensity;
+            
+            // Create color zones
+            float zone1 = smoothstep(0.2, 0.4, dist + combinedWave + ripple);
+            float zone2 = smoothstep(0.4, 0.6, dist + combinedWave + ripple);
+            float zone3 = smoothstep(0.6, 0.8, dist + combinedWave + ripple);
+            
+            // Mix colors
+            vec3 color = bgCol;
+            color = mix(color, color1In, zone1 * (1.0 - zone2));
+            color = mix(color, color2In, zone2 * (1.0 - zone3));
+            color = mix(color, color3In, zone3);
+            
+            // Add some noise for texture
+            float noiseVal = smoothNoise(p * 50.0 + time * 0.5) * 0.1;
+            color += noiseVal;
+            
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      });
+
+      const mesh = new THREE.Mesh(geometry, shaderMaterial);
+      scene.add(mesh);
+      camera.position.z = 1;
+
+      // Mouse tracking
+      window.addEventListener('mousemove', (event) => {
+        mouse.x = event.clientX / window.innerWidth;
+        mouse.y = 1.0 - (event.clientY / window.innerHeight);
+      });
+
+      // Resize handling
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        shaderMaterial.uniforms.iResolution.value.set(window.innerWidth, window.innerHeight);
+      });
+    }
+
+    // Audio setup
+    async function initAudio() {
+      try {
+        // Create audio context
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Create oscillator for demonstration (since we don't have a real audio file)
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        // Create analyser
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+        
+        // Connect audio nodes
+        oscillator.connect(gainNode);
+        gainNode.connect(analyser);
+        analyser.connect(audioContext.destination);
+        
+        // Configure oscillator
+        oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        
+        // Start oscillator
+        oscillator.start();
+        
+        // Create LFO for dynamic frequency changes
+        const lfo = audioContext.createOscillator();
+        const lfoGain = audioContext.createGain();
+        lfo.frequency.setValueAtTime(0.5, audioContext.currentTime);
+        lfo.type = 'sine';
+        lfoGain.gain.setValueAtTime(50, audioContext.currentTime);
+        lfo.connect(lfoGain);
+        lfoGain.connect(oscillator.frequency);
+        lfo.start();
+        
+        return true;
+      } catch (error) {
+        console.error('Audio initialization failed:', error);
+        return false;
+      }
+    }
+
+    // Animation loop
+    let frameCount = 0;
+    let lastTime = 0;
+    
+    function animate(currentTime) {
+      requestAnimationFrame(animate);
+      
+      // Update FPS
+      if (currentTime - lastTime >= 1000) {
+        fpsElement.textContent = `FPS: ${frameCount}`;
+        frameCount = 0;
+        lastTime = currentTime;
+      }
+      frameCount++;
+      
+      // Update time and mouse
+      shaderMaterial.uniforms.iTime.value = currentTime * 0.001;
+      shaderMaterial.uniforms.iMouse.value.set(mouse.x, mouse.y);
+      
+      // Update audio data
+      if (isPlaying && analyser) {
+        analyser.getByteFrequencyData(dataArray);
+        
+        // Calculate frequency bands
+        const lowFreq = Array.from(dataArray.slice(0, 64)).reduce((a, b) => a + b, 0) / 64 / 255;
+        const midFreq = Array.from(dataArray.slice(64, 128)).reduce((a, b) => a + b, 0) / 64 / 255;
+        const highFreq = Array.from(dataArray.slice(128, 192)).reduce((a, b) => a + b, 0) / 64 / 255;
+        
+        shaderMaterial.uniforms.lowFreq.value = lowFreq;
+        shaderMaterial.uniforms.midFreq.value = midFreq;
+        shaderMaterial.uniforms.highFreq.value = highFreq;
+        shaderMaterial.uniforms.transitionFactor.value = 1.0;
+        shaderMaterial.uniforms.kickEnergy.value = lowFreq > 0.3 ? lowFreq * 2.0 : 0.0;
+      } else {
+        // Default animation when not playing
+        const time = currentTime * 0.001;
+        shaderMaterial.uniforms.lowFreq.value = 0.1 + Math.sin(time * 0.5) * 0.05;
+        shaderMaterial.uniforms.midFreq.value = 0.08 + Math.cos(time * 0.7) * 0.04;
+        shaderMaterial.uniforms.highFreq.value = 0.06 + Math.sin(time * 1.2) * 0.03;
+        shaderMaterial.uniforms.transitionFactor.value = 0.3;
+      }
+      
+      renderer.render(scene, camera);
+    }
+
+    // Button event handler
+    playButton.addEventListener('click', async () => {
+      if (!isPlaying) {
+        const audioSuccess = await initAudio();
+        if (audioSuccess) {
+          isPlaying = true;
+          playButton.textContent = '⏸ PAUSE EXPERIENCE';
+          playButton.classList.add('playing');
+          status.textContent = '🎵 EXPERIENCE ACTIVE';
+          shaderMaterial.uniforms.isPlaying.value = true;
+        } else {
+          status.textContent = '❌ AUDIO FAILED - VISUAL ONLY';
+        }
+      } else {
+        isPlaying = false;
+        playButton.textContent = '▶ START EXPERIENCE';
+        playButton.classList.remove('playing');
+        status.textContent = '💫 MOVE MOUSE TO INTERACT';
+        shaderMaterial.uniforms.isPlaying.value = false;
+        if (audioContext) {
+          audioContext.close();
+          audioContext = null;
+        }
+      }
+    });
+
+    // Initialize
+    initThree();
+    animate(0);
+  </script>
+</body>
+</html>
