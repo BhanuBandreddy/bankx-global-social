@@ -57,24 +57,7 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
         lowFreq: { value: 0 },
         midFreq: { value: 0 },
         highFreq: { value: 0 },
-        isPlaying: { value: false },
-        transitionFactor: { value: 0 },
-        kickEnergy: { value: 0 },
-        bounceEffect: { value: 0 },
-        // Enhanced Color uniforms for more vibrant personal space
-        bgColorDown: { value: new THREE.Vector3(0.05, 0.02, 0.15) }, // Deep space blue
-        bgColorUp: { value: new THREE.Vector3(0.02, 0.01, 0.08) }, // Darker purple
-        color1In: { value: new THREE.Vector3(0.0, 1.0, 1.0) }, // Bright cyan
-        color1Out: { value: new THREE.Vector3(0.0, 0.8, 1.0) }, // Electric blue
-        color2In: { value: new THREE.Vector3(1.0, 0.2, 0.8) }, // Hot pink
-        color2Out: { value: new THREE.Vector3(0.8, 0.0, 0.6) }, // Deep magenta
-        color3In: { value: new THREE.Vector3(1.0, 0.8, 0.0) }, // Gold
-        color3Out: { value: new THREE.Vector3(1.0, 0.4, 0.0) }, // Orange
-        // Animation uniforms
-        baseSpeed: { value: 1.0 },
-        lineThickness: { value: 1.8 },
-        waveIntensity: { value: 0.08 },
-        rippleIntensity: { value: 0.25 }
+        transitionFactor: { value: 0 }
       },
       vertexShader: `
         varying vec2 vUv;
@@ -85,113 +68,62 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
       `,
       fragmentShader: `
         precision highp float;
+        varying vec2 vUv;
         uniform float iTime;
         uniform vec2 iResolution;
         uniform vec2 iMouse;
         uniform float lowFreq;
         uniform float midFreq;
         uniform float highFreq;
-        uniform bool isPlaying;
         uniform float transitionFactor;
-        uniform float kickEnergy;
-        uniform vec3 bgColorDown;
-        uniform vec3 bgColorUp;
-        uniform vec3 color1In;
-        uniform vec3 color1Out;
-        uniform vec3 color2In;
-        uniform vec3 color2Out;
-        uniform vec3 color3In;
-        uniform vec3 color3Out;
-        uniform float baseSpeed;
-        uniform float lineThickness;
-        uniform float waveIntensity;
-        uniform float rippleIntensity;
-        
-        varying vec2 vUv;
-        
-        float noise(vec2 p) {
-          return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+
+        // Color palette
+        vec3 orange = vec3(1.0, 0.72, 0.1);
+        vec3 yellow = vec3(1.0, 0.88, 0.45);
+        vec3 glow = vec3(0.9, 0.5, 0.02);
+
+        // Soft horizontal glowing bands
+        float band(vec2 uv, float y, float thickness, float glowStrength, float speed, float offset, float audioBoost) {
+          float wavyY = y + 0.07 * sin(uv.x * 6.0 + offset + iTime * speed) * (1.0 + audioBoost);
+          float dist = abs(uv.y - wavyY);
+          float base = exp(-dist * thickness * 12.0) * glowStrength * (0.5 + audioBoost);
+          // A little extra falloff for smooth
+          base *= exp(-dist * thickness * 5.0);
+          return base;
         }
-        
-        float smoothNoise(vec2 p) {
-          vec2 i = floor(p);
-          vec2 f = fract(p);
-          f = f * f * (3.0 - 2.0 * f);
-          
-          float a = noise(i);
-          float b = noise(i + vec2(1.0, 0.0));
-          float c = noise(i + vec2(0.0, 1.0));
-          float d = noise(i + vec2(1.0, 1.0));
-          
-          return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-        }
-        
+
         void main() {
-          vec2 p = vUv;
-          
-          // Dark background like the reference image
-          vec3 bgCol = vec3(0.08, 0.05, 0.03);
-          
-          // Audio-reactive horizontal bands
-          float time = iTime * baseSpeed;
-          float y = p.y;
-          float centerY = 0.5;
-          
-          // Create horizontal audio-reactive bands
-          float bandThickness = 0.08;
-          float bandSpacing = 0.2;
-          
-          // Multiple horizontal bands at different y positions
-          float band1Y = centerY - bandSpacing;
-          float band2Y = centerY;
-          float band3Y = centerY + bandSpacing;
-          
-          // Make bands wavy and reactive to audio
-          float wave1 = sin(p.x * 8.0 + time * 2.0) * lowFreq * 0.1;
-          float wave2 = sin(p.x * 6.0 + time * 1.5) * midFreq * 0.1;
-          float wave3 = sin(p.x * 10.0 + time * 2.5) * highFreq * 0.1;
-          
-          // Adjust band positions with waves
-          band1Y += wave1;
-          band2Y += wave2;
-          band3Y += wave3;
-          
-          // Create band intensities
-          float band1 = 1.0 - smoothstep(0.0, bandThickness, abs(y - band1Y));
-          float band2 = 1.0 - smoothstep(0.0, bandThickness, abs(y - band2Y));
-          float band3 = 1.0 - smoothstep(0.0, bandThickness, abs(y - band3Y));
-          
-          // Add glow effects
-          float glow1 = exp(-abs(y - band1Y) * 15.0) * lowFreq * 2.0;
-          float glow2 = exp(-abs(y - band2Y) * 15.0) * midFreq * 2.0;
-          float glow3 = exp(-abs(y - band3Y) * 15.0) * highFreq * 2.0;
-          
-          // Band colors - orange/yellow gradient like reference
-          vec3 bandColor1 = vec3(1.0, 0.4, 0.1) * (band1 + glow1) * lowFreq * 3.0;
-          vec3 bandColor2 = vec3(1.0, 0.7, 0.2) * (band2 + glow2) * midFreq * 3.0;
-          vec3 bandColor3 = vec3(1.0, 0.5, 0.0) * (band3 + glow3) * highFreq * 3.0;
-          
-          // Enhance intensity when playing
-          float intensity = transitionFactor;
-          bandColor1 *= (0.2 + intensity * 2.0);
-          bandColor2 *= (0.2 + intensity * 2.0);
-          bandColor3 *= (0.2 + intensity * 2.0);
-          
-          // Add horizontal streaking effect
-          float streak = sin(p.x * 30.0 + time * 8.0) * 0.05 * intensity;
-          
-          // Combine all bands
-          vec3 bands = bandColor1 + bandColor2 + bandColor3;
-          bands += vec3(streak, streak * 0.8, streak * 0.3);
-          
-          // Final color
-          vec3 color = bgCol + bands;
-          
-          // Add subtle texture noise
-          float noiseVal = noise(p * 200.0 + time * 0.5) * 0.03;
-          color += noiseVal;
-          
-          gl_FragColor = vec4(color, 1.0);
+          vec2 uv = vUv;
+          vec3 col = vec3(0.09, 0.06, 0.03); // very dark background
+
+          // Audio-reactive intensity
+          float audioIntensity = (lowFreq + midFreq + highFreq) / 3.0 * transitionFactor;
+
+          // Band 1 (top) - reacts to high frequencies
+          float b1 = band(uv, 0.32, 0.21, 1.2, 0.6, 0.0, highFreq * 2.0);
+          col += b1 * mix(orange, yellow, 0.5);
+
+          // Band 2 (middle, strongest) - reacts to mid frequencies
+          float b2 = band(uv, 0.5 + 0.05*sin(iTime*0.3), 0.24, 1.7, 1.6, 1.5, midFreq * 3.0);
+          col += b2 * glow;
+
+          // Band 3 (lower) - reacts to low frequencies
+          float b3 = band(uv, 0.74, 0.17, 1.2, 1.1, 3.5, lowFreq * 2.5);
+          col += b3 * orange;
+
+          // Slight streaks and movement for "energy"
+          float streak = 0.035 * sin(uv.x * 35.0 - iTime * 2.2) * exp(-abs(uv.y-0.6)*7.0) * (1.0 + audioIntensity);
+          col += streak * yellow;
+
+          // Subtle mouse parallax
+          float mx = (iMouse.x - 0.5) * 0.09;
+          col += band(uv, 0.42+mx, 0.17, 0.5, 0.9, 2.5, audioIntensity) * glow;
+
+          // Soft vignette
+          float vig = 0.88 - 0.21 * pow((uv.x-0.5)*2.0,2.0) - 0.25 * pow((uv.y-0.5)*2.0,2.0);
+          col *= vig;
+
+          gl_FragColor = vec4(col, 1.0);
         }
       `
     });
@@ -214,9 +146,9 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
       if (!isPlaying) {
         // Gentle animation to show the band effect
         shaderMaterial.uniforms.lowFreq.value = 0.3 + Math.sin(time * 0.5) * 0.2;
-        shaderMaterial.uniforms.midFreq.value = 0.25 + Math.cos(time * 0.7) * 0.15;
-        shaderMaterial.uniforms.highFreq.value = 0.2 + Math.sin(time * 1.2) * 0.1;
-        shaderMaterial.uniforms.transitionFactor.value = 0.8; // Keep bands visible
+        shaderMaterial.uniforms.midFreq.value = 0.4 + Math.cos(time * 0.7) * 0.3;
+        shaderMaterial.uniforms.highFreq.value = 0.25 + Math.sin(time * 1.2) * 0.2;
+        shaderMaterial.uniforms.transitionFactor.value = 1.0; // Keep bands fully visible
       }
       
       renderer.render(scene, camera);
