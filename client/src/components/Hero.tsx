@@ -74,8 +74,8 @@ export const Hero = () => {
                 <div className="w-16 h-16 neo-brutalist bg-black flex items-center justify-center mb-6 mx-auto transform -rotate-12">
                   <Globe strokeWidth={2.5} size={32} className="text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-ink mb-4 uppercase">Borderless Payments</h3>
-                <p className="text-ink font-normal leading-relaxed">Seamless global transactions without traditional banking limitations or borders.</p>
+                <h3 className="text-xl font-black text-black mb-4 uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>Borderless Payments</h3>
+                <p className="text-black font-bold leading-relaxed">Seamless global transactions without traditional banking limitations or borders.</p>
               </div>
             </div>
           </div>

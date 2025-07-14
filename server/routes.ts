@@ -769,6 +769,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // NANDA Protocol Bridge - Main endpoint for JSON-RPC requests
+  app.post("/api/nanda", async (req, res) => {
+    try {
+      const { path } = req.body;
+      
+      // Handle discover agents request from the frontend
+      if (path && path.includes('/discover')) {
+        const url = new URL(`http://dummy.com${path}`);
+        const capability = url.searchParams.get('cap');
+        
+        // Return the same mock agents as /api/nanda/agents
+        const mockAgents = [
+          {
+            id: "globalsocial-001", 
+            name: "GlobalSocial Trust Network",
+            tagline: "Our local agent.",
+            description: "Social trust network platform with AI agents, payment escrow, and logistics coordination for seamless travel commerce.",
+            capabilities: ["social_commerce", "trust_escrow", "peer_delivery", "travel_logistics", "multi_agent_orchestration"],
+            status: "active",
+            version: "1.0.0",
+            endpoint: `${req.protocol}://${req.get('host')}/api/agents`,
+            region: "Global",
+            performance_score: 95.0,
+            last_updated: new Date().toISOString(),
+            highlighted: true,
+            icon: "globe-2"
+          },
+          {
+            id: "agent-001",
+            name: "TrustPay Orchestrator",
+            tagline: "Escrow-driven global payments.",
+            description: "Advanced AI payment orchestrator for secure cross-border transactions with intelligent trust scoring.",
+            capabilities: ["payment_escrow", "trust_scoring", "risk_assessment", "transaction_monitoring"],
+            status: "active",
+            version: "2.1.3",
+            endpoint: "https://trustpay-orchestrator.nanda.ai/api/v1",
+            region: "Global",
+            performance_score: 98.2,
+            last_updated: "2024-01-14T16:45:00Z",
+            icon: "lock-keyhole"
+          },
+          {
+            id: "agent-002", 
+            name: "GlobeGuides™ Concierge",
+            tagline: "Ultra-personalized local curation.",
+            description: "AI-powered travel concierge providing hyper-local recommendations through social commerce integration.",
+            capabilities: ["travel_curation", "local_discovery", "social_commerce", "personalization"],
+            status: "active",
+            version: "1.9.5",
+            endpoint: "https://globeguides-concierge.nanda.ai/api/v1",
+            region: "Global", 
+            performance_score: 96.8,
+            last_updated: "2024-01-14T12:15:00Z",
+            icon: "globe-2"
+          },
+          {
+            id: "agent-003",
+            name: "LocaleLens AI", 
+            tagline: "Hidden gems via social proof.",
+            description: "Discovers authentic local experiences through community data analysis and social validation.",
+            capabilities: ["local_discovery", "social_analysis", "experience_curation", "cultural_insights"],
+            status: "active",
+            version: "1.8.2",
+            endpoint: "https://localelens-ai.nanda.ai/api/v1",
+            region: "Global",
+            performance_score: 94.7,
+            last_updated: "2024-01-13T09:20:00Z",
+            icon: "search-check"
+          },
+          {
+            id: "agent-004",
+            name: "PathSync Social Logistics",
+            tagline: "Crowd-sourced delivery network.",
+            description: "Coordinates peer-to-peer delivery through trusted traveler networks and social logistics.",
+            capabilities: ["peer_delivery", "route_optimization", "traveler_matching", "logistics_coordination"],
+            status: "active",
+            version: "2.0.1", 
+            endpoint: "https://pathsync-logistics.nanda.ai/api/v1",
+            region: "Global",
+            performance_score: 92.8,
+            last_updated: "2024-01-12T14:30:00Z",
+            icon: "navigation-2"
+          }
+        ];
+
+        return res.json(mockAgents);
+      }
+      
+      // Handle other NANDA bridge requests  
+      const { nandaBridge } = await import('./nanda-bridge');
+      await nandaBridge.handleNANDARequest(req, res);
+      
+    } catch (error) {
+      console.error("NANDA API error:", error);
+      res.status(500).json({ 
+        error: "NANDA API request failed",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // NANDA Phase 2: Heartbeat API
   app.post("/api/nanda/heartbeat", async (req, res) => {
     try {
