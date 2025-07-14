@@ -61,15 +61,15 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
         transitionFactor: { value: 0 },
         kickEnergy: { value: 0 },
         bounceEffect: { value: 0 },
-        // Color uniforms
-        bgColorDown: { value: new THREE.Vector3(0.16, 0.08, 0.04) },
-        bgColorUp: { value: new THREE.Vector3(0.08, 0.04, 0.02) },
-        color1In: { value: new THREE.Vector3(1.0, 0.78, 0.0) },
-        color1Out: { value: new THREE.Vector3(1.0, 0.39, 0.0) },
-        color2In: { value: new THREE.Vector3(1.0, 0.39, 0.39) },
-        color2Out: { value: new THREE.Vector3(0.78, 0.20, 0.20) },
-        color3In: { value: new THREE.Vector3(1.0, 0.59, 0.20) },
-        color3Out: { value: new THREE.Vector3(0.78, 0.39, 0.0) },
+        // Enhanced Color uniforms for more vibrant personal space
+        bgColorDown: { value: new THREE.Vector3(0.05, 0.02, 0.15) }, // Deep space blue
+        bgColorUp: { value: new THREE.Vector3(0.02, 0.01, 0.08) }, // Darker purple
+        color1In: { value: new THREE.Vector3(0.0, 1.0, 1.0) }, // Bright cyan
+        color1Out: { value: new THREE.Vector3(0.0, 0.8, 1.0) }, // Electric blue
+        color2In: { value: new THREE.Vector3(1.0, 0.2, 0.8) }, // Hot pink
+        color2Out: { value: new THREE.Vector3(0.8, 0.0, 0.6) }, // Deep magenta
+        color3In: { value: new THREE.Vector3(1.0, 0.8, 0.0) }, // Gold
+        color3Out: { value: new THREE.Vector3(1.0, 0.4, 0.0) }, // Orange
         // Animation uniforms
         baseSpeed: { value: 1.0 },
         lineThickness: { value: 1.8 },
@@ -184,13 +184,18 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
       shaderMaterial.uniforms.iTime.value = performance.now() * 0.001;
       shaderMaterial.uniforms.iMouse.value.set(mouse.x, mouse.y);
       
-      // Add subtle default animation even without audio
+      // Add engaging default animation even without audio
       const time = performance.now() * 0.001;
       if (!isPlaying) {
-        shaderMaterial.uniforms.lowFreq.value = 0.1 + Math.sin(time * 0.5) * 0.05;
-        shaderMaterial.uniforms.midFreq.value = 0.08 + Math.cos(time * 0.7) * 0.04;
-        shaderMaterial.uniforms.highFreq.value = 0.06 + Math.sin(time * 1.2) * 0.03;
-        shaderMaterial.uniforms.transitionFactor.value = 0.3;
+        // More dynamic default animation that responds to mouse
+        const mouseDistance = Math.sqrt((mouse.x - 0.5) ** 2 + (mouse.y - 0.5) ** 2);
+        const mouseInfluence = Math.min(mouseDistance * 2, 1);
+        
+        shaderMaterial.uniforms.lowFreq.value = 0.15 + Math.sin(time * 0.8) * 0.1 + mouseInfluence * 0.2;
+        shaderMaterial.uniforms.midFreq.value = 0.12 + Math.cos(time * 1.1) * 0.08 + mouseInfluence * 0.15;
+        shaderMaterial.uniforms.highFreq.value = 0.08 + Math.sin(time * 1.5) * 0.06 + mouseInfluence * 0.1;
+        shaderMaterial.uniforms.transitionFactor.value = 0.5 + mouseInfluence * 0.3;
+        shaderMaterial.uniforms.kickEnergy.value = Math.sin(time * 2) * 0.3 + mouseInfluence * 0.4;
       }
       
       renderer.render(scene, camera);
@@ -308,23 +313,23 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
       
       {/* Main Content */}
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-8">
-        {/* International Citizen Label */}
-        <div className="mb-4">
+        {/* Welcome Message - Animated */}
+        <div className="mb-6 animate-pulse">
           <p 
-            className="text-lg font-bold text-white uppercase tracking-[4px] opacity-80"
+            className="text-lg font-bold text-cyan-400 uppercase tracking-[4px] opacity-90"
             style={{ fontFamily: 'Bebas Neue, sans-serif' }}
           >
-            INTERNATIONAL CITIZEN
+            WELCOME BACK, INTERNATIONAL CITIZEN
           </p>
         </div>
         
-        {/* User Name - Main Title */}
+        {/* User Name - Main Title with Glow Effect */}
         <div className="mb-8">
           <h1 
-            className="text-6xl md:text-8xl font-black text-white uppercase tracking-tight"
+            className="text-6xl md:text-8xl font-black text-white uppercase tracking-tight hover:text-cyan-300 transition-colors duration-500"
             style={{ 
               fontFamily: 'Bebas Neue, sans-serif',
-              textShadow: '4px 4px 0px rgba(0,0,0,0.8)',
+              textShadow: '4px 4px 0px rgba(0,0,0,0.8), 0 0 30px rgba(0,255,255,0.3)',
               letterSpacing: '-0.02em'
             }}
           >
@@ -332,37 +337,84 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
           </h1>
         </div>
         
-        {/* Subtitle */}
-        <div className="mb-12">
+        {/* Personal Status Line */}
+        <div className="mb-8">
           <p 
-            className="text-xl font-bold text-gray-300 max-w-2xl mx-auto"
+            className="text-xl font-bold text-yellow-300 max-w-2xl mx-auto animate-bounce"
             style={{ fontFamily: 'Roboto Mono, monospace' }}
           >
-            Connect • Trust • Explore • Trade
+            Your Digital Command Center • Ready for Action
           </p>
         </div>
         
-        {/* Music Controls */}
-        <div className="flex flex-col items-center space-y-4">
-          <button
-            onClick={togglePlayback}
-            className={`neo-brutalist px-8 py-4 font-black uppercase text-lg hover:scale-105 transition-all duration-150 ${
-              isPlaying 
-                ? 'bg-red-500 text-white animate-pulse' 
-                : 'bg-white text-black'
-            }`}
-            style={{ fontFamily: 'Bebas Neue, sans-serif' }}
-          >
-            {isPlaying ? '⏸ PAUSE EXPERIENCE' : '▶ START EXPERIENCE'}
-          </button>
-          
-          {/* Status Indicator */}
+        {/* Live Stats */}
+        <div className="mb-12 grid grid-cols-3 gap-4 max-w-md mx-auto">
           <div className="text-center">
+            <div className="text-2xl font-black text-green-400" style={{ fontFamily: 'Bebas Neue, sans-serif' }}>
+              {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+            </div>
+            <div className="text-xs text-gray-400 font-bold" style={{ fontFamily: 'Roboto Mono, monospace' }}>
+              LOCAL TIME
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-black text-purple-400" style={{ fontFamily: 'Bebas Neue, sans-serif' }}>
+              LIVE
+            </div>
+            <div className="text-xs text-gray-400 font-bold" style={{ fontFamily: 'Roboto Mono, monospace' }}>
+              STATUS
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-black text-orange-400" style={{ fontFamily: 'Bebas Neue, sans-serif' }}>
+              {Math.floor(Math.random() * 99) + 1}%
+            </div>
+            <div className="text-xs text-gray-400 font-bold" style={{ fontFamily: 'Roboto Mono, monospace' }}>
+              ENERGY
+            </div>
+          </div>
+        </div>
+        
+        {/* Enhanced Music Controls */}
+        <div className="flex flex-col items-center space-y-6">
+          <div className="flex flex-col items-center space-y-3">
+            <button
+              onClick={togglePlayback}
+              className={`neo-brutalist px-12 py-6 font-black uppercase text-xl hover:scale-110 transition-all duration-200 transform ${
+                isPlaying 
+                  ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white animate-pulse shadow-lg shadow-red-500/50' 
+                  : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-black hover:from-yellow-400 hover:to-orange-500 shadow-lg shadow-cyan-500/50'
+              }`}
+              style={{ 
+                fontFamily: 'Bebas Neue, sans-serif',
+                textShadow: isPlaying ? '0 0 10px rgba(255,255,255,0.5)' : 'none'
+              }}
+            >
+              {isPlaying ? '⏸ EXPERIENCING NOW' : '🚀 LAUNCH YOUR SPACE'}
+            </button>
+            
+            {/* Ambient Mode Button */}
+            <button
+              className="neo-brutalist bg-purple-600 text-white px-6 py-2 font-bold uppercase text-sm hover:scale-105 transition-all duration-150 opacity-80 hover:opacity-100"
+              style={{ fontFamily: 'Bebas Neue, sans-serif' }}
+            >
+              🌌 AMBIENT MODE
+            </button>
+          </div>
+          
+          {/* Interactive Status */}
+          <div className="text-center space-y-2">
             <p 
-              className={`text-sm font-bold ${isPlaying ? 'text-green-400' : 'text-gray-400'}`}
+              className={`text-lg font-bold ${isPlaying ? 'text-green-400 animate-pulse' : 'text-cyan-300'}`}
               style={{ fontFamily: 'Roboto Mono, monospace' }}
             >
-              {isPlaying ? '🎵 EXPERIENCE ACTIVE' : '💫 MOVE MOUSE TO INTERACT'}
+              {isPlaying ? '🎵 YOUR UNIVERSE IS ALIVE' : '✨ MOVE MOUSE • EXPLORE YOUR REALM'}
+            </p>
+            <p 
+              className="text-sm text-gray-400 font-bold"
+              style={{ fontFamily: 'Roboto Mono, monospace' }}
+            >
+              This is your personal digital sanctuary
             </p>
           </div>
           
@@ -373,9 +425,26 @@ export const MusicReactiveHero = ({ className = '' }: MusicReactiveHeroProps) =>
             className="hidden"
             crossOrigin="anonymous"
           >
-            {/* Fallback to a simple tone generator */}
+            {/* Ambient space music */}
+            <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.wav" type="audio/wav" />
             <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaBCmBzvLZiTkgEmO070+fEElBn+DHfiEFIXLB7duVQgwRXrfv65lOEAw=" type="audio/wav" />
           </audio>
+          
+          {/* Floating Particles Effect */}
+          <div className="absolute inset-0 pointer-events-none">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-2 h-2 bg-cyan-400 rounded-full opacity-60 animate-ping"
+                style={{
+                  left: `${20 + i * 15}%`,
+                  top: `${30 + (i % 3) * 20}%`,
+                  animationDelay: `${i * 0.5}s`,
+                  animationDuration: `${2 + i * 0.3}s`
+                }}
+              />
+            ))}
+          </div>
         </div>
       </div>
       
