@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { SharedProductDiscovery } from "./shared/ProductDiscovery";
 import { SharedTrustPayment } from "./shared/TrustPayment";
 import { PathSyncLogistics } from "./PathSyncLogistics";
@@ -59,6 +62,7 @@ export const DemoFlow = () => {
   const [escrowTransactionId, setEscrowTransactionId] = useState<string>('');
   const { toast } = useToast();
   const { processFile, isProcessing } = usePDFProcessor();
+  const [, setLocation] = useLocation();
 
   const handleFileProcess = async (file: File) => {
     const processedItinerary = await processFile(file);
@@ -153,6 +157,21 @@ export const DemoFlow = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
+      {/* Navigation Back to Main App */}
+      <div className="flex items-center space-x-4 mb-6">
+        <Button 
+          variant="outline" 
+          onClick={() => setLocation('/')}
+          className="neo-brutalist bg-white hover:bg-gray-100"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to App
+        </Button>
+        <h1 className="text-2xl font-bold text-black uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
+          Demo Flow Experience
+        </h1>
+      </div>
+
       <DemoProgressHeader currentStep={currentStep} />
 
       {currentStep === 0 && (

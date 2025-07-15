@@ -2,13 +2,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, MapPin, Compass, ArrowRight } from "lucide-react";
+import { Upload, FileText, MapPin, Compass, ArrowRight, ArrowLeft } from "lucide-react";
+import { useLocation } from "wouter";
 import { WorkflowExperience } from "@/components/WorkflowExperience";
 import { LocaleLensDemo } from "@/components/LocaleLensDemo";
 import { AgentTorchDemo } from "@/components/AgentTorchDemo";
 
 export default function Demo() {
   const [selectedDemo, setSelectedDemo] = useState<'overview' | 'workflow' | 'localelens' | 'agenttorch'>('overview');
+  const [, setLocation] = useLocation();
 
   const demoCards = [
     {
@@ -41,15 +43,26 @@ export default function Demo() {
     <div className="min-h-screen bg-gray-100" style={{ fontFamily: 'Roboto Mono, monospace' }}>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-black text-black mb-4 uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
-              AI Agent Demo Platform
-            </h1>
-            <p className="text-lg text-black font-bold max-w-3xl mx-auto">
-              Experience the complete agentic workflow: PDF processing, real-time local discovery, 
-              and crowd intelligence for travel commerce.
-            </p>
+          {/* Navigation */}
+          <div className="flex items-center justify-between mb-8">
+            <Button 
+              variant="outline" 
+              onClick={() => setLocation('/')}
+              className="neo-brutalist bg-white hover:bg-gray-100"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to App
+            </Button>
+            <div className="flex-1 text-center">
+              <h1 className="text-4xl font-black text-black mb-2 uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
+                AI Agent Demo Platform
+              </h1>
+              <p className="text-lg text-black font-bold max-w-3xl mx-auto">
+                Experience the complete agentic workflow: PDF processing, real-time local discovery, 
+                and crowd intelligence for travel commerce.
+              </p>
+            </div>
+            <div className="w-32"></div> {/* Spacer for centering */}
           </div>
 
           {/* Demo Selection */}
