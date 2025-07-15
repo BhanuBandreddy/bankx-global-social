@@ -50,7 +50,7 @@ export const LeftSideMenu = ({ activeTab, onTabChange }: LeftSideMenuProps) => {
               NAVIGATION
             </h3>
           )}
-          <div className="space-y-2">
+          <div className="space-y-4">
             {menuItems.map((item) => (
               <button
                 key={item.id}

@@ -6,16 +6,14 @@ import { Hero } from "@/components/Hero";
 import { SocialFeed } from "@/components/SocialFeed";
 import { TrustMetrics } from "@/components/TrustMetrics";
 import { AgentDashboard } from "@/components/AgentDashboard";
-import { ChatSidebar } from "@/components/ChatSidebar";
+import { BlinkChatPanel } from "@/components/BlinkChatPanel";
 import { LeftSideMenu } from "@/components/LeftSideMenu";
 import { CustomIcons } from "@/components/CustomIcons";
 import { Button } from "@/components/ui/button";
-import { MessageSquare } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("feed");
-  const [isChatOpen, setIsChatOpen] = useState(false);
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -78,50 +76,41 @@ const Index = () => {
             </div>
 
             {/* Content Based on Active Tab */}
-            <div className={`relative transition-all duration-300 ${isChatOpen ? 'mr-96' : ''}`}>
-              {activeTab === "feed" && <SocialFeed />}
-              {activeTab === "agents" && <AgentDashboard />}
-              {activeTab === "trust" && <TrustMetrics />}
-              {activeTab === "travelers" && (
-                <div className="text-center py-12">
-                  <div className="neo-brutalist bg-white p-8 max-w-2xl mx-auto">
-                    <h2 className="text-3xl font-black text-black mb-4 uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
-                      Traveler Connections
-                    </h2>
-                    <p className="text-black font-bold mb-8">Interactive 3D map to discover travelers coming to any city worldwide</p>
-                    <Button 
-                      onClick={() => navigate('/traveler-world-map')}
-                      className="neo-brutalist bg-lime-400 text-black hover:bg-lime-500 px-8 py-4 font-black uppercase"
-                      style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}
-                    >
-                      🌍 Launch 3D Map
-                    </Button>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Main Content Area */}
+              <div className="lg:col-span-2">
+                {activeTab === "feed" && <SocialFeed />}
+                {activeTab === "agents" && <AgentDashboard />}
+                {activeTab === "trust" && <TrustMetrics />}
+                {activeTab === "travelers" && (
+                  <div className="text-center py-12">
+                    <div className="neo-brutalist bg-white p-8">
+                      <h2 className="text-3xl font-black text-black mb-4 uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
+                        Traveler Connections
+                      </h2>
+                      <p className="text-black font-bold mb-8">Interactive 3D map to discover travelers coming to any city worldwide</p>
+                      <Button 
+                        onClick={() => navigate('/traveler-world-map')}
+                        className="neo-brutalist bg-lime-400 text-black hover:bg-lime-500 px-8 py-4 font-black uppercase"
+                        style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}
+                      >
+                        🌍 Launch 3D Map
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+
+              {/* Blink Chat Panel */}
+              <div className="lg:col-span-1">
+                <BlinkChatPanel />
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Floating Blink Button */}
-      {!isChatOpen && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <Button
-            onClick={() => setIsChatOpen(true)}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 border-4 border-black shadow-[4px_4px_0px_0px_#000] font-black uppercase rounded-none"
-          >
-            <MessageSquare className="w-5 h-5 mr-2" />
-            BLINK
-          </Button>
-        </div>
-      )}
 
-      {/* Chat Sidebar */}
-      <ChatSidebar 
-        isOpen={isChatOpen} 
-        onToggle={() => setIsChatOpen(!isChatOpen)} 
-      />
     </div>
   );
 };
