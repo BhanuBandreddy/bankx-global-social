@@ -1,6 +1,5 @@
 
 import { AuthNavbar } from "./AuthNavbar";
-import { HamburgerMenu } from "./HamburgerMenu";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -25,7 +24,6 @@ export const Navbar = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <HamburgerMenu />
             <AuthNavbar />
           </div>
         </div>
