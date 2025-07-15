@@ -28,12 +28,12 @@ const Index = () => {
 
   // Handle tab navigation from hamburger menu
   useEffect(() => {
-    if (location.state?.activeTab) {
+    if (location.state?.activeTab && location.state.activeTab !== activeTab) {
       setActiveTab(location.state.activeTab);
       // Clear the state to prevent re-triggering
       window.history.replaceState({}, '', window.location.pathname);
     }
-  }, [location.state]);
+  }, [location.state, activeTab]);
 
   // Show loading while checking auth
   if (loading) {
