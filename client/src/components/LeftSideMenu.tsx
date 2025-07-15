@@ -27,9 +27,9 @@ export const LeftSideMenu = ({ activeTab, onTabChange }: LeftSideMenuProps) => {
   return (
     <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-white border-r-4 border-black h-full transition-all duration-300`} style={{ fontFamily: 'Roboto Mono, monospace' }}>
       {/* Header with Toggle */}
-      <div className="p-4 border-b-4 border-black bg-gray-100 flex items-center justify-between">
+      <div className="p-6 border-b-4 border-black bg-gray-100 flex items-center justify-between">
         {!isCollapsed && (
-          <h2 className="text-xl font-black text-black uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
+          <h2 className="text-xl font-black text-black uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '3px' }}>
             MENU
           </h2>
         )}
@@ -42,21 +42,21 @@ export const LeftSideMenu = ({ activeTab, onTabChange }: LeftSideMenuProps) => {
       </div>
 
       {/* Menu Content */}
-      <div className="p-4 space-y-6">
+      <div className="p-6 space-y-8">
         {/* Main Navigation */}
         <div>
           {!isCollapsed && (
-            <h3 className="text-sm font-black text-black uppercase mb-3" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
+            <h3 className="text-sm font-black text-black uppercase mb-5" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
               NAVIGATION
             </h3>
           )}
-          <div className="space-y-4">
+          <div className="space-y-5">
             {menuItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => onTabChange(item.id)}
                 className={`neo-brutalist w-full text-left transition-colors ${
-                  isCollapsed ? 'p-2 justify-center' : 'p-3'
+                  isCollapsed ? 'p-3 justify-center' : 'p-4'
                 } ${
                   activeTab === item.id 
                     ? 'bg-black text-white' 
@@ -69,10 +69,10 @@ export const LeftSideMenu = ({ activeTab, onTabChange }: LeftSideMenuProps) => {
                     <span className="text-lg">{item.icon}</span>
                   </div>
                 ) : (
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-4">
                     <span className="text-lg">{item.icon}</span>
                     <div>
-                      <div className="font-black text-xs uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
+                      <div className="font-black text-xs uppercase mb-1" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
                         {item.label}
                       </div>
                       <div className={`text-xs font-medium ${
@@ -91,14 +91,14 @@ export const LeftSideMenu = ({ activeTab, onTabChange }: LeftSideMenuProps) => {
         {/* Demo Flow */}
         <div>
           {!isCollapsed && (
-            <h3 className="text-sm font-black text-black uppercase mb-3" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
+            <h3 className="text-sm font-black text-black uppercase mb-5" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
               DEMO FLOW
             </h3>
           )}
           <button
             onClick={() => handleNavigation("/demo")}
             className={`neo-brutalist bg-lime-400 text-black hover:bg-lime-500 w-full text-left ${
-              isCollapsed ? 'p-2 justify-center' : 'p-3'
+              isCollapsed ? 'p-3 justify-center' : 'p-4'
             }`}
             title={isCollapsed ? "Demo Flow" : undefined}
           >
@@ -107,10 +107,10 @@ export const LeftSideMenu = ({ activeTab, onTabChange }: LeftSideMenuProps) => {
                 <span className="text-lg">🚀</span>
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-4">
                 <span className="text-lg">🚀</span>
                 <div>
-                  <div className="font-black text-xs uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
+                  <div className="font-black text-xs uppercase mb-1" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
                     DEMO FLOW
                   </div>
                   <div className="text-xs text-gray-800 font-medium">

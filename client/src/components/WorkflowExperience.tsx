@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Upload, MapPin, CreditCard, Users, Loader2, TrendingUp, TrendingDown, Minus, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 import { SharedProductDiscovery } from "./shared/ProductDiscovery";
 import { SharedTrustPayment } from "./shared/TrustPayment";
 import { PathSyncLogistics } from "./PathSyncLogistics";
@@ -133,7 +133,7 @@ export const WorkflowExperience = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
 
   const steps = [
     { id: 'upload', name: 'Upload Itinerary', agent: 'GlobeGuides™ Concierge', icon: Upload },
@@ -300,16 +300,16 @@ export const WorkflowExperience = () => {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Navigation Back to Main App */}
-      <div className="flex items-center space-x-4 mb-6">
+      <div className="flex items-center space-x-6 mb-8">
         <Button 
           variant="outline" 
-          onClick={() => setLocation('/')}
-          className="neo-brutalist bg-white hover:bg-gray-100"
+          onClick={() => navigate('/')}
+          className="neo-brutalist bg-white hover:bg-gray-100 px-6 py-3"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="w-4 h-4 mr-3" />
           Back to App
         </Button>
-        <h1 className="text-2xl font-bold text-black uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
+        <h1 className="text-2xl font-bold text-black uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '3px' }}>
           Workflow Experience
         </h1>
       </div>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { SharedProductDiscovery } from "./shared/ProductDiscovery";
@@ -62,7 +62,7 @@ export const DemoFlow = () => {
   const [escrowTransactionId, setEscrowTransactionId] = useState<string>('');
   const { toast } = useToast();
   const { processFile, isProcessing } = usePDFProcessor();
-  const [, setLocation] = useLocation();
+  const navigate = useNavigate();
 
   const handleFileProcess = async (file: File) => {
     const processedItinerary = await processFile(file);
@@ -158,16 +158,16 @@ export const DemoFlow = () => {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Navigation Back to Main App */}
-      <div className="flex items-center space-x-4 mb-6">
+      <div className="flex items-center space-x-6 mb-8">
         <Button 
           variant="outline" 
-          onClick={() => setLocation('/')}
-          className="neo-brutalist bg-white hover:bg-gray-100"
+          onClick={() => navigate('/')}
+          className="neo-brutalist bg-white hover:bg-gray-100 px-6 py-3"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="w-4 h-4 mr-3" />
           Back to App
         </Button>
-        <h1 className="text-2xl font-bold text-black uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
+        <h1 className="text-2xl font-bold text-black uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '3px' }}>
           Demo Flow Experience
         </h1>
       </div>
