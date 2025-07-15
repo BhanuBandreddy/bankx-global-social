@@ -17,158 +17,151 @@ export const HamburgerMenu = () => {
     }
   };
 
-  if (!isOpen) {
-    return (
-      <Button
-        onClick={() => setIsOpen(true)}
-        className="neo-brutalist bg-white text-black hover:bg-gray-100 p-3"
-        style={{ fontFamily: 'Roboto Mono, monospace' }}
-      >
-        <Menu size={24} strokeWidth={2.5} />
-      </Button>
-    );
-  }
-
   return (
     <>
       {/* Hamburger Button */}
       <Button
-        onClick={() => setIsOpen(false)}
+        onClick={() => setIsOpen(!isOpen)}
         className="neo-brutalist bg-white text-black hover:bg-gray-100 p-3"
         style={{ fontFamily: 'Roboto Mono, monospace' }}
       >
-        <Menu size={24} strokeWidth={2.5} />
+        {isOpen ? <X size={24} strokeWidth={2.5} /> : <Menu size={24} strokeWidth={2.5} />}
       </Button>
 
-      {/* Overlay */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
-        onClick={() => setIsOpen(false)}
-      />
+      {/* Menu Panel - Only render when open */}
+      {isOpen && (
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            onClick={() => setIsOpen(false)}
+          />
 
-      {/* Menu Panel */}
-      <div
-        className="fixed top-0 right-0 h-full w-80 bg-white border-l-4 border-black z-50"
-        style={{ fontFamily: 'Roboto Mono, monospace' }}
-      >
-        {/* Header */}
-        <div className="p-6 border-b-4 border-black bg-gray-100">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-black text-black uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
-              MENU
-            </h2>
-            <Button
-              onClick={() => setIsOpen(false)}
-              className="neo-brutalist bg-white text-black hover:bg-gray-100 p-2"
-            >
-              <X size={20} strokeWidth={2.5} />
-            </Button>
-          </div>
-        </div>
+          {/* Menu Panel */}
+          <div
+            className="fixed top-0 right-0 h-full w-80 bg-white border-l-4 border-black z-50"
+            style={{ fontFamily: 'Roboto Mono, monospace' }}
+          >
+            {/* Header */}
+            <div className="p-6 border-b-4 border-black bg-gray-100">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-black text-black uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
+                  MENU
+                </h2>
+                <Button
+                  onClick={() => setIsOpen(false)}
+                  className="neo-brutalist bg-white text-black hover:bg-gray-100 p-2"
+                >
+                  <X size={20} strokeWidth={2.5} />
+                </Button>
+              </div>
+            </div>
 
-        {/* Menu Content */}
-        <div className="p-6 overflow-y-auto h-full pb-20">
-          {/* Main Navigation Cards */}
-          <div className="mb-8">
-            <h3 className="text-lg font-black text-black uppercase mb-4" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
-              NAVIGATION
-            </h3>
-            <div className="space-y-4">
-              {[
-                { id: "feed", label: "Global Feed", icon: "🌐", description: "Social commerce feed" },
-                { id: "agents", label: "AI Agents", icon: <CustomIcons.Sparkle className="w-5 h-5" />, description: "NANDA agent network" },
-                { id: "trust", label: "Trust Network", icon: "🔐", description: "Trust score system" },
-                { id: "travelers", label: "Connections", icon: "✈️", description: "3D traveler discovery" },
-              ].map((item) => (
+            {/* Menu Content */}
+            <div className="p-6 overflow-y-auto h-full pb-20">
+              {/* Main Navigation Cards */}
+              <div className="mb-8">
+                <h3 className="text-lg font-black text-black uppercase mb-4" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
+                  NAVIGATION
+                </h3>
+                <div className="space-y-4">
+                  {[
+                    { id: "feed", label: "Global Feed", icon: "🌐", description: "Social commerce feed" },
+                    { id: "agents", label: "AI Agents", icon: <CustomIcons.Sparkle className="w-5 h-5" />, description: "NANDA agent network" },
+                    { id: "trust", label: "Trust Network", icon: "🔐", description: "Trust score system" },
+                    { id: "travelers", label: "Connections", icon: "✈️", description: "3D traveler discovery" },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleNavigation("/", item.id)}
+                      className="neo-brutalist bg-white text-black hover:bg-gray-100 p-4 w-full text-left block"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span className="text-xl flex items-center">
+                          {typeof item.icon === 'string' ? item.icon : item.icon}
+                        </span>
+                        <div>
+                          <div className="font-black text-sm uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
+                            {item.label}
+                          </div>
+                          <div className="text-xs text-gray-600 font-medium">
+                            {item.description}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Demo Flow */}
+              <div className="mb-8">
+                <h3 className="text-lg font-black text-black uppercase mb-4" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
+                  DEMO FLOW
+                </h3>
                 <button
-                  key={item.id}
-                  onClick={() => handleNavigation("/", item.id)}
-                  className="neo-brutalist bg-white text-black hover:bg-gray-100 p-4 w-full text-left block"
+                  onClick={() => handleNavigation("/demo")}
+                  className="neo-brutalist bg-lime-400 text-black hover:bg-lime-500 p-4 w-full text-left block"
                 >
                   <div className="flex items-center space-x-3">
-                    <span className="text-xl flex items-center">
-                      {typeof item.icon === 'string' ? item.icon : item.icon}
-                    </span>
+                    <span className="text-xl">🚀</span>
                     <div>
                       <div className="font-black text-sm uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
-                        {item.label}
+                        DEMO FLOW
                       </div>
-                      <div className="text-xs text-gray-600 font-medium">
-                        {item.description}
+                      <div className="text-xs text-gray-800 font-medium">
+                        Upload travel docs & experience AI agents
                       </div>
                     </div>
                   </div>
                 </button>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {/* Demo Flow */}
-          <div className="mb-8">
-            <h3 className="text-lg font-black text-black uppercase mb-4" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
-              DEMO FLOW
-            </h3>
-            <button
-              onClick={() => handleNavigation("/demo")}
-              className="neo-brutalist bg-lime-400 text-black hover:bg-lime-500 p-4 w-full text-left block"
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-xl">🚀</span>
-                <div>
-                  <div className="font-black text-sm uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
-                    DEMO FLOW
-                  </div>
-                  <div className="text-xs text-gray-800 font-medium">
-                    Upload travel docs & experience AI agents
-                  </div>
+              {/* Quick Actions */}
+              <div>
+                <h3 className="text-lg font-black text-black uppercase mb-4" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
+                  QUICK ACTIONS
+                </h3>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => handleNavigation("/traveler-world-map")}
+                    className="neo-brutalist bg-white text-black hover:bg-gray-100 p-3 w-full text-left block"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <span className="text-lg">🌍</span>
+                      <div>
+                        <div className="font-black text-sm uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
+                          WORLD MAP
+                        </div>
+                        <div className="text-xs text-gray-600 font-medium">
+                          3D traveler discovery
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="neo-brutalist bg-white text-black hover:bg-gray-100 p-3 w-full text-left block"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <span className="text-lg">💬</span>
+                      <div>
+                        <div className="font-black text-sm uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
+                          BLINK CHAT
+                        </div>
+                        <div className="text-xs text-gray-600 font-medium">
+                          AI conversation system
+                        </div>
+                      </div>
+                    </div>
+                  </button>
                 </div>
               </div>
-            </button>
-          </div>
-
-          {/* Quick Actions */}
-          <div>
-            <h3 className="text-lg font-black text-black uppercase mb-4" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
-              QUICK ACTIONS
-            </h3>
-            <div className="space-y-3">
-              <button
-                onClick={() => handleNavigation("/traveler-world-map")}
-                className="neo-brutalist bg-white text-black hover:bg-gray-100 p-3 w-full text-left block"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-lg">🌍</span>
-                  <div>
-                    <div className="font-black text-sm uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
-                      WORLD MAP
-                    </div>
-                    <div className="text-xs text-gray-600 font-medium">
-                      3D traveler discovery
-                    </div>
-                  </div>
-                </div>
-              </button>
-              
-              <button
-                onClick={() => handleNavigation("/", "feed")}
-                className="neo-brutalist bg-white text-black hover:bg-gray-100 p-3 w-full text-left block"
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="text-lg">💬</span>
-                  <div>
-                    <div className="font-black text-sm uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
-                      BLINK CHAT
-                    </div>
-                    <div className="text-xs text-gray-600 font-medium">
-                      AI conversation system
-                    </div>
-                  </div>
-                </div>
-              </button>
             </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </>
   );
 };

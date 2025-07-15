@@ -37,15 +37,7 @@ export const Hero = () => {
             </button>
           </div>
 
-          {/* Demo Flow pill moved from navbar */}
-          <div className="mb-16">
-            <button
-              onClick={() => navigate("/demo")}
-              className="bg-accent text-white rounded-full px-3 py-1 text-sm font-medium hover:bg-accent/90 transition-colors focus-ring"
-            >
-              DEMO FLOW
-            </button>
-          </div>
+
 
           {/* Key Features */}
           <div className="grid md:grid-cols-3 gap-8 mt-16">
