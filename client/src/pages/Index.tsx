@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("feed");
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -53,7 +53,7 @@ const Index = () => {
       <Navbar />
       
       {/* Music Reactive Hero Section */}
-      <MusicReactiveHero userName={user?.name || "Welcome"} />
+      <MusicReactiveHero userName={user?.fullName || user?.email?.split('@')[0]?.toUpperCase() || "WELCOME"} />
       
       {/* Main Content with Left Menu */}
       <div className="flex h-screen">
