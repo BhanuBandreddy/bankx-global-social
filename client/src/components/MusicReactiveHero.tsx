@@ -237,37 +237,46 @@ export default function MusicReactiveHero({ userName }: Props) {
     audio.loop = true;
 
     playBtn.onclick = async () => {
-      if (!playing) {
-        if (!ctx) {
-          ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-          analyser = ctx.createAnalyser();
-          analyser.fftSize = 512; // Reduced from 1024 for better performance
-          analyser.smoothingTimeConstant = 0.8; // Smooth out audio data
-          dataArray = new Uint8Array(analyser.frequencyBinCount);
-          source = ctx.createMediaElementSource(audio);
-          source.connect(analyser);
-          analyser.connect(ctx.destination);
+      try {
+        if (!playing) {
+          if (!ctx) {
+            ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            analyser = ctx.createAnalyser();
+            analyser.fftSize = 512; // Reduced from 1024 for better performance
+            analyser.smoothingTimeConstant = 0.8; // Smooth out audio data
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+            source = ctx.createMediaElementSource(audio);
+            source.connect(analyser);
+            analyser.connect(ctx.destination);
+          }
+          await ctx.resume();
+          await audio.play();
+          playBtn.textContent = "STOP";
+          playing = true;
+          uniforms.isPlaying.value = true;
+          audioStartedAt = performance.now();
+        } else {
+          audio.pause();
+          playBtn.textContent = "PLAY";
+          playing = false;
+          uniforms.isPlaying.value = false;
         }
-        await ctx.resume();
-        await audio.play();
-        playBtn.textContent = "STOP";
-        playing = true;
-        uniforms.isPlaying.value = true;
-        audioStartedAt = performance.now();
-      } else {
-        audio.pause();
-        playBtn.textContent = "PLAY";
-        playing = false;
-        uniforms.isPlaying.value = false;
+      } catch (error) {
+        console.log("Audio playback error (non-critical):", error);
+        // Gracefully handle audio errors without breaking the visualization
       }
     };
     input.onchange = (e: any) => {
-      const file = e.target.files && e.target.files[0];
-      if (file) {
-        const url = URL.createObjectURL(file);
-        audio.src = url;
-        audio.play().catch(() => {});
-        if (!playing) playBtn.click();
+      try {
+        const file = e.target.files && e.target.files[0];
+        if (file) {
+          const url = URL.createObjectURL(file);
+          audio.src = url;
+          audio.play().catch(() => {});
+          if (!playing) playBtn.click();
+        }
+      } catch (error) {
+        console.log("File upload error (non-critical):", error);
       }
     };
 
@@ -285,11 +294,15 @@ export default function MusicReactiveHero({ userName }: Props) {
 
     // Performance optimization: pause when not visible
     const handleVisibilityChange = () => {
-      isVisible = !document.hidden;
-      if (!isVisible && ctx) {
-        ctx.suspend(); // Pause audio context when tab not visible
-      } else if (isVisible && ctx && playing) {
-        ctx.resume(); // Resume when tab becomes visible
+      try {
+        isVisible = !document.hidden;
+        if (!isVisible && ctx) {
+          ctx.suspend().catch(() => {}); // Pause audio context when tab not visible
+        } else if (isVisible && ctx && playing) {
+          ctx.resume().catch(() => {}); // Resume when tab becomes visible
+        }
+      } catch (error) {
+        console.log("Visibility change error (non-critical):", error);
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
