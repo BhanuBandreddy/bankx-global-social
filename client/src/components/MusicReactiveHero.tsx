@@ -82,14 +82,21 @@ export default function MusicReactiveHero({ userName }: Props) {
     });
     mount.appendChild(fpsDiv);
 
-    // ===== Three.js Scene Setup =====
-    const width = mount.offsetWidth || window.innerWidth;
-    const height = mount.offsetHeight || 700;
+    // ===== Three.js Scene Setup (Optimized) =====
+    const width = Math.min(mount.offsetWidth || window.innerWidth, 1920); // Cap resolution
+    const height = Math.min(mount.offsetHeight || 700, 1080);
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: false, // Disable antialiasing for performance
+      alpha: false,
+      powerPreference: "high-performance",
+      stencil: false,
+      depth: false
+    });
     renderer.setSize(width, height);
     renderer.setClearColor(0x111111, 1);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Cap pixel ratio
     const canvas = renderer.domElement;
     Object.assign(canvas.style, {
       position: "absolute", top: "0", left: "0", width: "100%", height: "100%", zIndex: "1"
@@ -221,7 +228,7 @@ export default function MusicReactiveHero({ userName }: Props) {
     const mesh = new THREE.Mesh(geometry, shaderMat);
     scene.add(mesh);
 
-    // ======= Audio Setup (matches CodePen) =======
+    // ======= Audio Setup (Optimized) =======
     let analyserNode: AnalyserNode, source: MediaElementAudioSourceNode, dataArray: Uint8Array;
     const audio = new window.Audio();
     audio.crossOrigin = "anonymous";
@@ -234,7 +241,8 @@ export default function MusicReactiveHero({ userName }: Props) {
         if (!ctx) {
           ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
           analyser = ctx.createAnalyser();
-          analyser.fftSize = 1024;
+          analyser.fftSize = 512; // Reduced from 1024 for better performance
+          analyser.smoothingTimeConstant = 0.8; // Smooth out audio data
           dataArray = new Uint8Array(analyser.frequencyBinCount);
           source = ctx.createMediaElementSource(audio);
           source.connect(analyser);
@@ -269,20 +277,45 @@ export default function MusicReactiveHero({ userName }: Props) {
       for (let i = lo; i < hi; ++i) { sum += array[i]; ++n; }
       return n ? sum / n / 255 : 0;
     }
-    let lastKickTime = 0, kickDetected = false;
-    function animate() {
+    let lastKickTime = 0, kickDetected = false, frameCount = 0;
+    const targetFPS = 30; // Reduce from 60fps to 30fps for performance
+    const frameInterval = 1000 / targetFPS;
+    let lastFrameTime = 0;
+    let isVisible = true;
+
+    // Performance optimization: pause when not visible
+    const handleVisibilityChange = () => {
+      isVisible = !document.hidden;
+      if (!isVisible && ctx) {
+        ctx.suspend(); // Pause audio context when tab not visible
+      } else if (isVisible && ctx && playing) {
+        ctx.resume(); // Resume when tab becomes visible
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    function animate(currentTime: number) {
       animationId = requestAnimationFrame(animate);
+      
+      // Skip rendering when tab is not visible
+      if (!isVisible) return;
+      
+      // Throttle to target FPS
+      if (currentTime - lastFrameTime < frameInterval) return;
+      lastFrameTime = currentTime;
+
       uniforms.iTime.value = (performance.now() - audioStartedAt) / 1000;
       uniforms.idleAnimation.value += 0.01;
 
-      if (playing && analyser && dataArray) {
+      // Only update audio analysis every 3rd frame for performance
+      if (playing && analyser && dataArray && frameCount % 3 === 0) {
         analyser.getByteFrequencyData(dataArray);
-        uniforms.lowFreq.value = getAvg(dataArray, 0, 8);
-        uniforms.midFreq.value = getAvg(dataArray, 8, 32);
-        uniforms.highFreq.value = getAvg(dataArray, 32, 128);
+        uniforms.lowFreq.value = getAvg(dataArray, 0, 4); // Reduced range
+        uniforms.midFreq.value = getAvg(dataArray, 4, 16); // Reduced range
+        uniforms.highFreq.value = getAvg(dataArray, 16, 64); // Reduced range
         
-        // Kick detection
-        const currentKick = getAvg(dataArray, 0, 4);
+        // Simplified kick detection
+        const currentKick = uniforms.lowFreq.value;
         if (currentKick > 0.5 && !kickDetected) {
           kickDetected = true;
           lastKickTime = performance.now();
@@ -295,29 +328,31 @@ export default function MusicReactiveHero({ userName }: Props) {
         const kickAge = (performance.now() - lastKickTime) / 1000;
         uniforms.kickEnergy.value = Math.max(0, uniforms.kickEnergy.value - kickAge * 2);
         
-        // Bounce effect
-        uniforms.bounceEffect.value = Math.sin(uniforms.iTime.value * 10) * uniforms.kickEnergy.value * 0.3;
+        // Simplified bounce effect
+        uniforms.bounceEffect.value = Math.sin(uniforms.iTime.value * 8) * uniforms.kickEnergy.value * 0.2;
         
-        // Transition factor (smooth transition from idle to active)
+        // Transition factor
         uniforms.transitionFactor.value = Math.min(1, uniforms.transitionFactor.value + 0.02);
-      } else {
+      } else if (!playing) {
         uniforms.transitionFactor.value = Math.max(0, uniforms.transitionFactor.value - 0.01);
       }
 
-      // FPS counter
-      if (++frame % 60 === 0) {
+      // FPS counter (less frequent updates)
+      frameCount++;
+      if (frameCount % 90 === 0) { // Update every 3 seconds at 30fps
         const now = Date.now();
-        const fps = Math.round(60000 / (now - lastFpsCheck));
-        fpsDiv.textContent = `FPS: ${fps}`;
+        const fps = Math.round(90000 / (now - lastFpsCheck));
+        fpsDiv.textContent = `FPS: ${Math.min(fps, targetFPS)}`;
         lastFpsCheck = now;
       }
 
       renderer.render(scene, camera);
     }
-    animate();
+    animate(0);
 
     // ===== Cleanup =====
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (animationId) cancelAnimationFrame(animationId);
       if (ctx) ctx.close();
       if (gui) gui.destroy();
