@@ -53,7 +53,7 @@ const Index = () => {
       <Navbar />
       
       {/* Music Reactive Hero Section */}
-      <MusicReactiveHero userName="GLOBAL SOCIAL" />
+      <MusicReactiveHero userName={user?.name || "Welcome"} />
       
       {/* Main Content with Left Menu */}
       <div className="flex h-screen">
