@@ -52,8 +52,12 @@ const Index = () => {
     <div className="min-h-screen bg-gray-100" style={{ fontFamily: 'Roboto Mono, monospace' }}>
       <Navbar />
       
-      {/* Music Reactive Hero Section */}
-      <MusicReactiveHero userName={user?.fullName || user?.email?.split('@')[0]?.toUpperCase() || "WELCOME"} />
+      {/* Music Reactive Hero Section wrapped in neobrutalist container */}
+      <div className="p-6 bg-gray-100">
+        <div className="neo-brutalist bg-white">
+          <MusicReactiveHero userName={user?.fullName || user?.email?.split('@')[0]?.toUpperCase() || "WELCOME"} />
+        </div>
+      </div>
       
       {/* Main Content with Left Menu */}
       <div className="flex h-screen">

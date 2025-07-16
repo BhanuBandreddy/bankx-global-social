@@ -21,9 +21,12 @@ export default function MusicReactiveHero({ userName }: Props) {
     mount.innerHTML = "";
     Object.assign(mount.style, {
       position: "relative",
-      width: "100vw",
+      width: "100%",
       height: "700px",
       background: "#111",
+      border: "4px solid #fff",
+      borderRadius: "0",
+      boxShadow: "8px 8px 0 #000",
     });
 
     // --- Username Overlay (large text across light ray like GLOBAL SOCIAL) ---
