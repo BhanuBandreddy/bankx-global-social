@@ -56,7 +56,7 @@ export default function MusicReactiveHero({ userName }: Props) {
     });
 
     const subtitle = document.createElement("div");
-    subtitle.textContent = "citizen internationale";
+    subtitle.textContent = "shaping a world beyond borders";
     Object.assign(subtitle.style, {
       fontWeight: "400",
       fontSize: "clamp(0.8rem, 2vw, 1.5rem)", 
