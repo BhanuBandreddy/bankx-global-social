@@ -89,9 +89,20 @@ export default function MusicReactiveHero({ userName }: Props) {
         if (response.ok) {
           const result = await response.json();
           if (result.track) {
+            const token = localStorage.getItem('auth_token');
             const trackUrl = `/api/tracks/stream`;
-            audio.src = trackUrl;
-            uploadLabel.textContent = `Loaded: ${result.track.originalName}`;
+            
+            // Fetch audio with auth headers
+            const audioResponse = await fetch(trackUrl, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (audioResponse.ok) {
+              const audioBlob = await audioResponse.blob();
+              const audioUrl = URL.createObjectURL(audioBlob);
+              audio.src = audioUrl;
+              uploadLabel.textContent = `Loaded: ${result.track.originalName}`;
+            }
           }
         }
       } catch (error) {
@@ -314,12 +325,25 @@ export default function MusicReactiveHero({ userName }: Props) {
           
           if (response.ok) {
             const result = await response.json();
-            // Use the uploaded track URL
+            // Use the uploaded track URL with auth token
+            const token = localStorage.getItem('auth_token');
             const trackUrl = `/api/tracks/stream`;
-            audio.src = trackUrl;
-            audio.play().catch(() => {});
-            if (!playing) playBtn.click();
-            uploadLabel.textContent = `Playing: ${result.track.originalName}`;
+            
+            // Set up audio with auth headers
+            const audioResponse = await fetch(trackUrl, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (audioResponse.ok) {
+              const audioBlob = await audioResponse.blob();
+              const audioUrl = URL.createObjectURL(audioBlob);
+              audio.src = audioUrl;
+              audio.play().catch(() => {});
+              if (!playing) playBtn.click();
+              uploadLabel.textContent = `Playing: ${result.track.originalName}`;
+            } else {
+              uploadLabel.textContent = "Stream failed";
+            }
           } else {
             uploadLabel.textContent = "Upload failed";
             // Fallback to local URL for immediate playback
