@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
-import { Hero } from "@/components/Hero";
+import { MusicReactiveHero } from "@/components/MusicReactiveHero";
 import { SocialFeed } from "@/components/SocialFeed";
 import { TrustMetrics } from "@/components/TrustMetrics";
 import { AgentDashboard } from "@/components/AgentDashboard";
@@ -52,8 +52,8 @@ const Index = () => {
     <div className="min-h-screen bg-gray-100" style={{ fontFamily: 'Roboto Mono, monospace' }}>
       <Navbar />
       
-      {/* Hero Section */}
-      <Hero />
+      {/* Music Reactive Hero Section */}
+      <MusicReactiveHero userName={user?.name || "Global Social"} />
       
       {/* Main Content with Left Menu */}
       <div className="flex h-screen">
