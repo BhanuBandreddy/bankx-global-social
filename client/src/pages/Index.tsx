@@ -59,14 +59,14 @@ const Index = () => {
         </div>
       </div>
       
-      {/* Main Content with Left Menu and Right Blink Panel */}
-      <div className="flex min-h-screen">
+      {/* Main Content with Left Menu */}
+      <div className="flex h-screen">
         {/* Left Side Menu */}
         <LeftSideMenu activeTab={activeTab} onTabChange={setActiveTab} />
         
-        {/* Main Content Area - Always centered */}
-        <div className="flex-1 flex justify-center">
-          <div className="w-full max-w-4xl p-6">
+        {/* Main Content Area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-6">
             {/* Current Tab Indicator */}
             <div className="mb-8 text-center">
               <div className="neo-brutalist bg-white text-black px-6 py-3 inline-block">
@@ -79,33 +79,39 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Tab Content */}
-            <div>
-              {activeTab === "feed" && <SocialFeed />}
-              {activeTab === "agents" && <AgentDashboard />}
-              {activeTab === "trust" && <TrustMetrics />}
-              {activeTab === "travelers" && (
-                <div className="text-center py-12">
-                  <div className="neo-brutalist bg-white p-8">
-                    <h2 className="text-3xl font-black text-black mb-4 uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
-                      Traveler Connections
-                    </h2>
-                    <p className="text-black font-bold mb-8">Interactive 3D map to discover travelers coming to any city worldwide</p>
-                    <Button 
-                      onClick={() => navigate('/traveler-world-map')}
-                      className="neo-brutalist bg-lime-400 text-black hover:bg-lime-500 px-8 py-4 font-black uppercase"
-                      style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}
-                    >
-                      🌍 Launch 3D Map
-                    </Button>
+            {/* Content Based on Active Tab */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Main Content Area */}
+              <div className="lg:col-span-2">
+                {activeTab === "feed" && <SocialFeed />}
+                {activeTab === "agents" && <AgentDashboard />}
+                {activeTab === "trust" && <TrustMetrics />}
+                {activeTab === "travelers" && (
+                  <div className="text-center py-12">
+                    <div className="neo-brutalist bg-white p-8">
+                      <h2 className="text-3xl font-black text-black mb-4 uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
+                        Traveler Connections
+                      </h2>
+                      <p className="text-black font-bold mb-8">Interactive 3D map to discover travelers coming to any city worldwide</p>
+                      <Button 
+                        onClick={() => navigate('/traveler-world-map')}
+                        className="neo-brutalist bg-lime-400 text-black hover:bg-lime-500 px-8 py-4 font-black uppercase"
+                        style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}
+                      >
+                        🌍 Launch 3D Map
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+
+              {/* Blink Chat Panel */}
+              <div className="lg:col-span-1">
+                <BlinkChatPanel />
+              </div>
             </div>
           </div>
         </div>
-
-
       </div>
 
 

@@ -42,7 +42,7 @@ export default function MusicReactiveHero({ userName }: Props) {
       fontFamily: "Arial, sans-serif",
       pointerEvents: "none",
       textAlign: "center",
-      whiteSpace: "normal",
+      whiteSpace: "nowrap",
     });
 
     const title = document.createElement("div");
@@ -52,11 +52,7 @@ export default function MusicReactiveHero({ userName }: Props) {
       fontSize: "clamp(3rem, 8vw, 8rem)", 
       letterSpacing: "0.1em", 
       textTransform: "uppercase",
-      marginBottom: "0.5rem",
-      lineHeight: "0.9",
-      maxWidth: "90%",
-      wordWrap: "break-word",
-      overflowWrap: "break-word"
+      marginBottom: "0.5rem"
     });
 
     const subtitle = document.createElement("div");

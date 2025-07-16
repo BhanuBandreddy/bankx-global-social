@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { CustomIcons } from "./CustomIcons";
-import { ChevronLeft, ChevronRight, MessageSquare } from "lucide-react";
-import { BlinkChatPanel } from "./BlinkChatPanel";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface LeftSideMenuProps {
   activeTab: string;
@@ -12,7 +11,6 @@ interface LeftSideMenuProps {
 
 export const LeftSideMenu = ({ activeTab, onTabChange }: LeftSideMenuProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isBlinkOpen, setIsBlinkOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleNavigation = (path: string) => {
@@ -90,46 +88,6 @@ export const LeftSideMenu = ({ activeTab, onTabChange }: LeftSideMenuProps) => {
           </div>
         </div>
 
-        {/* Blink Chat */}
-        <div>
-          {!isCollapsed && (
-            <h3 className="text-sm font-black text-black uppercase mb-5" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
-              AI ASSISTANT
-            </h3>
-          )}
-          <button
-            onClick={() => setIsBlinkOpen(!isBlinkOpen)}
-            className={`neo-brutalist w-full text-left transition-colors ${
-              isCollapsed ? 'p-3 justify-center' : 'p-4'
-            } ${
-              isBlinkOpen 
-                ? 'bg-cyan-400 text-black' 
-                : 'bg-white text-black hover:bg-gray-100'
-            }`}
-            title={isCollapsed ? "Blink Chat" : undefined}
-          >
-            {isCollapsed ? (
-              <div className="flex justify-center">
-                <MessageSquare size={18} strokeWidth={2.5} />
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <MessageSquare size={18} strokeWidth={2.5} />
-                <div>
-                  <div className="font-black text-xs uppercase mb-1" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
-                    BLINK CHAT
-                  </div>
-                  <div className={`text-xs font-medium ${
-                    isBlinkOpen ? 'text-gray-800' : 'text-gray-600'
-                  }`}>
-                    AI assistant & agent orchestration
-                  </div>
-                </div>
-              </div>
-            )}
-          </button>
-        </div>
-
         {/* Demo Flow */}
         <div>
           {!isCollapsed && (
@@ -164,13 +122,6 @@ export const LeftSideMenu = ({ activeTab, onTabChange }: LeftSideMenuProps) => {
           </button>
         </div>
       </div>
-
-      {/* Expandable Blink Chat Panel */}
-      {isBlinkOpen && !isCollapsed && (
-        <div className="border-t-4 border-black bg-gray-50 h-96 overflow-hidden">
-          <BlinkChatPanel />
-        </div>
-      )}
     </div>
   );
 };
