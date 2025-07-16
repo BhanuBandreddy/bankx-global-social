@@ -7,7 +7,6 @@ import { SocialFeed } from "@/components/SocialFeed";
 import { TrustMetrics } from "@/components/TrustMetrics";
 import { AgentDashboard } from "@/components/AgentDashboard";
 import { BlinkChatPanel } from "@/components/BlinkChatPanel";
-import { StableBlinkPanel } from "@/components/StableBlinkPanel";
 import { LeftSideMenu } from "@/components/LeftSideMenu";
 import { CustomIcons } from "@/components/CustomIcons";
 import { Button } from "@/components/ui/button";
@@ -106,10 +105,7 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Right Side Stable Blink Panel */}
-        <div className="w-96 flex-shrink-0">
-          <StableBlinkPanel />
-        </div>
+
       </div>
 
 
