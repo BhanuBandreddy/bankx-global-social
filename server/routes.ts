@@ -13,12 +13,16 @@ import { openaiParser } from "./openai-parser";
 import { mcpTransport } from "./mcp-transport";
 import { a2aProtocol } from "./a2a-protocol";
 import { nandaSecurity, rateLimit, validateAgentSignature, sanitizeInput, corsPolicy, validateRequestSize } from "./security-middleware";
+import tracksRouter from "./routes/tracks";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post("/api/auth/signup", signUp);
   app.post("/api/auth/signin", signIn);
   app.get("/api/auth/user", authMiddleware, getUser);
+
+  // Music tracks routes
+  app.use("/api/tracks", tracksRouter);
 
   // Global Feed API
   app.get("/api/feed", authMiddleware, async (req: AuthenticatedRequest, res) => {

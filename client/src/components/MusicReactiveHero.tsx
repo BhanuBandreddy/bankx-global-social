@@ -266,17 +266,44 @@ export default function MusicReactiveHero({ userName }: Props) {
         // Gracefully handle audio errors without breaking the visualization
       }
     };
-    input.onchange = (e: any) => {
+    input.onchange = async (e: any) => {
       try {
         const file = e.target.files && e.target.files[0];
         if (file) {
-          const url = URL.createObjectURL(file);
-          audio.src = url;
-          audio.play().catch(() => {});
-          if (!playing) playBtn.click();
+          // Upload file to server
+          const formData = new FormData();
+          formData.append('track', file);
+          
+          uploadLabel.textContent = "Uploading...";
+          
+          const response = await fetch('/api/tracks/upload', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: formData,
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            // Use the uploaded track URL
+            const trackUrl = `/api/tracks/stream/${result.track.id}`;
+            audio.src = trackUrl;
+            audio.play().catch(() => {});
+            if (!playing) playBtn.click();
+            uploadLabel.textContent = `Playing: ${result.track.originalName}`;
+          } else {
+            uploadLabel.textContent = "Upload failed";
+            // Fallback to local URL for immediate playback
+            const url = URL.createObjectURL(file);
+            audio.src = url;
+            audio.play().catch(() => {});
+            if (!playing) playBtn.click();
+          }
         }
       } catch (error) {
         console.log("File upload error (non-critical):", error);
+        uploadLabel.textContent = "Upload your song";
       }
     };
 
