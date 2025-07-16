@@ -82,7 +82,7 @@ export default function MusicReactiveHero({ userName }: Props) {
       try {
         const response = await fetch('/api/tracks/current', {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
           },
         });
         
@@ -307,7 +307,7 @@ export default function MusicReactiveHero({ userName }: Props) {
           const response = await fetch('/api/tracks/upload', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
             },
             body: formData,
           });
