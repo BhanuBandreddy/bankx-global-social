@@ -30,26 +30,44 @@ export default function MusicReactiveHero({ userName }: Props) {
     });
 
     // --- Username Overlay (large text across light ray like GLOBAL SOCIAL) ---
-    const title = document.createElement("div");
-    title.textContent = userName;
-    Object.assign(title.style, {
+    const titleContainer = document.createElement("div");
+    Object.assign(titleContainer.style, {
       position: "absolute", 
       left: "50%", 
       top: "50%",
       transform: "translate(-50%, -50%)",
       color: "#fff", 
-      fontWeight: "900",
-      fontSize: "clamp(3rem, 8vw, 8rem)", 
-      letterSpacing: "0.1em", 
       zIndex: "3",
       textShadow: "0 4px 16px rgba(0,0,0,0.8)", 
       fontFamily: "Arial, sans-serif",
       pointerEvents: "none",
       textAlign: "center",
       whiteSpace: "nowrap",
-      textTransform: "uppercase"
     });
-    mount.appendChild(title);
+
+    const title = document.createElement("div");
+    title.textContent = userName;
+    Object.assign(title.style, {
+      fontWeight: "900",
+      fontSize: "clamp(3rem, 8vw, 8rem)", 
+      letterSpacing: "0.1em", 
+      textTransform: "uppercase",
+      marginBottom: "0.5rem"
+    });
+
+    const subtitle = document.createElement("div");
+    subtitle.textContent = "citizen internationale";
+    Object.assign(subtitle.style, {
+      fontWeight: "400",
+      fontSize: "clamp(0.8rem, 2vw, 1.5rem)", 
+      letterSpacing: "0.05em", 
+      textTransform: "lowercase",
+      opacity: "0.8"
+    });
+
+    titleContainer.appendChild(title);
+    titleContainer.appendChild(subtitle);
+    mount.appendChild(titleContainer);
 
     // --- Compact Controls ---
     const controls = document.createElement("div");
