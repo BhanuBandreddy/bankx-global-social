@@ -77,6 +77,31 @@ export default function MusicReactiveHero({ userName }: Props) {
     uploadLabel.appendChild(input);
     controls.appendChild(uploadLabel); mount.appendChild(controls);
 
+    // Load user's current track on mount
+    const loadCurrentTrack = async () => {
+      try {
+        const response = await fetch('/api/tracks/current', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.track) {
+            const trackUrl = `/api/tracks/stream`;
+            audio.src = trackUrl;
+            uploadLabel.textContent = `Loaded: ${result.track.originalName}`;
+          }
+        }
+      } catch (error) {
+        console.log("Load current track error (non-critical):", error);
+      }
+    };
+
+    // Load current track when component mounts
+    loadCurrentTrack();
+
     const fpsDiv = document.createElement("div");
     fpsDiv.textContent = "FPS: 0";
     Object.assign(fpsDiv.style, {
@@ -269,17 +294,44 @@ export default function MusicReactiveHero({ userName }: Props) {
         // Gracefully handle audio errors without breaking the visualization
       }
     };
-    input.onchange = (e: any) => {
+    input.onchange = async (e: any) => {
       try {
         const file = e.target.files && e.target.files[0];
         if (file) {
-          const url = URL.createObjectURL(file);
-          audio.src = url;
-          audio.play().catch(() => {});
-          if (!playing) playBtn.click();
+          // Upload file to server
+          const formData = new FormData();
+          formData.append('track', file);
+          
+          uploadLabel.textContent = "Uploading...";
+          
+          const response = await fetch('/api/tracks/upload', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: formData,
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            // Use the uploaded track URL
+            const trackUrl = `/api/tracks/stream`;
+            audio.src = trackUrl;
+            audio.play().catch(() => {});
+            if (!playing) playBtn.click();
+            uploadLabel.textContent = `Playing: ${result.track.originalName}`;
+          } else {
+            uploadLabel.textContent = "Upload failed";
+            // Fallback to local URL for immediate playback
+            const url = URL.createObjectURL(file);
+            audio.src = url;
+            audio.play().catch(() => {});
+            if (!playing) playBtn.click();
+          }
         }
       } catch (error) {
         console.log("File upload error (non-critical):", error);
+        uploadLabel.textContent = "Upload your song";
       }
     };
 

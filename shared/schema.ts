@@ -342,18 +342,15 @@ export const marketplaceEscrows = pgTable("marketplace_escrows", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// User music tracks table
-export const userTracks = pgTable("user_tracks", {
+// User current track table - stores only one track per user
+export const userCurrentTrack = pgTable("user_current_track", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
   filename: text("filename").notNull(),
   originalName: text("original_name").notNull(),
   fileSize: integer("file_size").notNull(),
   mimeType: text("mime_type").notNull(),
   filePath: text("file_path").notNull(), // Path to stored file
-  duration: integer("duration"), // Duration in seconds
-  isActive: boolean("is_active").default(false), // Currently playing track
-  createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
@@ -382,13 +379,13 @@ export type InsertConnectionRequest = z.infer<typeof insertConnectionRequestSche
 export type Airport = z.infer<typeof selectAirportSchema>;
 export type InsertAirport = z.infer<typeof insertAirportSchema>;
 
-// User tracks schemas
-export const insertUserTrackSchema = createInsertSchema(userTracks);
-export const selectUserTrackSchema = createSelectSchema(userTracks);
+// User current track schemas
+export const insertUserCurrentTrackSchema = createInsertSchema(userCurrentTrack);
+export const selectUserCurrentTrackSchema = createSelectSchema(userCurrentTrack);
 
 // Marketplace types
 export type MarketplaceUser = typeof marketplaceUsers.$inferSelect;
 export type MarketplaceProduct = typeof marketplaceProducts.$inferSelect;
 export type MarketplaceTrip = typeof marketplaceTrips.$inferSelect;
-export type UserTrack = z.infer<typeof selectUserTrackSchema>;
-export type InsertUserTrack = z.infer<typeof insertUserTrackSchema>;
+export type UserCurrentTrack = z.infer<typeof selectUserCurrentTrackSchema>;
+export type InsertUserCurrentTrack = z.infer<typeof insertUserCurrentTrackSchema>;

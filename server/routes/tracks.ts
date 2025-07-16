@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { db } from '../db.js';
-import { userTracks, users } from '@shared/schema';
+import { userCurrentTrack, users } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 import { authMiddleware } from '../auth.js';
 
@@ -42,7 +42,7 @@ const upload = multer({
   }
 });
 
-// Upload a new track
+// Upload a new track (replaces existing track for user)
 router.post('/upload', authMiddleware, upload.single('track'), async (req, res) => {
   try {
     if (!req.file) {
@@ -54,15 +54,20 @@ router.post('/upload', authMiddleware, upload.single('track'), async (req, res) 
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    // Deactivate previous active track
-    await db
-      .update(userTracks)
-      .set({ isActive: false })
-      .where(eq(userTracks.userId, userId));
+    // Get existing track to delete old file
+    const [existingTrack] = await db
+      .select()
+      .from(userCurrentTrack)
+      .where(eq(userCurrentTrack.userId, userId));
 
-    // Save track info to database
+    // Delete old file if exists
+    if (existingTrack && fs.existsSync(existingTrack.filePath)) {
+      fs.unlinkSync(existingTrack.filePath);
+    }
+
+    // Upsert (insert or update) track for user
     const [track] = await db
-      .insert(userTracks)
+      .insert(userCurrentTrack)
       .values({
         userId,
         filename: req.file.filename,
@@ -70,7 +75,17 @@ router.post('/upload', authMiddleware, upload.single('track'), async (req, res) 
         fileSize: req.file.size,
         mimeType: req.file.mimetype,
         filePath: req.file.path,
-        isActive: true,
+      })
+      .onConflictDoUpdate({
+        target: userCurrentTrack.userId,
+        set: {
+          filename: req.file.filename,
+          originalName: req.file.originalname,
+          fileSize: req.file.size,
+          mimeType: req.file.mimetype,
+          filePath: req.file.path,
+          updatedAt: new Date(),
+        },
       })
       .returning();
 
@@ -81,8 +96,7 @@ router.post('/upload', authMiddleware, upload.single('track'), async (req, res) 
         originalName: track.originalName,
         fileSize: track.fileSize,
         mimeType: track.mimeType,
-        isActive: track.isActive,
-        createdAt: track.createdAt,
+        updatedAt: track.updatedAt,
       }
     });
   } catch (error) {
@@ -91,38 +105,35 @@ router.post('/upload', authMiddleware, upload.single('track'), async (req, res) 
   }
 });
 
-// Get user's tracks
-router.get('/user', authMiddleware, async (req, res) => {
+// Get user's current track
+router.get('/current', authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const tracks = await db
+    const [track] = await db
       .select({
-        id: userTracks.id,
-        originalName: userTracks.originalName,
-        fileSize: userTracks.fileSize,
-        mimeType: userTracks.mimeType,
-        isActive: userTracks.isActive,
-        createdAt: userTracks.createdAt,
+        id: userCurrentTrack.id,
+        originalName: userCurrentTrack.originalName,
+        fileSize: userCurrentTrack.fileSize,
+        mimeType: userCurrentTrack.mimeType,
+        updatedAt: userCurrentTrack.updatedAt,
       })
-      .from(userTracks)
-      .where(eq(userTracks.userId, userId))
-      .orderBy(userTracks.createdAt);
+      .from(userCurrentTrack)
+      .where(eq(userCurrentTrack.userId, userId));
 
-    res.json({ tracks });
+    res.json({ track: track || null });
   } catch (error) {
-    console.error('Get tracks error:', error);
-    res.status(500).json({ error: 'Failed to get tracks' });
+    console.error('Get current track error:', error);
+    res.status(500).json({ error: 'Failed to get current track' });
   }
 });
 
-// Stream a track file
-router.get('/stream/:trackId', authMiddleware, async (req, res) => {
+// Stream current track file
+router.get('/stream', authMiddleware, async (req, res) => {
   try {
-    const { trackId } = req.params;
     const userId = req.user?.id;
 
     if (!userId) {
@@ -131,14 +142,11 @@ router.get('/stream/:trackId', authMiddleware, async (req, res) => {
 
     const [track] = await db
       .select()
-      .from(userTracks)
-      .where(and(
-        eq(userTracks.id, trackId),
-        eq(userTracks.userId, userId)
-      ));
+      .from(userCurrentTrack)
+      .where(eq(userCurrentTrack.userId, userId));
 
     if (!track) {
-      return res.status(404).json({ error: 'Track not found' });
+      return res.status(404).json({ error: 'No current track found' });
     }
 
     if (!fs.existsSync(track.filePath)) {
@@ -177,47 +185,9 @@ router.get('/stream/:trackId', authMiddleware, async (req, res) => {
   }
 });
 
-// Set active track
-router.post('/set-active/:trackId', authMiddleware, async (req, res) => {
+// Delete current track
+router.delete('/current', authMiddleware, async (req, res) => {
   try {
-    const { trackId } = req.params;
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({ error: 'User not authenticated' });
-    }
-
-    // Deactivate all tracks for user
-    await db
-      .update(userTracks)
-      .set({ isActive: false })
-      .where(eq(userTracks.userId, userId));
-
-    // Activate selected track
-    const [track] = await db
-      .update(userTracks)
-      .set({ isActive: true })
-      .where(and(
-        eq(userTracks.id, trackId),
-        eq(userTracks.userId, userId)
-      ))
-      .returning();
-
-    if (!track) {
-      return res.status(404).json({ error: 'Track not found' });
-    }
-
-    res.json({ success: true, track });
-  } catch (error) {
-    console.error('Set active track error:', error);
-    res.status(500).json({ error: 'Failed to set active track' });
-  }
-});
-
-// Delete a track
-router.delete('/:trackId', authMiddleware, async (req, res) => {
-  try {
-    const { trackId } = req.params;
     const userId = req.user?.id;
 
     if (!userId) {
@@ -226,14 +196,11 @@ router.delete('/:trackId', authMiddleware, async (req, res) => {
 
     const [track] = await db
       .select()
-      .from(userTracks)
-      .where(and(
-        eq(userTracks.id, trackId),
-        eq(userTracks.userId, userId)
-      ));
+      .from(userCurrentTrack)
+      .where(eq(userCurrentTrack.userId, userId));
 
     if (!track) {
-      return res.status(404).json({ error: 'Track not found' });
+      return res.status(404).json({ error: 'No current track found' });
     }
 
     // Delete file from filesystem
@@ -243,17 +210,16 @@ router.delete('/:trackId', authMiddleware, async (req, res) => {
 
     // Delete from database
     await db
-      .delete(userTracks)
-      .where(and(
-        eq(userTracks.id, trackId),
-        eq(userTracks.userId, userId)
-      ));
+      .delete(userCurrentTrack)
+      .where(eq(userCurrentTrack.userId, userId));
 
     res.json({ success: true });
   } catch (error) {
-    console.error('Delete track error:', error);
-    res.status(500).json({ error: 'Failed to delete track' });
+    console.error('Delete current track error:', error);
+    res.status(500).json({ error: 'Failed to delete current track' });
   }
 });
+
+
 
 export default router;
