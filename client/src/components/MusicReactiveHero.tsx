@@ -26,28 +26,38 @@ export default function MusicReactiveHero({ userName }: Props) {
       background: "#111",
     });
 
-    // --- UI Overlay ---
+    // --- Username Overlay (positioned on light ray) ---
     const title = document.createElement("div");
     title.textContent = userName;
     Object.assign(title.style, {
-      position: "absolute", top: "40px", width: "100%",
-      textAlign: "center", color: "#fff", fontWeight: "700",
-      fontSize: "3rem", letterSpacing: "-.04em", zIndex: "10",
-      textShadow: "0 4px 16px #000c", fontFamily: "Bebas Neue, sans-serif"
+      position: "absolute", 
+      left: "50%", 
+      top: "50%",
+      transform: "translate(-50%, -80%)",
+      color: "#fff", 
+      fontWeight: "600",
+      fontSize: "2rem", 
+      letterSpacing: "-.02em", 
+      zIndex: "3",
+      textShadow: "0 2px 4px #000", 
+      fontFamily: "system-ui, sans-serif",
+      pointerEvents: "none"
     });
     mount.appendChild(title);
 
+    // --- Compact Controls ---
     const controls = document.createElement("div");
     Object.assign(controls.style, {
-      position: "absolute", top: "120px", width: "100%",
-      textAlign: "center", zIndex: "11",
+      position: "absolute", top: "36px", width: "100%",
+      display: "flex", justifyContent: "center", alignItems: "center", gap: "16px",
+      zIndex: "10",
     });
     const playBtn = document.createElement("button");
     playBtn.textContent = "PLAY";
     Object.assign(playBtn.style, {
-      background: "#fff", color: "#111", fontWeight: "700", fontFamily: "Roboto Mono, monospace",
-      borderRadius: "20px", border: "0", fontSize: "1.2rem", padding: "13px 40px",
-      margin: "0 18px 0 0", cursor: "pointer", boxShadow: "0 2px 12px #0002"
+      background: "#fff", color: "#111", fontWeight: "600", fontFamily: "Roboto Mono, monospace",
+      borderRadius: "14px", border: "0", fontSize: "1rem", padding: "8px 22px",
+      cursor: "pointer", boxShadow: "0 2px 8px #0002"
     });
     controls.appendChild(playBtn);
     const input = document.createElement("input");
@@ -55,8 +65,8 @@ export default function MusicReactiveHero({ userName }: Props) {
     const uploadLabel = document.createElement("label");
     uploadLabel.textContent = "Upload your song";
     Object.assign(uploadLabel.style, {
-      background: "#fff", color: "#111", fontWeight: "700", fontFamily: "Roboto Mono, monospace",
-      borderRadius: "20px", padding: "13px 40px", cursor: "pointer", boxShadow: "0 2px 12px #0002"
+      background: "#fff", color: "#111", fontWeight: "600", fontFamily: "Roboto Mono, monospace",
+      borderRadius: "14px", padding: "8px 22px", cursor: "pointer", boxShadow: "0 2px 8px #0002"
     });
     uploadLabel.appendChild(input);
     controls.appendChild(uploadLabel); mount.appendChild(controls);

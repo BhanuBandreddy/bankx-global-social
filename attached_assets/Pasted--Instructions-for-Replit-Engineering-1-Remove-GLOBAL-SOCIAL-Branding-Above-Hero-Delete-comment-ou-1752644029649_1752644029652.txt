@@ -1,0 +1,72 @@
+ Instructions for Replit Engineering
+1. Remove GLOBAL SOCIAL Branding Above Hero
+Delete/comment out any <div> or element above the canvas displaying “GLOBAL SOCIAL”.
+
+The user’s name will now serve as the primary overlay label.
+
+2. Shrink "PLAY" and "Upload your song" Buttons
+Update the button styles:
+
+Font size: Change from 1.2rem/1.5rem down to 1rem or 0.9rem.
+
+Padding: Change from 13px 40px to something more compact, e.g., 8px 22px.
+
+Border-radius: Adjust as needed (e.g., 14px).
+
+Reduce margins/gaps between buttons for a more modern, compact look.
+
+If using Tailwind, example:
+
+jsx
+<button className="px-6 py-2 rounded-lg text-base font-semibold">PLAY</button>
+3. Username Overlay ON the Light Ray (Like CodePen)
+Place the username label INSIDE the canvas container, not above it.
+
+Position it absolutely, centered horizontally, with top ~50% of canvas height (or slightly above the midline of the light ray—experiment visually for the best placement).
+
+Use a simple white, semi-bold font. Add light drop shadow for contrast (e.g., text-shadow: 0 2px 4px #000 or Tailwind drop-shadow).
+
+Example Vanilla React/JSX for Inside the Hero Section:
+
+jsx
+<div className="relative w-full h-[700px]">
+  <canvas /* ...the Three.js/WebGL Canvas... */ />
+  <div
+    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[80%] text-white text-2xl font-semibold drop-shadow"
+    style={{ pointerEvents: 'none', zIndex: 3 }} // so mouse can pass through
+  >
+    {userName}
+  </div>
+  {/* PLAY / UPLOAD buttons - make smaller */}
+  <div className="absolute w-full top-9 flex justify-center gap-4 z-10">
+    <button className="px-6 py-2 rounded-lg text-base font-semibold">PLAY</button>
+    <button className="px-6 py-2 rounded-lg text-base font-semibold">Upload your song</button>
+  </div>
+</div>
+Adjust top-1/2 -translate-y-[80%] as needed so that the username sits directly over the light ray (not too high/too low).
+
+4. Additional Polishing
+Remove any unneeded additional text or spacers to ensure the light ray and username are visually dominant.
+
+Always keep the username visible in front of the animation by setting a higher z-index than the canvas, but lower than the controls.
+
+5. TL;DR Checklist for Team:
+ Remove “GLOBAL SOCIAL” static label above hero.
+
+ Shrink “PLAY” and “Upload your song” controls: smaller font, tighter padding, rounded buttons.
+
+ Insert user name as a centered <div> within the hero, absolutely placed over the light ray with good contrast.
+
+ Ensure username always renders above the animation.
+
+ Final result: only the username overlays the visualization, controls are compact, no redundant branding above.
+
+If you want code changes made for you, send:
+Your current hero section React/JSX file, and
+
+(Ideally) your main layout/page source file.
+
+And I’ll return the exact up-to-date file to drop into your project.
+
+replit.com favicon
+global-social - Replit
