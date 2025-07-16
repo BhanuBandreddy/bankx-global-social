@@ -7,7 +7,7 @@ import { SocialFeed } from "@/components/SocialFeed";
 import { TrustMetrics } from "@/components/TrustMetrics";
 import { AgentDashboard } from "@/components/AgentDashboard";
 import { BlinkChatPanel } from "@/components/BlinkChatPanel";
-import { FloatingBlinkButton } from "@/components/FloatingBlinkButton";
+import { StableBlinkPanel } from "@/components/StableBlinkPanel";
 import { LeftSideMenu } from "@/components/LeftSideMenu";
 import { CustomIcons } from "@/components/CustomIcons";
 import { Button } from "@/components/ui/button";
@@ -60,7 +60,7 @@ const Index = () => {
         </div>
       </div>
       
-      {/* Main Content with Left Menu */}
+      {/* Main Content with Left Menu and Right Blink Panel */}
       <div className="flex min-h-screen">
         {/* Left Side Menu */}
         <LeftSideMenu activeTab={activeTab} onTabChange={setActiveTab} />
@@ -105,10 +105,12 @@ const Index = () => {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Floating Blink Chat Button */}
-      <FloatingBlinkButton />
+        {/* Right Side Stable Blink Panel */}
+        <div className="w-96 flex-shrink-0">
+          <StableBlinkPanel />
+        </div>
+      </div>
 
 
     </div>
