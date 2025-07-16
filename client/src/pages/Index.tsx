@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
-import { MusicReactiveHero } from "@/components/MusicReactiveHero";
+import MusicReactiveHero from "@/components/MusicReactiveHero";
 import { SocialFeed } from "@/components/SocialFeed";
 import { TrustMetrics } from "@/components/TrustMetrics";
 import { AgentDashboard } from "@/components/AgentDashboard";
@@ -53,7 +53,7 @@ const Index = () => {
       <Navbar />
       
       {/* Music Reactive Hero Section */}
-      <MusicReactiveHero userName={user?.name || "Global Social"} />
+      <MusicReactiveHero userName="GLOBAL SOCIAL" />
       
       {/* Main Content with Left Menu */}
       <div className="flex h-screen">

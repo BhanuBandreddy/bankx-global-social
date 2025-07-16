@@ -1,151 +1,182 @@
+// MusicReactiveHero.tsx
 import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { GUI } from "dat.gui";
 
-type Props = {
-  userName: string;
-};
+type Props = { userName: string };
 
-export const MusicReactiveHero: React.FC<Props> = ({ userName }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const threeRefs = useRef<any>({});
+export default function MusicReactiveHero({ userName }: Props) {
+  const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const container = containerRef.current!;
-    container.innerHTML = "";
+    let animationId: number,
+      ctx: AudioContext | undefined,
+      analyser: AnalyserNode | undefined,
+      gui: GUI | undefined,
+      playing = false,
+      audioStartedAt = 0;
+    let frame = 0, lastFpsCheck = Date.now();
 
-    // Create headline & controls overlay
-    const headline = document.createElement("div");
-    headline.textContent = userName;
-    headline.style.position = "absolute";
-    headline.style.top = "3rem";
-    headline.style.width = "100%";
-    headline.style.textAlign = "center";
-    headline.style.fontSize = "5vw";
-    headline.style.fontWeight = "bold";
-    headline.style.letterSpacing = "-.03em";
-    headline.style.color = "#fff";
-    headline.style.textShadow = "0 2px 16px #000";
-    headline.style.zIndex = "30";
-    headline.style.fontFamily = "Bebas Neue, sans-serif";
-    container.appendChild(headline);
+    const mount = mountRef.current!;
+    mount.innerHTML = "";
+    Object.assign(mount.style, {
+      position: "relative",
+      width: "100vw",
+      height: "700px",
+      background: "#111",
+    });
 
-    const controlsDiv = document.createElement("div");
-    controlsDiv.style.position = "absolute";
-    controlsDiv.style.top = "7rem";
-    controlsDiv.style.width = "100%";
-    controlsDiv.style.display = "flex";
-    controlsDiv.style.justifyContent = "center";
-    controlsDiv.style.alignItems = "center";
-    controlsDiv.style.zIndex = "31";
+    // --- UI Overlay ---
+    const title = document.createElement("div");
+    title.textContent = userName;
+    Object.assign(title.style, {
+      position: "absolute", top: "40px", width: "100%",
+      textAlign: "center", color: "#fff", fontWeight: "700",
+      fontSize: "3rem", letterSpacing: "-.04em", zIndex: "10",
+      textShadow: "0 4px 16px #000c", fontFamily: "Bebas Neue, sans-serif"
+    });
+    mount.appendChild(title);
 
-    const fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.accept = "audio/*";
-    fileInput.style.display = "none";
-    fileInputRef.current = fileInput;
-
+    const controls = document.createElement("div");
+    Object.assign(controls.style, {
+      position: "absolute", top: "120px", width: "100%",
+      textAlign: "center", zIndex: "11",
+    });
+    const playBtn = document.createElement("button");
+    playBtn.textContent = "PLAY";
+    Object.assign(playBtn.style, {
+      background: "#fff", color: "#111", fontWeight: "700", fontFamily: "Roboto Mono, monospace",
+      borderRadius: "20px", border: "0", fontSize: "1.2rem", padding: "13px 40px",
+      margin: "0 18px 0 0", cursor: "pointer", boxShadow: "0 2px 12px #0002"
+    });
+    controls.appendChild(playBtn);
+    const input = document.createElement("input");
+    input.type = "file"; input.accept = "audio/*"; input.style.display = "none";
     const uploadLabel = document.createElement("label");
     uploadLabel.textContent = "Upload your song";
-    uploadLabel.style.background = "#fff";
-    uploadLabel.style.color = "#000";
-    uploadLabel.style.fontWeight = "bold";
-    uploadLabel.style.padding = "0.7em 2em";
-    uploadLabel.style.borderRadius = "1em";
-    uploadLabel.style.cursor = "pointer";
-    uploadLabel.style.boxShadow = "0 1px 8px #2228";
-    uploadLabel.style.fontFamily = "Roboto Mono, monospace";
+    Object.assign(uploadLabel.style, {
+      background: "#fff", color: "#111", fontWeight: "700", fontFamily: "Roboto Mono, monospace",
+      borderRadius: "20px", padding: "13px 40px", cursor: "pointer", boxShadow: "0 2px 12px #0002"
+    });
+    uploadLabel.appendChild(input);
+    controls.appendChild(uploadLabel); mount.appendChild(controls);
 
-    uploadLabel.appendChild(fileInput);
-    controlsDiv.appendChild(uploadLabel);
-    container.appendChild(controlsDiv);
+    const fpsDiv = document.createElement("div");
+    fpsDiv.textContent = "FPS: 0";
+    Object.assign(fpsDiv.style, {
+      position: "absolute", top: "8px", right: "18px", color: "#fff",
+      fontSize: "15px", zIndex: "12", textShadow: "0 2px 8px #000b"
+    });
+    mount.appendChild(fpsDiv);
 
-    // Container styles
-    container.style.position = "relative";
-    container.style.width = "100vw";
-    container.style.height = "700px";
-    container.style.overflow = "hidden";
-    container.style.background = "#111";
+    // ===== Three.js Scene Setup =====
+    const width = mount.offsetWidth || window.innerWidth;
+    const height = mount.offsetHeight || 700;
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(width, height);
+    renderer.setClearColor(0x111111, 1);
+    const canvas = renderer.domElement;
+    Object.assign(canvas.style, {
+      position: "absolute", top: "0", left: "0", width: "100%", height: "100%", zIndex: "1"
+    });
+    mount.appendChild(canvas);
 
-    // Vertex shader
-    const vertexShaderSource = `
+    // ======= Shader Source =======
+    const vertexShader = `
       varying vec2 vUv;
       void main() {
         vUv = uv;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
     `;
-
-    // Fragment shader with music reactive visuals
-    const fragmentShaderSource = `
+    const fragmentShader = `
+      #define PI 3.141592653589793
       precision highp float;
       uniform vec2 iResolution;
       uniform float iTime;
-      uniform float audioData[128];
-      uniform float audioVolume;
+      uniform vec2 iMouse;
+      uniform float lowFreq, midFreq, highFreq, kickEnergy, beatPhase, bounceEffect;
+      uniform bool isPlaying, enableGrain;
+      uniform float transitionFactor, lineStraightness, idleAnimation, idleWaveHeight;
+      uniform float baseSpeed, idleSpeed, bassReactivity, midReactivity, highReactivity,
+                    kickReactivity, bounceIntensity, waveIntensity, waveComplexity,
+                    rippleIntensity, lineThickness, grainIntensity, grainSpeed,
+                    grainMean, grainVariance;
+      uniform int grainBlendMode;
+      uniform vec3 bgColorDown, bgColorUp, color1In, color1Out, color2In, color2Out, color3In, color3Out;
       varying vec2 vUv;
-
-      float hash(float n) {
-        return fract(sin(n) * 43758.5453);
+      float squared(float v) { return v * v; }
+      float smootherstep(float edge0, float edge1, float x) {
+        float t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+        return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
       }
-
-      float noise(vec2 x) {
-        vec2 p = floor(x);
-        vec2 f = fract(x);
-        f = f * f * (3.0 - 2.0 * f);
-        float n = p.x + p.y * 57.0;
-        return mix(
-          mix(hash(n + 0.0), hash(n + 1.0), f.x),
-          mix(hash(n + 57.0), hash(n + 58.0), f.x),
-          f.y
-        );
+      vec3 applyGrain(vec3 color, vec2 uv) {
+        if (!enableGrain) return color;
+        float t = iTime * grainSpeed;
+        float seed = dot(uv, vec2(12.9898, 78.233));
+        float noise = fract(sin(seed) * 43758.5453 + t);
+        noise = exp(-((noise - grainMean) * (noise - grainMean)) / (2.0 * grainVariance * grainVariance));
+        vec3 grain = vec3(noise) * (1.0 - color);
+        color += grain * grainIntensity;
+        return color;
       }
-
+      float kickRipple(vec2 uv, float energy, float time) {
+        float dist = distance(uv, vec2(0.5, 0.5));
+        float width = 0.05, speed = 1.2;
+        float ripple = smootherstep(energy * speed * time - width, energy * speed * time, dist);
+        ripple *= smootherstep(dist, dist + width, energy * speed * time + width);
+        float ripple2 = smootherstep(energy * speed * (time - 0.2) - width, energy * speed * (time - 0.2), dist);
+        ripple2 *= smootherstep(dist, dist + width, energy * speed * (time - 0.2) + width);
+        return (ripple + ripple2 * 0.5) * energy * 0.7;
+      }
       void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-        vec2 uv = fragCoord / iResolution.xy;
-        uv.x *= iResolution.x / iResolution.y;
-        
-        // Get audio data
-        float bass = (audioData[1] + audioData[2] + audioData[3]) / 3.0;
-        float mid = (audioData[32] + audioData[48] + audioData[64]) / 3.0;
-        float treble = (audioData[96] + audioData[112] + audioData[127]) / 3.0;
-        
-        // Time with audio influence
-        float t = iTime + bass * 0.5;
-        
-        // Create reactive waves
-        vec2 center = vec2(0.5, 0.5);
-        float dist = distance(uv, center);
-        
-        // Multiple wave layers influenced by audio
-        float wave1 = sin(dist * 20.0 - t * 2.0 + bass * 10.0) * 0.1;
-        float wave2 = cos(dist * 15.0 - t * 1.5 + mid * 8.0) * 0.15;
-        float wave3 = sin(dist * 10.0 - t * 3.0 + treble * 12.0) * 0.08;
-        
-        float waves = wave1 + wave2 + wave3;
-        
-        // Color based on audio frequency response
-        vec3 color = vec3(0.0);
-        color.r = 0.5 + 0.5 * sin(waves + bass * 5.0);
-        color.g = 0.3 + 0.7 * cos(waves + mid * 3.0);
-        color.b = 0.8 + 0.2 * sin(waves + treble * 7.0);
-        
-        // Add some noise for texture
-        float n = noise(uv * 100.0 + t);
-        color += n * 0.1;
-        
-        // Pulsing effect based on volume
-        color *= 0.8 + audioVolume * 0.4;
-        
-        // Vignette effect
-        float vignette = smoothstep(0.8, 0.2, dist);
-        color *= vignette;
-        
-        fragColor = vec4(color, 1.0);
+        vec2 p = fragCoord.xy / iResolution.xy;
+        vec3 bgCol = mix(bgColorDown, bgColorUp, clamp(p.y * 2.0, 0.0, 1.0));
+        float speed = mix(idleSpeed, baseSpeed, transitionFactor);
+        float ballVisibility = mix(0.8, 0.2, transitionFactor), straightnessFactor = mix(1.0, lineStraightness, transitionFactor);
+        float idleWave = idleWaveHeight * sin(p.x * 5.0 + idleAnimation * 0.2);
+        float bassPulse = squared(lowFreq) * bassReactivity * transitionFactor;
+        float midPulse = squared(midFreq) * midReactivity * transitionFactor;
+        float highPulse = squared(highFreq) * highReactivity * transitionFactor;
+        float kickPulse = squared(kickEnergy) * kickReactivity * 1.5 * transitionFactor;
+        float bounce = bounceEffect * bounceIntensity * transitionFactor;
+        float curveIntensity = mix(idleWaveHeight, 0.05 + waveIntensity * (bassPulse + kickPulse * 0.7), transitionFactor);
+        float curveSpeed = speed;
+        float curve = curveIntensity * sin((6.25 * p.x) + (curveSpeed * iTime));
+        float ripple = rippleIntensity * kickRipple(p, kickEnergy, mod(iTime, 10.0)) * transitionFactor;
+        float audioWave = mix(0.0, (0.1 * sin(p.x * 20.0 * waveComplexity) * bassPulse +
+                               0.08 * sin(p.x * 30.0 * waveComplexity) * midPulse +
+                               0.05 * sin(p.x * 50.0 * waveComplexity) * highPulse) / straightnessFactor,
+                              transitionFactor);
+        float lineAActive = 0.5 + curve + audioWave + (0.01 + 0.05 * bassPulse + 0.1 * kickPulse) / straightnessFactor * sin((40.0 * waveComplexity + 80.0 * bassPulse + 90.0 * kickPulse) * p.x + (-1.5 * speed + 6.0 * bassPulse + 6.0 * kickPulse) * iTime)
+                        + bassPulse * 0.3 * sin(p.x * 10.0 - iTime * 2.0) + kickEnergy * 0.3 * sin(15.0 * (p.x - iTime * 0.5)) * transitionFactor - bounce;
+        float lineBActive = 0.5 + curve - audioWave + (0.01 + 0.05 * midPulse) / straightnessFactor * sin((50.0 * waveComplexity + 100.0 * midPulse) * p.x + (2.0 * speed + 8.0 * midPulse) * iTime) * sin((2.0 * speed + 8.0 * midPulse) * iTime)
+                        + midPulse * 0.2 * sin(p.x * 15.0 - iTime * 1.5) + kickEnergy * 0.1 * sin(p.x * 25.0 - iTime * 3.0) * transitionFactor - bounce * 0.5;
+        float lineCActive = 0.5 + curve * 0.7 - audioWave * 0.5 + (0.01 + 0.05 * highPulse) / straightnessFactor * sin((60.0 * waveComplexity + 120.0 * highPulse) * p.x + (2.5 * speed + 10.0 * highPulse) * iTime) * sin((2.5 * speed + 10.0 * highPulse) * (iTime + 0.1))
+                          + highPulse * 0.15 * sin(p.x * 20.0 - iTime * 1.0) - bounce * 0.3;
+        float lineADist = distance(p.y, lineAActive) * (2.0 / lineThickness), lineBDist = distance(p.y, lineBActive) * (2.0 / lineThickness), lineCDist = distance(p.y, lineCActive) * (2.0 / lineThickness);
+        float lineAShape = smootherstep(1.0 - clamp(lineADist, 0.0, 1.0), 1.0, 0.99), lineBShape = smootherstep(1.0 - clamp(lineBDist, 0.0, 1.0), 1.0, 0.99), lineCShape = smootherstep(1.0 - clamp(lineCDist, 0.0, 1.0), 1.0, 0.99);
+        vec3 kickColor = vec3(1.0, 0.7, 0.3); 
+        vec3 enhancedColor1In = mix(color1In, kickColor, kickEnergy * 0.6 * transitionFactor);
+        vec3 enhancedColor1Out = mix(color1Out, vec3(1.0, 0.5, 0.0), kickEnergy * 0.4 * transitionFactor);
+        vec3 lineACol = (1.0 - lineAShape) * vec3(mix(enhancedColor1In, enhancedColor1Out, lineAShape));
+        vec3 ballACol = (1.0 - smootherstep(1.0 - clamp(distance(p, vec2(0.2, lineAActive)) * (0.5 + 0.4 * bassPulse + kickEnergy * 1.2 * transitionFactor), 0.0, 1.0), 1.0, 0.99))
+             * vec3(mix(enhancedColor1In, enhancedColor1Out, lineAShape)) * mix(1.0, ballVisibility, transitionFactor);
+        vec3 enhancedColor2In = mix(color2In, vec3(1.0, 0.5, 0.5), kickEnergy * 0.3 * transitionFactor);
+        vec3 lineBCol = (1.0 - lineBShape) * vec3(mix(enhancedColor2In, color2Out, lineBShape));
+        vec3 ballBCol = (1.0 - smootherstep(1.0 - clamp(distance(p, vec2(0.8, lineBActive)) * (0.5 + 0.4 * highPulse + kickEnergy * 0.3 * transitionFactor), 0.0, 1.0), 1.0, 0.99))
+             * vec3(mix(enhancedColor2In, color2Out, lineBShape)) * mix(1.0, ballVisibility, transitionFactor);
+        vec3 lineCCol = (1.0 - lineCShape) * vec3(mix(color3In, color3Out, lineCShape));
+        vec3 ballCCol = (1.0 - smootherstep(1.0 - clamp(distance(p, vec2(0.5, lineCActive)) * (0.5 + 0.4 * highPulse + kickEnergy * 0.1 * transitionFactor), 0.0, 1.0), 1.0, 0.99))
+               * vec3(mix(color3In, color3Out, lineCShape)) * mix(1.0, ballVisibility, transitionFactor);
+        bgCol = mix(bgCol, mix(bgCol, vec3(1.0), 0.2), kickEnergy * 0.4 * transitionFactor);
+        vec3 rippleCol = vec3(1.0, 0.8, 0.4) * ripple * transitionFactor;
+        vec3 fcolor = bgCol + lineACol + lineBCol + lineCCol + ballACol + ballBCol + ballCCol + rippleCol;
+        fcolor = applyGrain(fcolor, p);
+        fragColor = vec4(fcolor, 1.0);
       }
-
       void main() {
         vec2 fragCoord = vUv * iResolution;
         vec4 fragColor;
@@ -154,169 +185,137 @@ export const MusicReactiveHero: React.FC<Props> = ({ userName }) => {
       }
     `;
 
-    // Three.js setup
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    camera.position.z = 1;
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    renderer.setSize(container.offsetWidth, container.offsetHeight);
-    renderer.setClearColor(0x111111, 1);
-    container.appendChild(renderer.domElement);
-
-    // Uniforms for the shader
-    const audioDataArray = new Float32Array(128);
-    const uniforms = {
-      iTime: { value: 0.0 },
-      iResolution: { value: new THREE.Vector2(container.offsetWidth, container.offsetHeight) },
-      audioData: { value: audioDataArray },
-      audioVolume: { value: 0.0 }
+    // ===== Uniforms and Initial Settings =====
+    const uniforms: Record<string, any> = {
+      iResolution: { value: new THREE.Vector2(width, height) },
+      iTime: { value: 0 }, iMouse: { value: new THREE.Vector2(0.5, 0.5) },
+      lowFreq: { value: 0 }, midFreq: { value: 0 }, highFreq: { value: 0 }, kickEnergy: { value: 0 }, beatPhase: { value: 0 }, bounceEffect: { value: 0 },
+      isPlaying: { value: false }, transitionFactor: { value: 0 },
+      lineStraightness: { value: 2.53 }, idleAnimation: { value: 0 }, idleWaveHeight: { value: 0.01 },
+      baseSpeed: { value: 1.0 }, idleSpeed: { value: 0.1 },
+      bassReactivity: { value: 0.4 }, midReactivity: { value: 0.5 }, highReactivity: { value: 0.4 },
+      kickReactivity: { value: 0.6 }, bounceIntensity: { value: 0.15 },
+      waveIntensity: { value: 0.08 }, waveComplexity: { value: 2.2 }, rippleIntensity: { value: 0.25 }, lineThickness: { value: 1.8 },
+      enableGrain: { value: true }, grainIntensity: { value: 0.075 }, grainSpeed: { value: 2.0 }, grainMean: { value: 0.0 }, grainVariance: { value: 0.5 }, grainBlendMode: { value: 0 },
+      bgColorDown: { value: new THREE.Vector3(40 / 255, 20 / 255, 10 / 255) }, bgColorUp: { value: new THREE.Vector3(20 / 255, 10 / 255, 5 / 255) },
+      color1In: { value: new THREE.Vector3(255 / 255, 200 / 255, 0 / 255) }, color1Out: { value: new THREE.Vector3(255 / 255, 100 / 255, 0 / 255) },
+      color2In: { value: new THREE.Vector3(255 / 255, 100 / 255, 100 / 255) }, color2Out: { value: new THREE.Vector3(200 / 255, 50 / 255, 50 / 255) },
+      color3In: { value: new THREE.Vector3(255 / 255, 150 / 255, 50 / 255) }, color3Out: { value: new THREE.Vector3(200 / 255, 100 / 255, 0 / 255) }
     };
 
-    // Create material and mesh
-    const material = new THREE.ShaderMaterial({
-      uniforms: uniforms,
-      vertexShader: vertexShaderSource,
-      fragmentShader: fragmentShaderSource
-    });
-
+    const shaderMat = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader });
     const geometry = new THREE.PlaneGeometry(2, 2);
-    const mesh = new THREE.Mesh(geometry, material);
+    const mesh = new THREE.Mesh(geometry, shaderMat);
     scene.add(mesh);
 
-    // Audio setup
-    let audioElement = new Audio();
-    audioRef.current = audioElement;
-    audioElement.crossOrigin = "anonymous";
-    audioElement.preload = "auto";
-    audioElement.loop = true;
-    
-    // Audio context and analyzer
-    let audioContext: AudioContext | null = null;
-    let analyser: AnalyserNode | null = null;
-    let source: MediaElementAudioSourceNode | null = null;
-    let dataArray: Uint8Array | null = null;
+    // ======= Audio Setup (matches CodePen) =======
+    let analyserNode: AnalyserNode, source: MediaElementAudioSourceNode, dataArray: Uint8Array;
+    const audio = new window.Audio();
+    audio.crossOrigin = "anonymous";
+    audio.preload = "auto";
+    audio.src = "https://assets.codepen.io/7558/kosikk-slow-motion.ogg";
+    audio.loop = true;
 
-    const initAudio = () => {
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        analyser = audioContext.createAnalyser();
-        analyser.fftSize = 256;
-        dataArray = new Uint8Array(analyser.frequencyBinCount);
-        
-        source = audioContext.createMediaElementSource(audioElement);
-        source.connect(analyser);
-        analyser.connect(audioContext.destination);
+    playBtn.onclick = async () => {
+      if (!playing) {
+        if (!ctx) {
+          ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          analyser = ctx.createAnalyser();
+          analyser.fftSize = 1024;
+          dataArray = new Uint8Array(analyser.frequencyBinCount);
+          source = ctx.createMediaElementSource(audio);
+          source.connect(analyser);
+          analyser.connect(ctx.destination);
+        }
+        await ctx.resume();
+        await audio.play();
+        playBtn.textContent = "STOP";
+        playing = true;
+        uniforms.isPlaying.value = true;
+        audioStartedAt = performance.now();
+      } else {
+        audio.pause();
+        playBtn.textContent = "PLAY";
+        playing = false;
+        uniforms.isPlaying.value = false;
+      }
+    };
+    input.onchange = (e: any) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        const url = URL.createObjectURL(file);
+        audio.src = url;
+        audio.play().catch(() => {});
+        if (!playing) playBtn.click();
       }
     };
 
-    // Default audio
-    audioElement.src = "https://www.soundjay.com/misc/sounds/bell-ringing-05.wav";
+    // ===== Animation Loop & Freq Band Analysis =====
+    function getAvg(array: Uint8Array, lo: number, hi: number) {
+      let sum = 0, n = 0;
+      for (let i = lo; i < hi; ++i) { sum += array[i]; ++n; }
+      return n ? sum / n / 255 : 0;
+    }
+    let lastKickTime = 0, kickDetected = false;
+    function animate() {
+      animationId = requestAnimationFrame(animate);
+      uniforms.iTime.value = (performance.now() - audioStartedAt) / 1000;
+      uniforms.idleAnimation.value += 0.01;
 
-    // File upload handler
-    fileInput.onchange = (ev) => {
-      const files = fileInput.files;
-      if (files && files.length > 0) {
-        const objectURL = URL.createObjectURL(files[0]);
-        audioElement.src = objectURL;
-        audioElement.currentTime = 0;
-        initAudio();
-        audioElement.play().catch(console.error);
-      }
-    };
-
-    // Click to start audio
-    const startButton = document.createElement("button");
-    startButton.textContent = "▶ Start Audio";
-    startButton.style.position = "absolute";
-    startButton.style.bottom = "2rem";
-    startButton.style.left = "50%";
-    startButton.style.transform = "translateX(-50%)";
-    startButton.style.background = "#00FF88";
-    startButton.style.color = "#000";
-    startButton.style.border = "4px solid #000";
-    startButton.style.padding = "12px 24px";
-    startButton.style.fontWeight = "bold";
-    startButton.style.cursor = "pointer";
-    startButton.style.fontFamily = "Roboto Mono, monospace";
-    startButton.style.zIndex = "32";
-
-    startButton.onclick = () => {
-      initAudio();
-      audioElement.play().catch(console.error);
-      startButton.style.display = "none";
-    };
-
-    container.appendChild(startButton);
-
-    // Animation loop
-    const animate = () => {
-      requestAnimationFrame(animate);
-
-      // Update time
-      uniforms.iTime.value += 0.016;
-
-      // Update audio data
-      if (analyser && dataArray) {
+      if (playing && analyser && dataArray) {
         analyser.getByteFrequencyData(dataArray);
+        uniforms.lowFreq.value = getAvg(dataArray, 0, 8);
+        uniforms.midFreq.value = getAvg(dataArray, 8, 32);
+        uniforms.highFreq.value = getAvg(dataArray, 32, 128);
         
-        // Map to 128 values for shader
-        for (let i = 0; i < 128; i++) {
-          audioDataArray[i] = dataArray[i] / 255.0;
+        // Kick detection
+        const currentKick = getAvg(dataArray, 0, 4);
+        if (currentKick > 0.5 && !kickDetected) {
+          kickDetected = true;
+          lastKickTime = performance.now();
+          uniforms.kickEnergy.value = currentKick;
+        } else if (currentKick < 0.3) {
+          kickDetected = false;
         }
         
-        // Calculate volume
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-          sum += dataArray[i];
-        }
-        uniforms.audioVolume.value = (sum / dataArray.length) / 255.0;
+        // Kick energy decay
+        const kickAge = (performance.now() - lastKickTime) / 1000;
+        uniforms.kickEnergy.value = Math.max(0, uniforms.kickEnergy.value - kickAge * 2);
+        
+        // Bounce effect
+        uniforms.bounceEffect.value = Math.sin(uniforms.iTime.value * 10) * uniforms.kickEnergy.value * 0.3;
+        
+        // Transition factor (smooth transition from idle to active)
+        uniforms.transitionFactor.value = Math.min(1, uniforms.transitionFactor.value + 0.02);
+      } else {
+        uniforms.transitionFactor.value = Math.max(0, uniforms.transitionFactor.value - 0.01);
+      }
+
+      // FPS counter
+      if (++frame % 60 === 0) {
+        const now = Date.now();
+        const fps = Math.round(60000 / (now - lastFpsCheck));
+        fpsDiv.textContent = `FPS: ${fps}`;
+        lastFpsCheck = now;
       }
 
       renderer.render(scene, camera);
-    };
-
-    // Handle resize
-    const handleResize = () => {
-      const width = container.offsetWidth;
-      const height = container.offsetHeight;
-      renderer.setSize(width, height);
-      uniforms.iResolution.value.set(width, height);
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    // Start animation
+    }
     animate();
 
-    // Store refs for cleanup
-    threeRefs.current = {
-      renderer,
-      scene,
-      audioElement,
-      audioContext,
-      handleResize
-    };
-
-    // Cleanup
+    // ===== Cleanup =====
     return () => {
-      window.removeEventListener('resize', handleResize);
+      if (animationId) cancelAnimationFrame(animationId);
+      if (ctx) ctx.close();
+      if (gui) gui.destroy();
       renderer.dispose();
-      material.dispose();
       geometry.dispose();
-      
-      if (audioContext) {
-        audioContext.close();
-      }
-      
-      container.innerHTML = "";
+      shaderMat.dispose();
+      mount.innerHTML = "";
     };
   }, [userName]);
 
-  return (
-    <div
-      ref={containerRef}
-      className="w-full h-[700px] relative"
-      style={{ minHeight: "700px", background: "#111" }}
-    />
-  );
-};
+  return <div ref={mountRef} className="w-full h-[700px] relative" />;
+}
+
+export { MusicReactiveHero };
