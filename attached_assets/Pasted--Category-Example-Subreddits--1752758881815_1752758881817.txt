@@ -1,0 +1,10 @@
+| Category                          | Example Subreddits                                                               | Purpose                                                                          |
+| :-------------------------------- | :------------------------------------------------------------------------------- | :------------------------------------------------------------------------------- |
+| **Global Travel Advice & Safety** | r/travel, r/AskTravel, r/travelsafety, r/solotravel                              | General tips, safe neighborhoods, scam warnings, “tourist traps” to avoid        |
+| **City/Country Hubs**             | r/NewYorkCity, r/London, r/Tokyo, r/Berlin, r/Mumbai, r/Sydney                   | Local Q\&A, “best of” posts, hidden gems, meetup info                            |
+| **Grocery & Supermarket Deals**   | r/CostcoDeals, r/LidlUK, r/TescoDeals, r/Cheap\_Meals, r/Deals                   | Flash sales, member‑only steals, weekly ads from big chains and discount grocers |
+| **Small‑Batch & Artisan Goods**   | r/BuyItForLife, r/handmade, r/ArtisanVideos, r/smallbusiness                     | Handmade homewares, craft foods, niche services you won’t find on Amazon/Etsy    |
+| **Fashion & Accessories**         | r/malefashionadvice, r/femalefashionadvice, r/Streetwear, r/Sneakers             | Trending brands, streetwear drops, sneakerheads’ finds                           |
+| **Beauty & Fragrance**            | r/SkincareAddiction, r/AsianBeauty, r/BeautyDeals, r/fragrance, r/PerfumeAddicts | Best local beauty lines, deal alerts on perfumes/shampoos                        |
+| **Travel Gear & Luggage**         | r/onebag, r/travelgear, r/backpacking, r/TravelHacks                             | Carry‑on reviews, packing lists, lightweight luggage deals                       |
+| **Experiences & Local Tours**     | r/ExperienceExchange, r/UrbanExploration, r/LocalGuides                          | Peer‑to‑peer tours, hidden‑gem excursions, “off‑the‑beaten‑path” experiences     |
