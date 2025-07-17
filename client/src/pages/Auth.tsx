@@ -90,10 +90,10 @@ const Auth = () => {
         )}
       </button>
 
-      {/* Compact login positioned at bottom center */}
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-80 neo-brutalist bg-white bg-opacity-95 backdrop-blur-sm z-20">
+      {/* Compact login positioned at bottom center - stable positioning */}
+      <div className="fixed bottom-4 left-1/2 w-80 neo-brutalist bg-white bg-opacity-95 backdrop-blur-sm z-20" style={{ transform: 'translateX(-50%)', transition: 'none' }}>
         {/* Compact Header */}
-        <div className="bg-black bg-opacity-90 text-white p-3 backdrop-blur-sm">
+        <div className="bg-black bg-opacity-90 text-white p-3 backdrop-blur-sm" style={{ transition: 'none' }}>
           <h1 style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }} className="text-xl font-black uppercase text-center text-white mb-1">
             {fullName ? fullName.toUpperCase() : 'GLOBAL SOCIAL'}
           </h1>
@@ -103,7 +103,7 @@ const Auth = () => {
         </div>
           
         {/* Compact Form */}
-        <div className="component-preview p-4">
+        <div className="component-preview p-4" style={{ transition: 'none' }}>
           <form onSubmit={handleSubmit} className="space-y-3 w-full">
             {!isLogin && (
               <div>
@@ -118,7 +118,7 @@ const Auth = () => {
                   required={!isLogin}
                   className="neo-brutalist w-full h-10 text-sm font-bold placeholder:text-gray-400 bg-white"
                   placeholder="ENTER NAME"
-                  style={{ fontFamily: 'Roboto Mono, monospace' }}
+                  style={{ fontFamily: 'Roboto Mono, monospace', transition: 'none' }}
                 />
               </div>
             )}
@@ -135,7 +135,7 @@ const Auth = () => {
                 required
                 className="neo-brutalist w-full h-10 text-sm font-bold placeholder:text-gray-400 bg-white"
                 placeholder="EMAIL@DOMAIN.COM"
-                style={{ fontFamily: 'Roboto Mono, monospace' }}
+                style={{ fontFamily: 'Roboto Mono, monospace', transition: 'none' }}
               />
             </div>
 
@@ -152,7 +152,7 @@ const Auth = () => {
                 className="neo-brutalist w-full h-10 text-sm font-bold placeholder:text-gray-400 bg-white"
                 placeholder="••••••••"
                 minLength={6}
-                style={{ fontFamily: 'Roboto Mono, monospace' }}
+                style={{ fontFamily: 'Roboto Mono, monospace', transition: 'none' }}
               />
             </div>
 
@@ -166,7 +166,7 @@ const Auth = () => {
               type="submit" 
               className="neo-brutalist w-full h-10 bg-black text-lime-400 hover:bg-gray-800 font-black text-sm uppercase disabled:opacity-50"
               disabled={loading}
-              style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}
+              style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px', transition: 'none' }}
             >
               {loading ? 'PROCESSING...' : (isLogin ? 'ENTER' : 'REGISTER')}
             </Button>
@@ -182,7 +182,7 @@ const Auth = () => {
                   setFullName('');
                 }}
                 className="neo-brutalist bg-blue-500 text-white px-4 py-2 font-black text-xs uppercase"
-                style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}
+                style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px', transition: 'none' }}
               >
                 {isLogin ? "REGISTER" : "LOGIN"}
               </button>
