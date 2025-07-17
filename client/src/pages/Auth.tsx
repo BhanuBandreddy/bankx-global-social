@@ -67,14 +67,7 @@ const Auth = () => {
         <div className="absolute inset-0 bg-black bg-opacity-10"></div>
       </div>
 
-      {/* Neo-brutalist Background Pattern - reduced for video visibility */}
-      <div className="absolute inset-0 z-10">
-        <div className="absolute top-10 left-10 w-20 h-20 neo-brutalist bg-yellow-400 opacity-40"></div>
-        <div className="absolute top-32 right-20 w-16 h-16 neo-brutalist bg-blue-500 rotate-12 opacity-40"></div>
-        <div className="absolute bottom-20 left-20 w-24 h-24 neo-brutalist bg-red-500 -rotate-12 opacity-40"></div>
-        <div className="absolute bottom-40 right-10 w-12 h-12 neo-brutalist bg-green-400 rotate-45 opacity-40"></div>
-        <div className="absolute top-1/2 left-1/4 w-8 h-8 neo-brutalist bg-purple-500 opacity-40"></div>
-      </div>
+      
 
       <div className="w-full max-w-md neo-brutalist bg-white relative z-20">
         {/* Compact Header */}
