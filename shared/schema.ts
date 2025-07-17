@@ -67,6 +67,62 @@ export const feedPosts = pgTable("feed_posts", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Reddit content storage for multi-agent workflows
+export const redditContent = pgTable("reddit_content", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  redditId: text("reddit_id").notNull().unique(),
+  subreddit: text("subreddit").notNull(),
+  title: text("title").notNull(),
+  content: text("content"),
+  author: text("author").notNull(),
+  score: integer("score").default(0),
+  numComments: integer("num_comments").default(0),
+  permalink: text("permalink").notNull(),
+  url: text("url"),
+  thumbnail: text("thumbnail"),
+  isVideo: boolean("is_video").default(false),
+  domain: text("domain"),
+  createdUtc: timestamp("created_utc"),
+  // Processed data for Global Social integration
+  category: text("category"), // electronics, travel, deals, etc.
+  processedContent: text("processed_content"),
+  extractedProducts: jsonb("extracted_products"),
+  aiTags: jsonb("ai_tags").default([]),
+  trustMetrics: jsonb("trust_metrics"),
+  globalSocialPostId: uuid("global_social_post_id").references(() => feedPosts.id),
+  // Multi-agent workflow context
+  agentContext: jsonb("agent_context"), // Store context for future multi-agent processing
+  processedAt: timestamp("processed_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+// Reddit subreddit tracking for dynamic discovery
+export const redditSubreddits = pgTable("reddit_subreddits", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  subscribers: integer("subscribers").default(0),
+  category: text("category"), // travel, deals, electronics, local, etc.
+  location: text("location"), // For location-based subreddits
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  lastFetched: timestamp("last_fetched"),
+  fetchFrequency: text("fetch_frequency").default("hourly"), // hourly, daily, weekly
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Zod schemas for Reddit content
+export const insertRedditContentSchema = createInsertSchema(redditContent);
+export const selectRedditContentSchema = createSelectSchema(redditContent);
+export const insertRedditSubredditSchema = createInsertSchema(redditSubreddits);
+export const selectRedditSubredditSchema = createSelectSchema(redditSubreddits);
+
+export type InsertRedditContent = z.infer<typeof insertRedditContentSchema>;
+export type SelectRedditContent = z.infer<typeof selectRedditContentSchema>;
+export type InsertRedditSubreddit = z.infer<typeof insertRedditSubredditSchema>;
+export type SelectRedditSubreddit = z.infer<typeof selectRedditSubredditSchema>;
+
 // Escrow transactions
 export const escrowTransactions = pgTable("escrow_transactions", {
   id: uuid("id").primaryKey().defaultRandom(),

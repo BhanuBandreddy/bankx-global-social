@@ -1063,6 +1063,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Reddit Integration API
+  app.get('/api/reddit/feed', async (req, res) => {
+    try {
+      const { location, category, limit = 20 } = req.query;
+      
+      const { redditService } = await import('./reddit-service');
+      const { RedditPostAdapter } = await import('./reddit-adapter');
+      
+      // Get categorized posts from Reddit
+      const redditPosts = await redditService.getCategorizedPosts(location as string);
+      
+      // Convert Reddit posts to Global Social format
+      const allPosts = [
+        ...redditPosts.travel.map(post => RedditPostAdapter.convertToGlobalSocialPost(post)),
+        ...redditPosts.deals.map(post => RedditPostAdapter.convertToGlobalSocialPost(post)),
+        ...redditPosts.electronics.map(post => RedditPostAdapter.convertToGlobalSocialPost(post)),
+        ...redditPosts.local.map(post => RedditPostAdapter.convertToGlobalSocialPost(post)),
+        ...redditPosts.lifestyle.map(post => RedditPostAdapter.convertToGlobalSocialPost(post))
+      ];
+
+      // Filter by category if specified
+      const filteredPosts = category 
+        ? allPosts.filter(post => post.productCategory === category || post.redditData.subreddit.toLowerCase().includes(category as string))
+        : allPosts;
+
+      // Sort by engagement and limit
+      const sortedPosts = filteredPosts
+        .sort((a, b) => (b.likes + b.trustBoosts) - (a.likes + a.trustBoosts))
+        .slice(0, parseInt(limit as string));
+
+      res.json({
+        success: true,
+        posts: sortedPosts,
+        total: sortedPosts.length,
+        categories: {
+          travel: redditPosts.travel.length,
+          deals: redditPosts.deals.length,
+          electronics: redditPosts.electronics.length,
+          local: redditPosts.local.length,
+          lifestyle: redditPosts.lifestyle.length
+        }
+      });
+    } catch (error) {
+      console.error('Reddit feed error:', error);
+      res.status(500).json({ error: 'Failed to fetch Reddit feed' });
+    }
+  });
+
+  app.get('/api/reddit/subreddit/:name', async (req, res) => {
+    try {
+      const { name } = req.params;
+      const { limit = 25 } = req.query;
+      
+      const { redditService } = await import('./reddit-service');
+      const { RedditPostAdapter } = await import('./reddit-adapter');
+      
+      const posts = await redditService.getSubredditPosts(name, parseInt(limit as string));
+      const convertedPosts = posts.map(post => RedditPostAdapter.convertToGlobalSocialPost(post));
+      
+      res.json({
+        success: true,
+        subreddit: name,
+        posts: convertedPosts,
+        total: convertedPosts.length
+      });
+    } catch (error) {
+      console.error(`Error fetching r/${req.params.name}:`, error);
+      res.status(500).json({ error: 'Failed to fetch subreddit posts' });
+    }
+  });
+
+  app.get('/api/reddit/search-local/:location', async (req, res) => {
+    try {
+      const { location } = req.params;
+      
+      const { redditService } = await import('./reddit-service');
+      
+      const subreddit = await redditService.searchLocalSubreddit(location);
+      
+      res.json({
+        success: true,
+        location,
+        subreddit: subreddit || null,
+        found: !!subreddit
+      });
+    } catch (error) {
+      console.error(`Error searching local subreddit for ${req.params.location}:`, error);
+      res.status(500).json({ error: 'Failed to search local subreddit' });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Conductor orchestration endpoints

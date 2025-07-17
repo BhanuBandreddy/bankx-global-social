@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Verified, TrendingUp, Shield, Zap, ShoppingCart, Loader2 } from "lucide-react";
 import { CustomIcons } from "./CustomIcons";
 import { FeedActionTrigger } from "./FeedActionTrigger";
+// import { useRedditFeed } from "@/hooks/useRedditFeed";
 import { BlinkNotifications } from "./BlinkNotifications";
 import { InlinePurchaseFlow } from "./InlinePurchaseFlow";
 import { Button } from "@/components/ui/button";
@@ -84,6 +85,33 @@ export const SocialFeed = () => {
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [trustBoosts, setTrustBoosts] = useState<Set<string>>(new Set());
   const [activePurchasePost, setActivePurchasePost] = useState<any>(null);
+  const [showRedditContent, setShowRedditContent] = useState(true);
+  const [selectedLocation, setSelectedLocation] = useState<string>("New York");
+  const [redditPosts, setRedditPosts] = useState<any[]>([]);
+  const [isLoadingReddit, setIsLoadingReddit] = useState(false);
+  
+  // Fetch Reddit content
+  useEffect(() => {
+    if (showRedditContent) {
+      fetchRedditFeed();
+    }
+  }, [selectedLocation, showRedditContent]);
+
+  const fetchRedditFeed = async () => {
+    try {
+      setIsLoadingReddit(true);
+      const response = await fetch(`/api/reddit/feed?location=${encodeURIComponent(selectedLocation)}&limit=15`);
+      if (response.ok) {
+        const data = await response.json();
+        setRedditPosts(data.posts || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch Reddit feed:', error);
+      setRedditPosts([]);
+    } finally {
+      setIsLoadingReddit(false);
+    }
+  };
 
   const handleLike = (postId: string) => {
     const newLiked = new Set(likedPosts);
@@ -105,7 +133,7 @@ export const SocialFeed = () => {
     setTrustBoosts(newTrustBoosts);
   };
 
-  const feedPosts = [
+  const originalFeedPosts = [
     {
       id: "1",
       userId: "550e8400-e29b-41d4-a716-446655440001",
@@ -272,17 +300,51 @@ export const SocialFeed = () => {
     }
   ];
 
+  // Merge original and Reddit posts
+  const feedPosts = showRedditContent 
+    ? [...originalFeedPosts, ...redditPosts]
+      .sort((a, b) => (b.likes + b.trustBoosts) - (a.likes + a.trustBoosts))
+    : originalFeedPosts;
+
   return (
     <div className="space-y-6">
       {/* Global Feed - Clean Mobile-First Design */}
       <div className="max-w-md mx-auto bg-white border-4 border-black">
         {/* Feed Header */}
         <div className="p-4 border-b-4 border-black bg-white sticky top-0 z-10">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-bold text-black uppercase tracking-tight">Global Feed</h2>
             <div className="flex items-center space-x-1 text-sm">
               <div className="w-2 h-2 bg-green-400 border border-black rounded-full animate-pulse"></div>
               <span className="text-green-600 font-bold">LIVE</span>
+            </div>
+          </div>
+          
+          {/* Reddit Content Toggle */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Button
+                onClick={() => setShowRedditContent(!showRedditContent)}
+                className={`neo-brutalist text-xs px-2 py-1 ${showRedditContent ? 'bg-blue-600 text-white' : 'bg-white text-black border-2 border-black'}`}
+              >
+                {showRedditContent ? '🌐 REDDIT' : '📱 LOCAL'}
+              </Button>
+              {showRedditContent && (
+                <select 
+                  value={selectedLocation} 
+                  onChange={(e) => setSelectedLocation(e.target.value)}
+                  className="neo-brutalist text-xs px-2 py-1 bg-white border-2 border-black"
+                >
+                  <option value="New York">NYC</option>
+                  <option value="Tokyo">Tokyo</option>
+                  <option value="London">London</option>
+                  <option value="Berlin">Berlin</option>
+                  <option value="Sydney">Sydney</option>
+                </select>
+              )}
+            </div>
+            <div className="text-xs text-gray-600">
+              {isLoadingReddit ? 'Loading...' : `${feedPosts.length} posts`}
             </div>
           </div>
         </div>
