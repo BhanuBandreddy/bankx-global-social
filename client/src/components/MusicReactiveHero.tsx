@@ -404,6 +404,19 @@ export default function MusicReactiveHero({ userName }: Props) {
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
+    // Global audio mute toggle from parent component
+    const handleGlobalMute = (event: any) => {
+      try {
+        const { muted } = event.detail;
+        if (audio) {
+          audio.muted = muted;
+        }
+      } catch (error) {
+        console.log("Global mute error (non-critical):", error);
+      }
+    };
+    window.addEventListener('toggleHeroAudio', handleGlobalMute);
+
     function animate(currentTime: number) {
       animationId = requestAnimationFrame(animate);
       
@@ -463,6 +476,7 @@ export default function MusicReactiveHero({ userName }: Props) {
     // ===== Cleanup =====
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('toggleHeroAudio', handleGlobalMute);
       if (animationId) cancelAnimationFrame(animationId);
       if (ctx) ctx.close();
       if (gui) gui.destroy();

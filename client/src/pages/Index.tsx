@@ -10,10 +10,12 @@ import { BlinkChatPanel } from "@/components/BlinkChatPanel";
 import { LeftSideMenu } from "@/components/LeftSideMenu";
 import { CustomIcons } from "@/components/CustomIcons";
 import { Button } from "@/components/ui/button";
+import { Volume2, VolumeX } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("feed");
+  const [heroAudioMuted, setHeroAudioMuted] = useState(false);
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,9 +50,33 @@ const Index = () => {
     return null;
   }
 
+  const toggleHeroAudio = () => {
+    // This will communicate with the MusicReactiveHero component
+    // Since the component manages its own audio, we'll add a global context or event
+    setHeroAudioMuted(!heroAudioMuted);
+    
+    // Dispatch custom event to communicate with the hero component
+    window.dispatchEvent(new CustomEvent('toggleHeroAudio', { 
+      detail: { muted: !heroAudioMuted } 
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gray-100" style={{ fontFamily: 'Roboto Mono, monospace' }}>
       <Navbar />
+      
+      {/* Global Audio Mute Button */}
+      <button
+        onClick={toggleHeroAudio}
+        className="fixed top-6 left-6 neo-brutalist bg-white bg-opacity-90 hover:bg-opacity-100 p-3 z-50 transition-all duration-200"
+        title={heroAudioMuted ? "Unmute Hero Audio" : "Mute Hero Audio"}
+      >
+        {heroAudioMuted ? (
+          <VolumeX className="w-6 h-6 text-black" />
+        ) : (
+          <Volume2 className="w-6 h-6 text-black" />
+        )}
+      </button>
       
       {/* Music Reactive Hero Section wrapped in neobrutalist container */}
       <div className="p-6 bg-gray-100">

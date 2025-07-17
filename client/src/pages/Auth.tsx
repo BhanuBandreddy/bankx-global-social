@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 import { FlagGrid, PassportStamp } from '@/components/ui/flag-grid';
-import { Globe, Shield, Users, Plane } from 'lucide-react';
+import { Globe, Shield, Users, Plane, Volume2, VolumeX } from 'lucide-react';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,6 +17,8 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [isMuted, setIsMuted] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
   const { user, signIn, signUp } = useAuth();
 
@@ -47,14 +49,22 @@ const Auth = () => {
     }
   };
 
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(videoRef.current.muted);
+    }
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ fontFamily: 'Roboto Mono, monospace' }}>
       {/* Video Background */}
       <div className="absolute inset-0 z-0">
         <video 
+          ref={videoRef}
           autoPlay 
           loop 
-          muted={false}
+          muted={isMuted}
           playsInline
           className="w-full h-full object-cover"
           style={{ filter: 'brightness(0.8) contrast(1.1)' }}
@@ -66,6 +76,19 @@ const Auth = () => {
         {/* Light overlay for better text readability while keeping video visible */}
         <div className="absolute inset-0 bg-black bg-opacity-10"></div>
       </div>
+
+      {/* Mute Button */}
+      <button
+        onClick={toggleMute}
+        className="fixed top-6 left-6 neo-brutalist bg-white bg-opacity-90 hover:bg-opacity-100 p-3 z-30 transition-all duration-200"
+        title={isMuted ? "Unmute Audio" : "Mute Audio"}
+      >
+        {isMuted ? (
+          <VolumeX className="w-6 h-6 text-black" />
+        ) : (
+          <Volume2 className="w-6 h-6 text-black" />
+        )}
+      </button>
 
       {/* Compact login positioned at bottom center */}
       <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-80 neo-brutalist bg-white bg-opacity-95 backdrop-blur-sm z-20">
