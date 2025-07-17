@@ -48,17 +48,35 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 relative" style={{ fontFamily: 'Roboto Mono, monospace' }}>
-      {/* Neo-brutalist Background Pattern */}
-      <div className="absolute inset-0">
-        <div className="absolute top-10 left-10 w-20 h-20 neo-brutalist bg-yellow-400"></div>
-        <div className="absolute top-32 right-20 w-16 h-16 neo-brutalist bg-blue-500 rotate-12"></div>
-        <div className="absolute bottom-20 left-20 w-24 h-24 neo-brutalist bg-red-500 -rotate-12"></div>
-        <div className="absolute bottom-40 right-10 w-12 h-12 neo-brutalist bg-green-400 rotate-45"></div>
-        <div className="absolute top-1/2 left-1/4 w-8 h-8 neo-brutalist bg-purple-500"></div>
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ fontFamily: 'Roboto Mono, monospace' }}>
+      {/* Video Background */}
+      <div className="absolute inset-0 z-0">
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline
+          className="w-full h-full object-cover"
+          style={{ filter: 'brightness(0.4)' }}
+        >
+          <source src="https://player.vimeo.com/external/371433846.sd.mp4?s=236da2f3c0fd273d2c6d9a064f3ae35579b2bbdf&profile_id=139&oauth2_token_id=57447761" type="video/mp4" />
+          {/* Fallback gradient background */}
+          <div className="w-full h-full bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900"></div>
+        </video>
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-black bg-opacity-30"></div>
       </div>
 
-      <div className="w-full max-w-lg neo-brutalist bg-white relative z-10">
+      {/* Neo-brutalist Background Pattern - kept for additional visual interest */}
+      <div className="absolute inset-0 z-10">
+        <div className="absolute top-10 left-10 w-20 h-20 neo-brutalist bg-yellow-400 opacity-80"></div>
+        <div className="absolute top-32 right-20 w-16 h-16 neo-brutalist bg-blue-500 rotate-12 opacity-80"></div>
+        <div className="absolute bottom-20 left-20 w-24 h-24 neo-brutalist bg-red-500 -rotate-12 opacity-80"></div>
+        <div className="absolute bottom-40 right-10 w-12 h-12 neo-brutalist bg-green-400 rotate-45 opacity-80"></div>
+        <div className="absolute top-1/2 left-1/4 w-8 h-8 neo-brutalist bg-purple-500 opacity-80"></div>
+      </div>
+
+      <div className="w-full max-w-lg neo-brutalist bg-white relative z-20">
         {/* Neo-brutalist Header */}
         <div className="bg-black text-white p-6">
           <div className="flex items-center justify-center gap-4 mb-4">
