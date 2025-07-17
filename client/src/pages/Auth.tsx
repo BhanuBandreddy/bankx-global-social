@@ -67,8 +67,8 @@ const Auth = () => {
         <div className="absolute inset-0 bg-black bg-opacity-10"></div>
       </div>
 
-      {/* Compact login positioned in top-right corner */}
-      <div className="absolute top-6 right-6 w-80 neo-brutalist bg-white bg-opacity-95 backdrop-blur-sm relative z-20">
+      {/* Compact login positioned at bottom center */}
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 w-80 neo-brutalist bg-white bg-opacity-95 backdrop-blur-sm relative z-20">
         {/* Compact Header */}
         <div className="bg-black bg-opacity-90 text-white p-3 backdrop-blur-sm">
           <h1 style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }} className="text-xl font-black uppercase text-center text-white mb-1">
