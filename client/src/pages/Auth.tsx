@@ -76,37 +76,20 @@ const Auth = () => {
         <div className="absolute top-1/2 left-1/4 w-8 h-8 neo-brutalist bg-purple-500 opacity-40"></div>
       </div>
 
-      <div className="w-full max-w-lg neo-brutalist bg-white relative z-20">
-        {/* Neo-brutalist Header with transparency to show video */}
-        <div className="bg-black bg-opacity-85 text-white p-6 backdrop-blur-sm">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <div className="w-12 h-12 neo-brutalist bg-blue-500 flex items-center justify-center">
-              <Globe className="w-6 h-6 text-white" />
-            </div>
-            <div className="w-12 h-12 neo-brutalist bg-red-500 flex items-center justify-center">
-              <Shield className="w-6 h-6 text-white" />
-            </div>
-            <div className="w-12 h-12 neo-brutalist bg-green-500 flex items-center justify-center">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-          </div>
-          
-          <FlagGrid />
-          
-          <h1 style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }} className="text-5xl font-black uppercase text-center text-white mb-2">
+      <div className="w-full max-w-md neo-brutalist bg-white relative z-20">
+        {/* Compact Header */}
+        <div className="bg-black bg-opacity-85 text-white p-4 backdrop-blur-sm">
+          <h1 style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }} className="text-3xl font-black uppercase text-center text-white mb-1">
             {fullName ? fullName.toUpperCase() : 'GLOBAL SOCIAL'}
           </h1>
-          <div className="text-center text-lime-400 font-black text-xl uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
+          <div className="text-center text-lime-400 font-black text-lg uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
             {fullName ? 'INTERNATIONAL CITIZEN' : (isLogin ? 'PASSPORT CONTROL' : 'JOIN THE NETWORK')}
-          </div>
-          <div className="text-center text-white font-bold text-sm mt-2 uppercase tracking-wide">
-            {isLogin ? 'ENTER CREDENTIALS' : 'REGISTER NOW'}
           </div>
         </div>
           
-        {/* Neo-brutalist Form */}
-        <div className="component-preview p-8">
-          <form onSubmit={handleSubmit} className="space-y-6 w-full">
+        {/* Compact Form */}
+        <div className="component-preview p-6">
+          <form onSubmit={handleSubmit} className="space-y-4 w-full">
             {!isLogin && (
               <div>
                 <Label htmlFor="fullName" className="font-black text-black text-lg uppercase block mb-2" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
@@ -118,7 +101,7 @@ const Auth = () => {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required={!isLogin}
-                  className="neo-brutalist w-full h-14 text-xl font-bold placeholder:text-gray-400 bg-white"
+                  className="neo-brutalist w-full h-12 text-lg font-bold placeholder:text-gray-400 bg-white"
                   placeholder="ENTER NAME"
                   style={{ fontFamily: 'Roboto Mono, monospace' }}
                 />
@@ -135,7 +118,7 @@ const Auth = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="neo-brutalist w-full h-14 text-xl font-bold placeholder:text-gray-400 bg-white"
+                className="neo-brutalist w-full h-12 text-lg font-bold placeholder:text-gray-400 bg-white"
                 placeholder="EMAIL@DOMAIN.COM"
                 style={{ fontFamily: 'Roboto Mono, monospace' }}
               />
@@ -151,7 +134,7 @@ const Auth = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="neo-brutalist w-full h-14 text-xl font-bold placeholder:text-gray-400 bg-white"
+                className="neo-brutalist w-full h-12 text-lg font-bold placeholder:text-gray-400 bg-white"
                 placeholder="••••••••"
                 minLength={6}
                 style={{ fontFamily: 'Roboto Mono, monospace' }}
@@ -166,7 +149,7 @@ const Auth = () => {
 
             <Button 
               type="submit" 
-              className="neo-brutalist w-full h-16 bg-black text-lime-400 hover:bg-gray-800 font-black text-2xl uppercase disabled:opacity-50"
+              className="neo-brutalist w-full h-12 bg-black text-lime-400 hover:bg-gray-800 font-black text-xl uppercase disabled:opacity-50"
               disabled={loading}
               style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}
             >
