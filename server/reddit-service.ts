@@ -36,48 +36,104 @@ interface RedditResponse {
 class RedditService {
   private accessToken: string | null = null;
   private tokenExpiry: number = 0;
+  private refreshToken: string | null = null;
+
+  // Store authorization code and exchange for token
+  async exchangeCodeForToken(code: string, redirectUri: string): Promise<boolean> {
+    try {
+      const auth = Buffer.from(`${process.env.REDDIT_CLIENT_ID}:${process.env.REDDIT_CLIENT_SECRET}`).toString('base64');
+      
+      console.log('Exchanging authorization code for access token...');
+      
+      const response = await fetch('https://www.reddit.com/api/v1/access_token', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': process.env.REDDIT_USER_AGENT || 'GlobalSocial/1.0'
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: code,
+          redirect_uri: redirectUri
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Reddit token exchange failed:', errorText);
+        return false;
+      }
+
+      const data = await response.json() as any;
+      
+      if (!data.access_token) {
+        console.error('No access token received from Reddit');
+        return false;
+      }
+      
+      this.accessToken = data.access_token;
+      this.refreshToken = data.refresh_token;
+      this.tokenExpiry = Date.now() + (data.expires_in * 1000);
+      
+      console.log('Reddit access token obtained successfully via authorization code');
+      return true;
+    } catch (error) {
+      console.error('Error exchanging code for token:', error);
+      return false;
+    }
+  }
+
+  // Generate authorization URL for user to approve
+  getAuthorizationUrl(redirectUri: string, state: string): string {
+    const params = new URLSearchParams({
+      client_id: process.env.REDDIT_CLIENT_ID!,
+      response_type: 'code',
+      state: state,
+      redirect_uri: redirectUri,
+      duration: 'permanent',
+      scope: 'read'
+    });
+
+    return `https://www.reddit.com/api/v1/authorize?${params.toString()}`;
+  }
 
   private async getAccessToken(): Promise<string> {
     if (this.accessToken && Date.now() < this.tokenExpiry) {
       return this.accessToken;
     }
 
-    const auth = Buffer.from(`${process.env.REDDIT_CLIENT_ID}:${process.env.REDDIT_CLIENT_SECRET}`).toString('base64');
-    
-    console.log('Requesting Reddit access token...');
-    console.log('Client ID exists:', !!process.env.REDDIT_CLIENT_ID);
-    console.log('Client Secret exists:', !!process.env.REDDIT_CLIENT_SECRET);
-    console.log('User Agent:', process.env.REDDIT_USER_AGENT);
-    
-    const response = await fetch('https://www.reddit.com/api/v1/access_token', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': process.env.REDDIT_USER_AGENT || 'GlobalSocial/1.0'
-      },
-      body: 'grant_type=client_credentials'
-    });
+    // Try to refresh token if available
+    if (this.refreshToken) {
+      try {
+        const auth = Buffer.from(`${process.env.REDDIT_CLIENT_ID}:${process.env.REDDIT_CLIENT_SECRET}`).toString('base64');
+        
+        const response = await fetch('https://www.reddit.com/api/v1/access_token', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': process.env.REDDIT_USER_AGENT || 'GlobalSocial/1.0'
+          },
+          body: new URLSearchParams({
+            grant_type: 'refresh_token',
+            refresh_token: this.refreshToken
+          })
+        });
 
-    console.log('Reddit auth response status:', response.status);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.log('Reddit auth error response:', errorText);
-      throw new Error(`Reddit auth failed: ${response.status} ${response.statusText} - ${errorText}`);
+        if (response.ok) {
+          const data = await response.json() as any;
+          this.accessToken = data.access_token;
+          this.tokenExpiry = Date.now() + (data.expires_in * 1000);
+          console.log('Reddit access token refreshed successfully');
+          return this.accessToken;
+        }
+      } catch (error) {
+        console.error('Error refreshing token:', error);
+      }
     }
 
-    const data = await response.json() as any;
-    
-    if (!data.access_token) {
-      throw new Error('No access token received from Reddit');
-    }
-    
-    this.accessToken = data.access_token;
-    this.tokenExpiry = Date.now() + (data.expires_in * 1000);
-    
-    console.log('Reddit access token obtained successfully');
-    return this.accessToken;
+    throw new Error('No valid Reddit access token available. User needs to reauthorize.');
   }
 
   async searchLocalSubreddit(location: string): Promise<string | null> {

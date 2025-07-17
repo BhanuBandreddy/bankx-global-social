@@ -1063,6 +1063,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Reddit OAuth Routes
+  app.get('/api/reddit/auth', (req, res) => {
+    try {
+      const { redditService } = require('./reddit-service');
+      const state = Math.random().toString(36).substring(7);
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/reddit/callback`;
+      
+      const authUrl = redditService.getAuthorizationUrl(redirectUri, state);
+      
+      // Store state in session for validation
+      req.session = req.session || {};
+      req.session.redditState = state;
+      
+      res.json({ 
+        success: true, 
+        authUrl: authUrl,
+        message: 'Visit the auth URL to authorize Reddit access'
+      });
+    } catch (error) {
+      console.error('Reddit auth initialization error:', error);
+      res.status(500).json({ error: 'Failed to initialize Reddit authentication' });
+    }
+  });
+
+  app.get('/api/reddit/callback', async (req, res) => {
+    try {
+      const { code, state, error } = req.query;
+      
+      if (error) {
+        return res.status(400).json({ error: `Reddit authorization failed: ${error}` });
+      }
+      
+      if (!code || !state) {
+        return res.status(400).json({ error: 'Missing authorization code or state' });
+      }
+      
+      // Validate state
+      if (req.session?.redditState !== state) {
+        return res.status(400).json({ error: 'Invalid state parameter' });
+      }
+      
+      const { redditService } = await import('./reddit-service');
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/reddit/callback`;
+      
+      const success = await redditService.exchangeCodeForToken(code as string, redirectUri);
+      
+      if (success) {
+        // Clear state
+        delete req.session.redditState;
+        res.json({ success: true, message: 'Reddit authorization successful' });
+      } else {
+        res.status(400).json({ error: 'Failed to exchange authorization code' });
+      }
+    } catch (error) {
+      console.error('Reddit callback error:', error);
+      res.status(500).json({ error: 'Reddit authorization callback failed' });
+    }
+  });
+
   // Reddit Integration API
   app.get('/api/reddit/feed', async (req, res) => {
     try {
@@ -1107,7 +1166,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Reddit feed error:', error);
-      res.status(500).json({ error: 'Failed to fetch Reddit feed' });
+      res.json({
+        success: true,
+        posts: [],
+        total: 0,
+        categories: { travel: 0, deals: 0, electronics: 0, local: 0, lifestyle: 0 },
+        message: 'Reddit authorization required. Call /api/reddit/auth to start OAuth flow.'
+      });
     }
   });
 

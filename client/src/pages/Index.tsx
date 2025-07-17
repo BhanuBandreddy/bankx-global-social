@@ -12,6 +12,7 @@ import { CustomIcons } from "@/components/CustomIcons";
 import { Button } from "@/components/ui/button";
 import { Volume2, VolumeX } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { RedditAuth } from "@/components/RedditAuth";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("feed");
@@ -131,8 +132,17 @@ const Index = () => {
                 )}
               </div>
 
-              {/* Blink Chat Panel */}
-              <div className="lg:col-span-1">
+              {/* Right Side Panels */}
+              <div className="lg:col-span-1 space-y-6">
+                {/* Reddit Integration */}
+                <RedditAuth onAuthComplete={() => {
+                  // Refresh the feed when Reddit auth completes
+                  if (activeTab === 'feed') {
+                    window.location.reload();
+                  }
+                }} />
+                
+                {/* Blink Chat Panel */}
                 <BlinkChatPanel />
               </div>
             </div>

@@ -1,0 +1,102 @@
+Here's what's happening, based on your latest screenshot and console messages:
+
+Key Findings from Console
+Your app is repeatedly showing:
+
+text
+Reddit auth response status: 401
+OAuth failed for /r/nyc, trying public JSON...
+Public Reddit API error for /r/nyc: 403 Blocked
+and similar messages for every subreddit attempted.
+
+Diagnosis
+401 Unauthorized:
+This means the Reddit API did not accept your credentials or there is something missing/wrong with the authentication.
+
+403 Blocked (Public API access):
+Reddit has restricted unauthenticated/public API access—that's why fallback fetches are also blocked.
+
+Causes (and How To Fix)
+1. Incorrect API Call Flow
+After getting an OAuth token, you should ONLY call endpoints through https://oauth.reddit.com, not https://www.reddit.com.
+
+Ensure every authenticated API call includes these headers:
+
+Authorization: bearer <access_token>
+
+User-Agent: GlobalSocial/1.0 by u/No-Chocolate8095 (or your chosen string)
+
+(Your user agent seems correct.)
+
+2. Credentials or Flow Issues
+Is your app POSTing to https://www.reddit.com/api/v1/access_token with client_id, client_secret, grant_type, and redirect_uri (and code if using Authorization Code flow)?
+
+For "web app," you must use the Authorization Code Flow, NOT the client credentials flow.
+
+This means the user needs to visit the authorization URL, approve your app, and you must exchange the returned code for a token.
+
+3. Token Not Received or Used
+If the access token request fails or is not used properly, all API requests will fail with 401.
+
+If you are using a localhost or a mismatched redirect URI during OAuth, Reddit will reject.
+
+Your registered redirect URI is:
+https://your-replit-domain.replit.dev/redirect
+You must use this exact URI during the OAuth process.
+
+4. Possible Client Mistake
+If you try "client_credentials" grant instead of "authorization_code" with a "web app," it will silently fail with 401—Reddit only allows "client_credentials" for "script" apps.
+
+How to Unblock
+Step-by-step:
+Start the OAuth Flow:
+
+Direct user to:
+
+text
+https://www.reddit.com/api/v1/authorize?client_id=Ebl4ILj_HGaiaMnnt3MKqw&response_type=code&state=<random>&redirect_uri=https://your-replit-domain.replit.dev/redirect&duration=permanent&scope=read
+User Consents and Gets Redirected Back:
+
+With ?state=...&code=...
+
+Exchange the Code for a Token:
+
+POST to:
+
+text
+https://www.reddit.com/api/v1/access_token
+with:
+
+text
+grant_type=authorization_code
+code=<code from step 2>
+redirect_uri=https://your-replit-domain.replit.dev/redirect
+Add HTTP Basic Auth header: (client_id:client_secret)
+
+With Token, Make API Requests:
+
+Use https://oauth.reddit.com/... endpoints and the Authorization: bearer <token> header.
+
+TL;DR: What You Need to Fix
+Your app is set as a web app (not a script app).
+
+You must follow the Authorization Code Flow (user must log in and approve).
+
+Your requests probably failed because:
+
+You tried "client_credentials" grant, which is forbidden for web apps.
+
+You used tokens with the wrong endpoints or without proper headers.
+
+You mismatched redirect URIs.
+
+All data fetches must use https://oauth.reddit.com with the bearer token.
+
+What to Do Next:
+Update your authentication flow to use Authorization Code grant (see Reddit OAuth docs).
+
+Double-check that redirect URIs match exactly, including scheme (https).
+
+Never use the client credentials flow for a web app; only use this for "script" apps (personal/private bots).
+
+Ensure tokens are included in every request.
