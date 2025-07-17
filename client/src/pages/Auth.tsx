@@ -90,8 +90,8 @@ const Auth = () => {
         )}
       </button>
 
-      {/* Compact login positioned at bottom center - stable positioning */}
-      <div className="fixed bottom-4 left-1/2 w-80 neo-brutalist bg-white bg-opacity-95 backdrop-blur-sm z-20" style={{ transform: 'translateX(-50%)', transition: 'none' }}>
+      {/* Compact login positioned at bottom right-center - stable positioning */}
+      <div className="fixed bottom-4 right-8 w-80 neo-brutalist bg-white bg-opacity-95 backdrop-blur-sm z-20" style={{ transition: 'none' }}>
         {/* Compact Header */}
         <div className="bg-black bg-opacity-90 text-white p-3 backdrop-blur-sm" style={{ transition: 'none' }}>
           <h1 style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }} className="text-xl font-black uppercase text-center text-white mb-1">
