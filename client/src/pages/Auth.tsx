@@ -57,28 +57,28 @@ const Auth = () => {
           muted={false}
           playsInline
           className="w-full h-full object-cover"
-          style={{ filter: 'brightness(0.5)' }}
+          style={{ filter: 'brightness(0.8) contrast(1.1)' }}
         >
           <source src="/videos/globalsocial-bg.mp4" type="video/mp4" />
           {/* Fallback gradient background */}
           <div className="w-full h-full bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900"></div>
         </video>
-        {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+        {/* Light overlay for better text readability while keeping video visible */}
+        <div className="absolute inset-0 bg-black bg-opacity-10"></div>
       </div>
 
-      {/* Neo-brutalist Background Pattern - kept for additional visual interest */}
+      {/* Neo-brutalist Background Pattern - reduced for video visibility */}
       <div className="absolute inset-0 z-10">
-        <div className="absolute top-10 left-10 w-20 h-20 neo-brutalist bg-yellow-400 opacity-80"></div>
-        <div className="absolute top-32 right-20 w-16 h-16 neo-brutalist bg-blue-500 rotate-12 opacity-80"></div>
-        <div className="absolute bottom-20 left-20 w-24 h-24 neo-brutalist bg-red-500 -rotate-12 opacity-80"></div>
-        <div className="absolute bottom-40 right-10 w-12 h-12 neo-brutalist bg-green-400 rotate-45 opacity-80"></div>
-        <div className="absolute top-1/2 left-1/4 w-8 h-8 neo-brutalist bg-purple-500 opacity-80"></div>
+        <div className="absolute top-10 left-10 w-20 h-20 neo-brutalist bg-yellow-400 opacity-40"></div>
+        <div className="absolute top-32 right-20 w-16 h-16 neo-brutalist bg-blue-500 rotate-12 opacity-40"></div>
+        <div className="absolute bottom-20 left-20 w-24 h-24 neo-brutalist bg-red-500 -rotate-12 opacity-40"></div>
+        <div className="absolute bottom-40 right-10 w-12 h-12 neo-brutalist bg-green-400 rotate-45 opacity-40"></div>
+        <div className="absolute top-1/2 left-1/4 w-8 h-8 neo-brutalist bg-purple-500 opacity-40"></div>
       </div>
 
       <div className="w-full max-w-lg neo-brutalist bg-white relative z-20">
-        {/* Neo-brutalist Header */}
-        <div className="bg-black text-white p-6">
+        {/* Neo-brutalist Header with transparency to show video */}
+        <div className="bg-black bg-opacity-85 text-white p-6 backdrop-blur-sm">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="w-12 h-12 neo-brutalist bg-blue-500 flex items-center justify-center">
               <Globe className="w-6 h-6 text-white" />
