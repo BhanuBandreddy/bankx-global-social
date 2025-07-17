@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+// Using built-in fetch in Node.js 18+
 
 interface RedditPost {
   id: string;
@@ -44,6 +44,8 @@ class RedditService {
 
     const auth = Buffer.from(`${process.env.REDDIT_CLIENT_ID}:${process.env.REDDIT_CLIENT_SECRET}`).toString('base64');
     
+    console.log('Requesting Reddit access token...');
+    
     const response = await fetch('https://www.reddit.com/api/v1/access_token', {
       method: 'POST',
       headers: {
@@ -54,10 +56,20 @@ class RedditService {
       body: 'grant_type=client_credentials'
     });
 
+    if (!response.ok) {
+      throw new Error(`Reddit auth failed: ${response.status} ${response.statusText}`);
+    }
+
     const data = await response.json() as any;
+    
+    if (!data.access_token) {
+      throw new Error('No access token received from Reddit');
+    }
+    
     this.accessToken = data.access_token;
     this.tokenExpiry = Date.now() + (data.expires_in * 1000);
     
+    console.log('Reddit access token obtained successfully');
     return this.accessToken;
   }
 
@@ -71,7 +83,17 @@ class RedditService {
         }
       });
 
+      if (!response.ok) {
+        console.error(`Reddit search error: ${response.status} ${response.statusText}`);
+        return null;
+      }
+
       const data = await response.json() as RedditResponse;
+      
+      if (!data.data || !data.data.children) {
+        return null;
+      }
+      
       const subreddits = data.data.children
         .filter(sub => sub.data.subscribers > 10000)
         .sort((a, b) => b.data.subscribers - a.data.subscribers);
@@ -93,7 +115,18 @@ class RedditService {
         }
       });
 
+      if (!response.ok) {
+        console.error(`Reddit API error for r/${subreddit}: ${response.status} ${response.statusText}`);
+        return [];
+      }
+
       const data = await response.json() as RedditResponse;
+      
+      if (!data.data || !data.data.children) {
+        console.error(`Invalid Reddit response for r/${subreddit}`);
+        return [];
+      }
+      
       return data.data.children.map(child => child.data);
     } catch (error) {
       console.error(`Error fetching posts from r/${subreddit}:`, error);

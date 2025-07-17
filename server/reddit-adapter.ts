@@ -89,73 +89,105 @@ export class RedditPostAdapter {
     const content = post.selftext.toLowerCase();
     const combined = `${title} ${content}`;
 
-    // Electronics detection
-    if (combined.match(/\b(phone|laptop|camera|headphones|electronics|gadget|device|tech)\b/)) {
-      const priceMatch = combined.match(/\$(\d+)/);
-      if (priceMatch) {
+    // Enhanced product detection with more patterns
+    const productPatterns = {
+      electronics: /\b(phone|laptop|camera|headphones|electronics|gadget|device|tech|gaming|console|pc|mac|iphone|android|tablet|smartwatch)\b/,
+      fashion: /\b(fashion|clothing|shoes|sneakers|boots|bag|handbag|jacket|dress|shirt|style|wear|outfit|brand|designer)\b/,
+      deals: /\b(deal|sale|discount|offer|cheap|price|buy|shopping|store|amazon|ebay|target|walmart)\b/,
+      travel: /\b(hotel|flight|travel|trip|vacation|booking|airbnb|hostel|destination|tour)\b/,
+      food: /\b(restaurant|food|coffee|menu|dining|recipe|cooking|kitchen|chef)\b/
+    };
+
+    // Determine category
+    let category = 'general';
+    for (const [cat, pattern] of Object.entries(productPatterns)) {
+      if (pattern.test(combined)) {
+        category = cat;
+        break;
+      }
+    }
+
+    // Enhanced price detection - multiple currencies and formats
+    const priceMatches = combined.match(/[\$£€¥₹]\s*(\d+(?:\.\d{2})?)|(\d+(?:\.\d{2})?)\s*(?:usd|eur|gbp|cad|aud)/gi);
+    
+    if (priceMatches && priceMatches.length > 0) {
+      // Extract the first price found
+      const priceStr = priceMatches[0];
+      const numMatch = priceStr.match(/(\d+(?:\.\d{2})?)/);
+      
+      if (numMatch) {
+        const price = numMatch[1];
+        const currency = priceStr.includes('$') ? 'USD' :
+                        priceStr.includes('£') ? 'GBP' :
+                        priceStr.includes('€') ? 'EUR' :
+                        priceStr.includes('¥') ? 'JPY' :
+                        priceStr.includes('₹') ? 'INR' : 'USD';
+
         return {
-          category: 'electronics',
+          category,
           product: {
             id: nanoid(),
-            name: post.title.length > 50 ? post.title.substring(0, 50) + '...' : post.title,
-            price: priceMatch[1],
-            currency: 'USD',
-            trustGuarantee: post.score > 100
+            name: post.title.length > 60 ? post.title.substring(0, 60) + '...' : post.title,
+            price: price,
+            currency,
+            trustGuarantee: post.score > 50 // Lower threshold for more products
           }
         };
       }
     }
 
-    // Fashion/Lifestyle detection
-    if (combined.match(/\b(fashion|clothing|shoes|bag|style|wear|outfit)\b/)) {
-      const priceMatch = combined.match(/\$(\d+)/);
-      if (priceMatch) {
-        return {
-          category: 'fashion',
-          product: {
-            id: nanoid(),
-            name: post.title.length > 50 ? post.title.substring(0, 50) + '...' : post.title,
-            price: priceMatch[1],
-            currency: 'USD',
-            trustGuarantee: post.score > 50
-          }
-        };
-      }
+    // If no price but product-related, still create entry for popular posts
+    if (category !== 'general' && post.score > 100) {
+      return {
+        category,
+        product: {
+          id: nanoid(),
+          name: post.title.length > 60 ? post.title.substring(0, 60) + '...' : post.title,
+          price: 'Contact',
+          currency: 'USD',
+          trustGuarantee: post.score > 500
+        }
+      };
     }
 
-    // Deal detection
-    if (combined.match(/\b(deal|sale|discount|offer|cheap|price|buy)\b/)) {
-      const priceMatch = combined.match(/\$(\d+)/);
-      if (priceMatch) {
-        return {
-          category: 'deals',
-          product: {
-            id: nanoid(),
-            name: post.title.length > 50 ? post.title.substring(0, 50) + '...' : post.title,
-            price: priceMatch[1],
-            currency: 'USD',
-            trustGuarantee: post.score > 200
-          }
-        };
-      }
-    }
-
-    return {};
+    return { category: category !== 'general' ? category : undefined };
   }
 
   private static getImageUrl(post: RedditPost): string | undefined {
-    // Check if it's an image URL
+    // Check if it's a direct image URL
     if (post.url && post.url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
       return post.url;
     }
 
-    // Check preview images
+    // Check for imgur, Reddit uploads, and other image hosts
+    if (post.url) {
+      // Imgur gallery/image conversion
+      if (post.url.includes('imgur.com') && !post.url.includes('.jpg') && !post.url.includes('.png')) {
+        const imgurId = post.url.split('/').pop();
+        if (imgurId) {
+          return `https://i.imgur.com/${imgurId}.jpg`;
+        }
+      }
+      
+      // Reddit media preview
+      if (post.url.includes('i.redd.it') || post.url.includes('v.redd.it')) {
+        return post.url;
+      }
+    }
+
+    // Check preview images with proper URL decoding
     if (post.preview?.images?.[0]?.source?.url) {
       return post.preview.images[0].source.url.replace(/&amp;/g, '&');
     }
 
-    // Use thumbnail if it's not default Reddit thumbnail
-    if (post.thumbnail && post.thumbnail !== 'self' && post.thumbnail !== 'default' && post.thumbnail.startsWith('http')) {
+    // Enhanced thumbnail handling - only use quality thumbnails
+    if (post.thumbnail && 
+        post.thumbnail !== 'self' && 
+        post.thumbnail !== 'default' && 
+        post.thumbnail !== 'nsfw' &&
+        post.thumbnail !== 'spoiler' &&
+        post.thumbnail.startsWith('http') &&
+        (post.thumbnail.includes('preview.redd.it') || post.thumbnail.includes('external-preview.redd.it'))) {
       return post.thumbnail;
     }
 

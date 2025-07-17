@@ -1066,7 +1066,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Reddit Integration API
   app.get('/api/reddit/feed', async (req, res) => {
     try {
-      const { location, category, limit = 20 } = req.query;
+      const { location, category, limit = 50 } = req.query;
       
       const { redditService } = await import('./reddit-service');
       const { RedditPostAdapter } = await import('./reddit-adapter');

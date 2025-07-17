@@ -100,7 +100,7 @@ export const SocialFeed = () => {
   const fetchRedditFeed = async () => {
     try {
       setIsLoadingReddit(true);
-      const response = await fetch(`/api/reddit/feed?location=${encodeURIComponent(selectedLocation)}&limit=15`);
+      const response = await fetch(`/api/reddit/feed?location=${encodeURIComponent(selectedLocation)}&limit=50`);
       if (response.ok) {
         const data = await response.json();
         setRedditPosts(data.posts || []);
@@ -300,10 +300,120 @@ export const SocialFeed = () => {
     }
   ];
 
-  // Merge original and Reddit posts
+  // Enhanced location-based content with rich images and metadata
+  const getLocationBasedContent = (location: string) => [
+    {
+      id: `${location}_tech_1`,
+      source: "community",
+      userId: "550e8400-e29b-41d4-a716-446655440010",
+      user: {
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: `TechDeals ${location}`,
+        handle: `@techdeals_${location.toLowerCase().replace(' ', '')}`,
+        avatar: "📱",
+        verified: true,
+        trustLevel: "Verified Seller",
+        trustBadge: "⭐",
+        trustScore: 89
+      },
+      content: `🔥 Amazing tech deals discovered in ${location}! Premium electronics with verified authenticity. Local pickup available with instant trust verification.`,
+      image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&h=600&fit=crop",
+      tags: ["electronics", "deals", "verified", location.toLowerCase()],
+      product: {
+        id: `prod_${location}_1`,
+        name: "Premium Electronics Collection",
+        price: "899",
+        currency: "USD",
+        originalPrice: "$1199",
+        trustGuarantee: true
+      },
+      location: location,
+      productCategory: "electronics",
+      aiInsight: "High demand electronics with excellent pricing",
+      trustInsight: "Verified seller with 89% community trust score",
+      timestamp: "2h",
+      likes: 145,
+      comments: 23,
+      shares: 12,
+      trustBoosts: 78
+    },
+    {
+      id: `${location}_fashion_2`,
+      source: "community",
+      userId: "550e8400-e29b-41d4-a716-446655440011",
+      user: {
+        id: "550e8400-e29b-41d4-a716-446655440011",
+        name: `Style ${location}`,
+        handle: `@style_${location.toLowerCase().replace(' ', '')}`,
+        avatar: "👔",
+        verified: true,
+        trustLevel: "Fashion Expert",
+        trustBadge: "💎",
+        trustScore: 92
+      },
+      content: `Discovered incredible sustainable fashion in ${location}! Eco-friendly materials, exceptional craftsmanship, and ethical manufacturing practices.`,
+      image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&h=600&fit=crop",
+      tags: ["fashion", "sustainable", "ethical", location.toLowerCase()],
+      product: {
+        id: `prod_${location}_2`,
+        name: "Sustainable Fashion Collection",
+        price: "129",
+        currency: "USD",
+        originalPrice: "$180",
+        trustGuarantee: true
+      },
+      location: location,
+      productCategory: "fashion",
+      aiInsight: "Trending sustainable fashion with growing demand",
+      trustInsight: "Expert verified with 92% authenticity rating",
+      timestamp: "4h",
+      likes: 234,
+      comments: 45,
+      shares: 19,
+      trustBoosts: 156
+    },
+    {
+      id: `${location}_local_3`,
+      source: "community",
+      userId: "550e8400-e29b-41d4-a716-446655440012",
+      user: {
+        id: "550e8400-e29b-41d4-a716-446655440012",
+        name: `Local Guide ${location}`,
+        handle: `@localguide_${location.toLowerCase().replace(' ', '')}`,
+        avatar: "🗺️",
+        verified: true,
+        trustLevel: "Local Expert",
+        trustBadge: "🏆",
+        trustScore: 87
+      },
+      content: `Best local discoveries in ${location}! Hidden gems, authentic experiences, and community-verified recommendations from trusted locals.`,
+      image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&h=600&fit=crop",
+      tags: ["local", "experiences", "authentic", location.toLowerCase()],
+      product: {
+        id: `prod_${location}_3`,
+        name: "Local Experience Package",
+        price: "45",
+        currency: "USD",
+        trustGuarantee: true
+      },
+      location: location,
+      productCategory: "experiences",
+      aiInsight: "Authentic local experiences with high satisfaction",
+      trustInsight: "Verified local expert with authentic recommendations",
+      timestamp: "6h",
+      likes: 189,
+      comments: 34,
+      shares: 28,
+      trustBoosts: 123
+    }
+  ];
+
+  // Merge content with location-based enhanced content
+  const locationContent = getLocationBasedContent(selectedLocation);
   const feedPosts = showRedditContent 
-    ? [...originalFeedPosts, ...redditPosts]
+    ? [...locationContent, ...originalFeedPosts, ...redditPosts]
       .sort((a, b) => (b.likes + b.trustBoosts) - (a.likes + a.trustBoosts))
+      .slice(0, 50) // Show up to 50 posts for rich content experience
     : originalFeedPosts;
 
   return (
@@ -320,28 +430,24 @@ export const SocialFeed = () => {
             </div>
           </div>
           
-          {/* Reddit Content Toggle */}
+          {/* Location Filter */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Button
-                onClick={() => setShowRedditContent(!showRedditContent)}
-                className={`neo-brutalist text-xs px-2 py-1 ${showRedditContent ? 'bg-blue-600 text-white' : 'bg-white text-black border-2 border-black'}`}
+              <span className="text-xs font-bold text-gray-600">LOCATION:</span>
+              <select 
+                value={selectedLocation} 
+                onChange={(e) => setSelectedLocation(e.target.value)}
+                className="neo-brutalist text-xs px-2 py-1 bg-white border-2 border-black"
               >
-                {showRedditContent ? '🌐 REDDIT' : '📱 LOCAL'}
-              </Button>
-              {showRedditContent && (
-                <select 
-                  value={selectedLocation} 
-                  onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="neo-brutalist text-xs px-2 py-1 bg-white border-2 border-black"
-                >
-                  <option value="New York">NYC</option>
-                  <option value="Tokyo">Tokyo</option>
-                  <option value="London">London</option>
-                  <option value="Berlin">Berlin</option>
-                  <option value="Sydney">Sydney</option>
-                </select>
-              )}
+                <option value="New York">New York</option>
+                <option value="Tokyo">Tokyo</option>
+                <option value="London">London</option>
+                <option value="Berlin">Berlin</option>
+                <option value="Sydney">Sydney</option>
+                <option value="Paris">Paris</option>
+                <option value="Toronto">Toronto</option>
+                <option value="Mumbai">Mumbai</option>
+              </select>
             </div>
             <div className="text-xs text-gray-600">
               {isLoadingReddit ? 'Loading...' : `${feedPosts.length} posts`}
@@ -395,20 +501,31 @@ export const SocialFeed = () => {
               <div className="px-4 pb-4">
                 <p className="text-black leading-relaxed mb-3">{post.content}</p>
                 
-                {/* Image */}
-                <div className="mb-4 relative">
-                  <img 
-                    src={post.image} 
-                    alt="Post content" 
-                    className="w-full h-48 object-cover border-4 border-black"
-                  />
-                  {post.product.trustGuarantee && (
-                    <div className="absolute top-2 right-2 px-2 py-1 bg-green-400 border-2 border-black text-xs font-bold flex items-center">
-                      <Shield className="w-3 h-3 mr-1" />
-                      TRUST GUARANTEED
-                    </div>
-                  )}
-                </div>
+                {/* Enhanced Image Display */}
+                {post.image && (
+                  <div className="mb-4 relative">
+                    <img 
+                      src={post.image} 
+                      alt="Post content" 
+                      className="w-full h-48 object-cover border-4 border-black"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                    {post.product?.trustGuarantee && (
+                      <div className="absolute top-2 right-2 px-2 py-1 bg-green-400 border-2 border-black text-xs font-bold flex items-center">
+                        <Shield className="w-3 h-3 mr-1" />
+                        TRUST GUARANTEED
+                      </div>
+                    )}
+                    {/* Source indicator for content attribution */}
+                    {post.source === 'reddit' && (
+                      <div className="absolute bottom-2 left-2 px-2 py-1 bg-black text-white text-xs font-bold border border-white">
+                        COMMUNITY VERIFIED
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
@@ -432,45 +549,46 @@ export const SocialFeed = () => {
                 </div>
               </div>
 
-              {/* Product Card with Contextual Blink Integration */}
-              <div className="mx-4 mb-4 p-4 bg-gray-50 border-4 border-black">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <h3 className="font-bold text-black">{post.product.name}</h3>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <span className="text-xl font-bold text-black">{post.product.price}</span>
-                      {post.product.originalPrice && (
-                        <span className="text-sm text-gray-500 line-through">{post.product.originalPrice}</span>
-                      )}
-                      {post.product.trustGuarantee && (
-                        <span className="px-2 py-1 bg-green-200 border-2 border-black text-xs font-bold">
-                          🛡️ PROTECTED
-                        </span>
-                      )}
+              {/* Product Card - Only show if product exists */}
+              {post.product && (
+                <div className="mx-4 mb-4 p-4 bg-gray-50 border-4 border-black">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <h3 className="font-bold text-black">{post.product.name}</h3>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="text-xl font-bold text-black">${post.product.price}</span>
+                        {post.product.originalPrice && (
+                          <span className="text-sm text-gray-500 line-through">{post.product.originalPrice}</span>
+                        )}
+                        {post.product.trustGuarantee && (
+                          <span className="px-2 py-1 bg-green-200 border-2 border-black text-xs font-bold">
+                            🛡️ PROTECTED
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col space-y-2">
+                      <Button
+                        onClick={() => setActivePurchasePost(post)}
+                        className="px-3 py-2 bg-black text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-1px] hover:translate-y-[-1px] text-sm"
+                      >
+                        Buy Now
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex flex-col space-y-2">
-                    <Button
-                      onClick={() => setActivePurchasePost(post)}
-                      className="px-3 py-2 bg-black text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] transition-all duration-200 transform hover:translate-x-[-1px] hover:translate-y-[-1px] text-sm"
-                    >
-                      Buy Now
-                    </Button>
-
-                  </div>
-                </div>
-                
-                {/* Trust Score for Product */}
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600">Trust Oracle Score</span>
-                  <div className="flex items-center space-x-1">
-                    <div className="w-16 bg-gray-200 border border-black h-2">
-                      <div className="bg-green-400 h-full" style={{width: `${post.user.trustScore}%`}}></div>
+                  
+                  {/* Trust Score for Product */}
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-600">Trust Oracle Score</span>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-16 bg-gray-200 border border-black h-2">
+                        <div className="bg-green-400 h-full" style={{width: `${post.user.trustScore}%`}}></div>
+                      </div>
+                      <span className="font-bold text-green-600">{post.user.trustScore}%</span>
                     </div>
-                    <span className="font-bold text-green-600">{post.user.trustScore}%</span>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Enhanced Interaction Bar */}
               <div className="flex items-center justify-between p-4 bg-gray-50 border-t-4 border-black">
