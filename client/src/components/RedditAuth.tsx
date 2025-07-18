@@ -24,18 +24,58 @@ export function RedditAuth({ onAuthComplete }: RedditAuthProps) {
       if (data.success && data.authUrl) {
         setAuthUrl(data.authUrl);
         
+        console.log('Opening Reddit authorization URL:', data.authUrl);
+        
         // Open authorization URL in new window
-        window.open(data.authUrl, 'reddit-auth', 'width=600,height=700');
+        const authWindow = window.open(data.authUrl, 'reddit-auth', 'width=600,height=700');
         
         // Listen for callback completion
         const checkAuth = setInterval(async () => {
           try {
+            // Check if the auth window was closed (user completed or cancelled)
+            if (authWindow?.closed) {
+              clearInterval(checkAuth);
+              
+              // Test if authentication was successful
+              const feedResponse = await fetch('/api/reddit/feed?limit=1');
+              const feedData = await feedResponse.json();
+              
+              if (feedData.success && feedData.total > 0) {
+                setAuthStatus('authorized');
+                toast({
+                  title: "Reddit Connected",
+                  description: "Successfully connected to Reddit API for enhanced content",
+                });
+                onAuthComplete?.();
+              } else {
+                // Check if there was an error message
+                if (feedData.message && feedData.message.includes('authorization required')) {
+                  setAuthStatus('error');
+                  toast({
+                    title: "Authorization Required",
+                    description: "Please complete Reddit authorization to enable enhanced content",
+                    variant: "destructive",
+                  });
+                } else {
+                  setAuthStatus('error');
+                  toast({
+                    title: "Authorization Failed",
+                    description: "Reddit authorization was not completed successfully",
+                    variant: "destructive",
+                  });
+                }
+              }
+              return;
+            }
+            
+            // Also check if auth succeeded while window is still open
             const feedResponse = await fetch('/api/reddit/feed?limit=1');
             const feedData = await feedResponse.json();
             
             if (feedData.success && feedData.total > 0) {
               setAuthStatus('authorized');
               clearInterval(checkAuth);
+              authWindow?.close();
               toast({
                 title: "Reddit Connected",
                 description: "Successfully connected to Reddit API for enhanced content",
@@ -52,6 +92,11 @@ export function RedditAuth({ onAuthComplete }: RedditAuthProps) {
           clearInterval(checkAuth);
           if (authStatus === 'pending') {
             setAuthStatus('error');
+            toast({
+              title: "Authorization Timeout",
+              description: "Reddit authorization timed out. Please try again.",
+              variant: "destructive",
+            });
           }
         }, 300000);
         
