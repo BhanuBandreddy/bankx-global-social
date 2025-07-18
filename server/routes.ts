@@ -1068,7 +1068,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { redditService } = await import('./reddit-service');
       const state = Math.random().toString(36).substring(7);
-      const redirectUri = `${req.protocol}://${req.get('host')}/api/reddit/callback`;
+      
+      // Use the correct domain from environment or fallback to host header
+      const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || req.get('host');
+      const redirectUri = `https://${domain}/api/reddit/callback`;
       
       const authUrl = redditService.getAuthorizationUrl(redirectUri, state);
       
@@ -1105,7 +1108,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { redditService } = await import('./reddit-service');
-      const redirectUri = `${req.protocol}://${req.get('host')}/api/reddit/callback`;
+      
+      // Use the correct domain from environment or fallback to host header
+      const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || req.get('host');
+      const redirectUri = `https://${domain}/api/reddit/callback`;
       
       const success = await redditService.exchangeCodeForToken(code as string, redirectUri);
       
