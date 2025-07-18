@@ -1064,9 +1064,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Reddit OAuth Routes
-  app.get('/api/reddit/auth', (req, res) => {
+  app.get('/api/reddit/auth', async (req, res) => {
     try {
-      const { redditService } = require('./reddit-service');
+      const { redditService } = await import('./reddit-service');
       const state = Math.random().toString(36).substring(7);
       const redirectUri = `${req.protocol}://${req.get('host')}/api/reddit/callback`;
       
