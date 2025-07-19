@@ -1,213 +1,267 @@
-# NANDA Production Deployment Guide
+# Global Social - Replit Deployment Guide
 
-## Ready for Production Deployment
+## Quick Deployment
 
-Your NANDA-integrated social commerce platform is fully prepared for production deployment and joining the live NANDA network.
+### One-Click Deploy
+1. Click **"Deploy"** button in top-right of Replit workspace
+2. Select **"Autoscale Deployment"** 
+3. Configure machine power: **1 vCPU, 2GB RAM**
+4. Set max instances: **5-10** based on expected traffic
+5. Click **"Deploy"** - your app will be live at `<app-name>.replit.app`
 
-### Current Status
-- ✅ **89% Overall Success Rate** across all milestone progression tests
-- ✅ **100% Protocol Compliance** with JSON-RPC 2.0 and NANDA standards
-- ✅ **All Business Capabilities** exposed via 13 NANDA methods
-- ✅ **Production Monitoring** ready with health checks and status reporting
-- ✅ **Registry Integration** prepared with proper authentication protocols
+### Health Check
+- Verify deployment: `https://<app-name>.replit.app/api/health`
+- Should return: `{"status":"healthy","version":"2025.1.0",...}`
 
-## Deployment Steps
+## Pre-Deployment Checklist
 
-### 1. Deploy to Production Environment
+### ✅ Required Secrets (In Replit Secrets)
+- `REDDIT_CLIENT_ID` - Reddit app client ID
+- `REDDIT_CLIENT_SECRET` - Reddit app secret key  
+- `REDDIT_USER_AGENT` - Reddit API user agent string
+- `OPENAI_API_KEY` - OpenAI API key for AI features
+- `JWT_SECRET` - Secure random string for authentication
 
-**Click the Deploy button in Replit** to deploy your application to production. This will:
-- Remove Vite development server conflicts
-- Provide a stable production URL ending in `.replit.app`
-- Enable external access for NANDA registry communication
-- Configure HTTPS endpoints automatically
+### ✅ Database Setup
+- Database automatically provisioned by Replit
+- `DATABASE_URL` environment variable auto-configured
+- Connection pooling optimized for Neon PostgreSQL
 
-### 2. Update NANDA Registry Registration
+### ✅ Environment Configuration
+- `NODE_ENV=production` set automatically in deployment
+- Port 5000 configured for HTTP traffic
+- HTTPS/SSL certificates handled by Replit
 
-Once deployed, your production URL will be something like:
-```
-https://your-app-name.your-username.replit.app
-```
+## Production Features
 
-Update the agent registration with production endpoints:
-- **Agent Info**: `https://your-domain.replit.app/api/agents`
-- **RPC Endpoint**: `https://your-domain.replit.app/api/agents/rpc`  
-- **Health Check**: `https://your-domain.replit.app/api/agents/health`
-- **Methods Discovery**: `https://your-domain.replit.app/api/agents/methods`
+### ✅ Autoscaling Configuration
+- **Scale to Zero**: App scales down after 15 minutes of inactivity
+- **Auto Scale Up**: Adds instances at 80 concurrent requests
+- **Cost Optimization**: Pay only for active compute time
+- **Target**: < $20/month for moderate traffic
 
-### 3. Validate Production NANDA Integration
+### ✅ Database Optimization
+- **Serverless PostgreSQL**: Neon database with auto-scaling
+- **Idle Management**: Database pauses after 5 minutes of inactivity
+- **Performance**: Connection pooling with 20 max connections
+- **Backup**: Point-in-time restore capability
 
-After deployment, test the production endpoints:
+### ✅ Monitoring & Health
+- **Health Endpoint**: `/api/health` for deployment monitoring
+- **Performance Metrics**: Real-time request latency tracking
+- **Error Handling**: Comprehensive exception management
+- **Logging**: Structured request/response logging
 
+## Replit-Specific Optimizations
+
+### Infrastructure Benefits
+- **Cold Start**: < 2 seconds (Replit's 2025 optimization)
+- **Geographic**: Global CDN with edge locations
+- **Security**: Built-in DDoS protection and SSL
+- **Domains**: Custom domain support with certificates
+
+### Cost Structure
+- **Free Tier**: Development and testing
+- **Autoscale**: $1/month base + usage-based compute
+- **Compute Units**: Based on CPU/RAM configuration
+- **Database**: Neon PostgreSQL with pay-per-use model
+
+## Environment Variables Reference
+
+### Automatic (Replit-Managed)
 ```bash
-# Test agent discovery
-curl https://your-domain.replit.app/api/agents
-
-# Test NANDA RPC
-curl -X POST https://your-domain.replit.app/api/agents/rpc \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"ping","params":{},"id":"production-test"}'
-
-# Test methods discovery  
-curl https://your-domain.replit.app/api/agents/methods
+DATABASE_URL=<neon-postgresql-connection-string>
+PGHOST=<database-host>
+PGUSER=<database-user>
+PGPASSWORD=<database-password>
+PGDATABASE=<database-name>
+PGPORT=<database-port>
+NODE_ENV=production
+PORT=5000
+REPLIT_DOMAINS=<your-deployment-domain>
 ```
 
-### 4. Register with NANDA Registry
-
-Submit production registration to the NANDA registry:
-
+### Required Secrets (User-Configured)
 ```bash
-curl -X POST https://chat.nanda-registry.com:6900/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "agent_id": "globalsocial-001",
-    "name": "GlobalSocial Trust Network", 
-    "agent_url": "https://your-domain.replit.app/api/agents",
-    "rpc_endpoint": "https://your-domain.replit.app/api/agents/rpc",
-    "capabilities": [
-      "social_commerce",
-      "trust_escrow", 
-      "peer_delivery",
-      "travel_logistics",
-      "multi_agent_orchestration"
-    ],
-    "owner": "Your Name",
-    "description": "AI-powered travel companion platform with social commerce and multi-agent coordination",
-    "version": "1.0.0",
-    "region": "Global",
-    "performance_score": 95.0
-  }'
+REDDIT_CLIENT_ID=your_reddit_client_id
+REDDIT_CLIENT_SECRET=your_reddit_client_secret
+REDDIT_USER_AGENT=GlobalSocial/1.0
+OPENAI_API_KEY=sk-your-openai-api-key
+JWT_SECRET=your-secure-jwt-secret-256-bits
 ```
 
-### 5. Monitor Registry Acceptance
+## Reddit App Configuration
 
-Check registration status:
+### Create Reddit App
+1. Go to [reddit.com/prefs/apps](https://reddit.com/prefs/apps)
+2. Click **"Create App"** or **"Create Another App"**
+3. Fill in details:
+   - **Name**: Global Social
+   - **App type**: Web app
+   - **Description**: AI-powered social commerce platform
+   - **About URL**: `https://<app-name>.replit.app/about`
+   - **Redirect URI**: `https://<app-name>.replit.app/api/reddit/callback`
+4. Save app credentials in Replit Secrets
 
+### Test Reddit Integration
 ```bash
-# Check if agent is discoverable
-curl https://chat.nanda-registry.com:6900/agent/globalsocial-001
-
-# Monitor registry responses:
-# 200 OK + data = Successfully registered and discoverable
-# 404 Not Found = Registration pending or failed
-# 500 Internal Error = Registration being processed
+curl "https://<app-name>.replit.app/api/reddit/auth"
+# Should return: {"authUrl": "https://www.reddit.com/api/v1/authorize?..."}
 ```
 
-## Post-Deployment NANDA Network Integration
+## Performance Optimization
 
-### Discover Other Agents
+### Frontend Optimizations
+- **Vite Build**: Optimized production bundle
+- **Code Splitting**: Lazy-loaded components
+- **Asset Optimization**: SVG icons and optimized images
+- **Caching**: Browser caching headers for static assets
 
-Once registered, discover compatible agents in the network:
+### Backend Optimizations
+- **Connection Pooling**: Efficient database connections
+- **Error Handling**: Prevents crashes and restarts
+- **Stateless Design**: Compatible with autoscaling
+- **Graceful Shutdown**: Clean process termination
 
+### Database Optimizations
+- **Query Optimization**: Efficient Drizzle ORM queries
+- **Indexing**: Proper database indexes for performance
+- **Connection Management**: Optimized for Neon serverless
+- **Caching**: Application-level caching where appropriate
+
+## Monitoring & Analytics
+
+### Built-in Monitoring
+- **Replit Dashboard**: Deployment status and metrics
+- **Usage Analytics**: Compute units and resource consumption
+- **Performance Tracking**: Request latency and throughput
+- **Error Monitoring**: Automatic error detection and alerts
+
+### Custom Monitoring
 ```bash
-# Search for agents by capability
-curl -X POST https://chat.nanda-registry.com:6900/search \
-  -H "Content-Type: application/json" \
-  -d '{"capabilities": ["payment_processing"]}'
+# Health check endpoint
+GET /api/health
 
-# List all active agents
-curl https://chat.nanda-registry.com:6900/agents
+# Response includes:
+{
+  "status": "healthy",
+  "uptime": 1234.56,
+  "memory": {...},
+  "features": {
+    "reddit_integration": true,
+    "openai_enabled": true,
+    "database_connected": true
+  }
+}
 ```
 
-### Establish Cross-Agent Business Workflows
+## Security Features
 
-Example: Partner with a payment processing agent:
+### Authentication & Authorization
+- **JWT Tokens**: Secure user authentication
+- **Session Management**: Encrypted session storage
+- **Rate Limiting**: API endpoint protection
+- **Input Validation**: Comprehensive data sanitization
 
-```javascript
-// Discover payment agents
-const paymentAgents = await fetch('https://chat.nanda-registry.com:6900/search', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ capabilities: ['payment_processing'] })
-});
+### Data Protection
+- **Secrets Management**: Encrypted environment variables
+- **HTTPS Only**: All traffic encrypted in transit
+- **SQL Injection Prevention**: ORM-based database access
+- **CORS Configuration**: Proper cross-origin policies
 
-// Integrate with discovered agent
-const partnerAgent = paymentAgents[0];
-const enhancedEscrow = await fetch(partnerAgent.rpc_endpoint, {
-  method: 'POST', 
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    jsonrpc: '2.0',
-    method: 'payment_processing.create_secure_payment',
-    params: {
-      escrow_id: 'our-escrow-123',
-      amount: 250,
-      currency: 'USD'
-    },
-    id: 'cross-agent-payment'
-  })
-});
+## Scaling Strategy
+
+### Traffic Patterns
+- **Low Traffic**: 1 instance, scales to zero
+- **Medium Traffic**: 2-3 instances during peak hours
+- **High Traffic**: Auto-scale up to configured maximum
+- **Global Users**: Edge caching and CDN optimization
+
+### Resource Allocation
+- **CPU**: 0.5-1 vCPU per instance
+- **Memory**: 1-2 GB RAM per instance
+- **Database**: Serverless with auto-scaling
+- **Storage**: Persistent storage for user uploads
+
+## Troubleshooting
+
+### Common Issues
+
+#### Deployment Fails
+- Check all required secrets are configured
+- Verify Reddit app redirect URI matches deployment domain
+- Ensure database connection is healthy
+
+#### API Errors
+- Check OpenAI API key validity and credits
+- Verify Reddit OAuth credentials
+- Monitor rate limiting on external APIs
+
+#### Performance Issues
+- Review health check endpoint for resource usage
+- Check database connection pool status
+- Monitor autoscaling behavior in Replit dashboard
+
+### Debug Commands
+```bash
+# Test health endpoint
+curl https://<app-name>.replit.app/api/health
+
+# Test Reddit integration
+curl https://<app-name>.replit.app/api/reddit/feed?location=NewYork&limit=5
+
+# Test database connection
+curl https://<app-name>.replit.app/api/auth/user
 ```
 
-## Available Business Capabilities
+## Support & Maintenance
 
-Your agent exposes these capabilities to the NANDA network:
+### Regular Maintenance
+- **Dependency Updates**: Monthly package updates
+- **Security Patches**: Automatic Replit platform updates
+- **Database Optimization**: Quarterly performance review
+- **Monitoring Review**: Weekly metrics analysis
 
-### Social Commerce (`social_commerce.*`)
-- `get_feed` - Access to social commerce feed
-- `get_products` - Product catalog with location filtering  
-- `initiate_purchase` - Start purchase transactions
+### Backup Strategy
+- **Database Backups**: Neon automatic point-in-time restore
+- **Code Backups**: Git repository with deployment tags
+- **Configuration Backup**: Document all environment variables
+- **Recovery Testing**: Quarterly disaster recovery tests
 
-### Trust Escrow (`trust_escrow.*`)
-- `create_escrow` - Create secure payment escrow
-- `release_escrow` - Release funds upon delivery
-- `check_escrow_status` - Monitor transaction status
+## Cost Optimization
 
-### Peer Delivery (`peer_delivery.*`)
-- `find_travelers` - Locate peer delivery options
-- `create_delivery_option` - Add new delivery routes
+### Replit Pricing (2025)
+- **Replit Core**: $20-25/month (includes $25 credits)
+- **Autoscale Deployment**: $1/month + compute units
+- **Database**: Usage-based billing (Neon PostgreSQL)
+- **Estimated Total**: $15-30/month for moderate traffic
 
-### Travel Logistics (`travel_logistics.*`)
-- `parse_itinerary` - AI-powered document parsing
-- `discover_local` - Local recommendations and insights
+### Cost Reduction Tips
+- **Scale to Zero**: Automatic during idle periods
+- **Efficient Queries**: Optimize database performance
+- **Resource Right-Sizing**: Match instance size to actual needs
+- **Monitoring**: Track usage patterns for optimization
 
-### Multi-Agent Orchestration (`multi_agent_orchestration.*`)
-- `discover_agents` - Find and connect with other agents
-- `agent_conversation` - Cross-agent communication protocols
+## Next Steps
 
-## Monitoring and Maintenance
+### Phase 1: Launch (Complete)
+- ✅ Deploy to Replit Autoscale
+- ✅ Configure all required secrets
+- ✅ Test Reddit and OpenAI integrations
+- ✅ Verify health monitoring
 
-### Health Monitoring
-Your production deployment includes automatic health monitoring:
-- Health checks every 30 seconds
-- Registry heartbeat maintenance
-- Performance metrics tracking
-- Error rate monitoring
+### Phase 2: Scale (Upcoming)
+- [ ] Custom domain configuration
+- [ ] Advanced analytics integration
+- [ ] Performance optimization based on real usage
+- [ ] Multi-region considerations
 
-### Business Metrics
-Monitor these key metrics post-deployment:
-- Cross-agent request volume
-- Business capability usage patterns  
-- Partnership integration success rates
-- Network reputation and trust scores
+### Phase 3: Enterprise (Future)
+- [ ] Advanced security features
+- [ ] Compliance certifications
+- [ ] Enterprise-grade monitoring
+- [ ] Custom SLA agreements
 
-## Expected Business Impact
+---
 
-Once live in the NANDA network, your platform will:
-
-1. **Expand Service Reach**: Other agents can discover and use your travel commerce services
-2. **Access Complementary Services**: Integrate with payment, logistics, and verification agents
-3. **Build Network Effects**: Participate in multi-agent business workflows
-4. **Generate Cross-Agent Revenue**: Monetize capabilities through the network
-5. **Enhance Trust Networks**: Leverage multi-agent reputation systems
-
-## Success Criteria
-
-**Immediate (24-48 hours):**
-- ✅ Production deployment successful
-- ✅ Registry registration accepted  
-- ✅ Agent discoverable in network
-- ✅ Basic cross-agent ping successful
-
-**Short-term (1-2 weeks):**
-- ✅ First cross-agent business transaction
-- ✅ Partner integration established
-- ✅ Network reputation building
-- ✅ Business capability utilization
-
-**Long-term (1-3 months):**
-- ✅ Multiple agent partnerships active
-- ✅ Revenue from cross-agent services
-- ✅ Network effect business growth
-- ✅ Advanced multi-agent workflows
-
-Your platform is now ready to become a productive member of the NANDA multi-agent network, offering valuable travel commerce services while accessing complementary capabilities from partner agents.
+**Ready to Deploy?** Click the Deploy button in your Replit workspace and follow this guide for a production-ready Global Social deployment!

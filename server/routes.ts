@@ -1225,6 +1225,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced health check for Replit deployment monitoring
+  app.get('/api/health', async (req, res) => {
+    try {
+      res.json({ 
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        version: '2025.1.0',
+        environment: process.env.NODE_ENV || 'development',
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        features: {
+          reddit_integration: !!process.env.REDDIT_CLIENT_ID,
+          openai_enabled: !!process.env.OPENAI_API_KEY,
+          database_connected: !!process.env.DATABASE_URL
+        }
+      });
+    } catch (error) {
+      res.status(503).json({
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // Conductor orchestration endpoints
