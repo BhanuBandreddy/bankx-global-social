@@ -66,10 +66,10 @@ const Index = () => {
     <div className="min-h-screen bg-gray-100" style={{ fontFamily: 'Roboto Mono, monospace' }}>
       <Navbar />
       
-      {/* Global Audio Mute Button */}
+      {/* Global Audio Mute Button - positioned to avoid navbar overlap */}
       <button
         onClick={toggleHeroAudio}
-        className="fixed top-6 left-6 neo-brutalist bg-white bg-opacity-90 hover:bg-opacity-100 p-3 z-50 transition-all duration-200"
+        className="fixed top-20 left-6 neo-brutalist bg-white bg-opacity-90 hover:bg-opacity-100 p-3 z-50 transition-all duration-200"
         title={heroAudioMuted ? "Unmute Hero Audio" : "Mute Hero Audio"}
       >
         {heroAudioMuted ? (

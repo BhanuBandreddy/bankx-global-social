@@ -69,16 +69,18 @@ const Auth = () => {
           ref={videoRef}
           autoPlay 
           loop 
-          muted={isMuted}
+          muted={true}
           playsInline
           poster="/placeholder.svg"
-          preload="metadata"
+          preload="auto"
           className="w-full h-full object-cover"
           style={{ filter: 'brightness(0.8) contrast(1.1)' }}
+          controls={false}
           onError={(e) => {
-            console.error('Video failed to load:', e);
+            console.error('Video failed to load on Auth page:', e);
             console.log('Video source attempted:', '/videos/globalsocial-bg.mp4');
             console.log('Environment:', { isDevelopment, isDeployment, hostname: window.location.hostname });
+            console.log('Video element:', videoRef.current);
             setVideoError(true);
             // Hide video and show gradient background
             if (videoRef.current) {
@@ -86,16 +88,26 @@ const Auth = () => {
             }
           }}
           onCanPlay={() => {
-            console.log('Video loaded successfully from:', '/videos/globalsocial-bg.mp4');
+            console.log('Auth page video loaded successfully from:', '/videos/globalsocial-bg.mp4');
             console.log('Environment:', { isDevelopment, isDeployment, hostname: window.location.hostname });
             setVideoError(false);
+            // Ensure video is visible
+            if (videoRef.current) {
+              videoRef.current.style.display = 'block';
+            }
           }}
           onLoadStart={() => {
-            console.log('Video loading started...');
+            console.log('Auth page video loading started...');
             console.log('Environment:', { isDevelopment, isDeployment, hostname: window.location.hostname });
           }}
           onLoadedData={() => {
-            console.log('Video data loaded successfully');
+            console.log('Auth page video data loaded successfully');
+          }}
+          onPlay={() => {
+            console.log('Auth page video started playing');
+          }}
+          onPause={() => {
+            console.log('Auth page video paused');
           }}
         >
           <source src="/videos/globalsocial-bg.mp4" type="video/mp4" />
@@ -130,11 +142,11 @@ const Auth = () => {
         <div className="absolute inset-0 bg-black bg-opacity-10"></div>
       </div>
 
-      {/* Mute Button - only show if video is loaded */}
+      {/* Mute Button - positioned to avoid overlapping and only show if video is loaded */}
       {!videoError && (
         <button
           onClick={toggleMute}
-          className="fixed top-6 left-6 neo-brutalist bg-white bg-opacity-90 hover:bg-opacity-100 p-3 z-30 transition-all duration-200"
+          className="fixed top-6 right-6 neo-brutalist bg-white bg-opacity-90 hover:bg-opacity-100 p-3 z-30 transition-all duration-200"
           title={isMuted ? "Unmute Audio" : "Mute Audio"}
         >
           {isMuted ? (
