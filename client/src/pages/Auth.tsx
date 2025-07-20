@@ -130,9 +130,9 @@ const Auth = () => {
           }}
         >
           <source src="/videos/globalsocial-bg.mp4" type="video/mp4" />
-          {/* Fallback gradient background */}
-          <div className="w-full h-full bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900"></div>
+          {/* Fallback gradient background if video fails */}
         </video>
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 opacity-50"></div>
         {/* Light overlay for better text readability while keeping video visible */}
         <div className="absolute inset-0 bg-black bg-opacity-10"></div>
       </div>
