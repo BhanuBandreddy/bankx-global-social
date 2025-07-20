@@ -14,6 +14,15 @@ import { mcpTransport } from "./mcp-transport";
 import { a2aProtocol } from "./a2a-protocol";
 import { nandaSecurity, rateLimit, validateAgentSignature, sanitizeInput, corsPolicy, validateRequestSize } from "./security-middleware";
 import tracksRouter from "./routes/tracks";
+import Stripe from "stripe";
+
+// Initialize Stripe
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY is required for X402 payments');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2023-10-16',
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -95,6 +104,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // X402 Stripe Payment Endpoints
+  app.post('/api/x402/create-escrow', authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { buyer, seller, amount, productId } = req.body;
+      const userId = req.user!.id;
+
+      console.log('Creating X402 Stripe escrow for:', { buyer, seller, amount, productId });
+
+      // Create Stripe Connect account as escrow wallet
+      const account = await stripe.accounts.create({
+        type: 'express',
+        metadata: {
+          buyer: buyer || userId,
+          seller: seller || userId,
+          amount: amount.toString(),
+          productId: productId || 'demo',
+          escrowType: 'x402_micropayment'
+        }
+      });
+
+      res.json({
+        success: true,
+        escrowId: account.id,
+        escrowWallet: account.id
+      });
+    } catch (error: any) {
+      console.error('X402 escrow creation error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to create escrow wallet',
+        details: error.message
+      });
+    }
+  });
+
+  app.post('/api/x402/lock-funds', authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { amount, currency = 'usd', escrowId } = req.body;
+
+      console.log('Locking X402 funds:', { amount, currency, escrowId });
+
+      // Create PaymentIntent to lock funds
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: currency.toLowerCase(),
+        automatic_payment_methods: { enabled: true },
+        metadata: {
+          escrowId: escrowId || 'demo',
+          paymentType: 'x402_micropayment'
+        }
+      });
+
+      res.json({
+        success: true,
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id
+      });
+    } catch (error: any) {
+      console.error('X402 fund locking error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to lock funds',
+        details: error.message
+      });
+    }
+  });
+
+  app.post('/api/x402/release-funds', authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { paymentIntentId, escrowId, sellerId } = req.body;
+
+      console.log('Releasing X402 funds:', { paymentIntentId, escrowId, sellerId });
+
+      // For demo purposes - in production, this would transfer to seller
+      // Currently just confirms the payment was processed
+      res.json({
+        success: true,
+        status: 'released',
+        transactionId: `stripe_x402_${Date.now()}`,
+        message: 'Funds released successfully'
+      });
+    } catch (error: any) {
+      console.error('X402 fund release error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to release funds',
+        details: error.message
+      });
+    }
+  });
+
   // Escrow and payment routes - Enhanced
   app.post("/api/escrow/initiate", authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
@@ -135,6 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currency,
         status: "escrowed",
         paymentMethod: "x402",
+        x402PaymentId: req.body.x402PaymentId || null,
         deliveryOption: deliveryOption || null,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       }).returning();

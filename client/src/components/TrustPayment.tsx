@@ -1,10 +1,15 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, Shield, Clock, CheckCircle, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api";
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+
+// Initialize Stripe
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
 
 interface Product {
   id: string;
@@ -20,10 +25,67 @@ interface TrustPaymentProps {
   onPaymentCancel: () => void;
 }
 
+// Enhanced Payment Form Component with Stripe Elements
+const PaymentForm = ({ amount, currency, onPaymentSuccess, onPaymentError }: {
+  amount: number;
+  currency: string;
+  onPaymentSuccess: (paymentIntent: any) => void;
+  onPaymentError: (error: string) => void;
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!stripe || !elements) return;
+
+    setIsProcessing(true);
+
+    try {
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        redirect: 'if_required',
+      });
+
+      if (error) {
+        onPaymentError(error.message || 'Payment failed');
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        onPaymentSuccess(paymentIntent);
+      }
+    } catch (err: any) {
+      onPaymentError(err.message || 'Payment processing error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
+        <PaymentElement 
+          options={{
+            layout: 'tabs'
+          }}
+        />
+      </div>
+      <Button 
+        type="submit" 
+        disabled={!stripe || isProcessing}
+        className="w-full neo-button neo-button-blue"
+      >
+        {isProcessing ? 'Processing...' : `Pay $${amount} with X402`}
+      </Button>
+    </form>
+  );
+};
+
 export const TrustPayment = ({ product, onPaymentSuccess, onPaymentCancel }: TrustPaymentProps) => {
-  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'creating-escrow' | 'payment-ready' | 'processing' | 'success' | 'error'>('idle');
   const [x402PaymentId, setX402PaymentId] = useState<string>('');
   const [escrowDetails, setEscrowDetails] = useState<any>(null);
+  const [clientSecret, setClientSecret] = useState<string>('');
   const { toast } = useToast();
 
   // Extract numeric amount from price string (e.g., "€200" -> 200)
@@ -37,80 +99,140 @@ export const TrustPayment = ({ product, onPaymentSuccess, onPaymentCancel }: Tru
 
   const initiatex402Payment = async () => {
     try {
-      setPaymentStatus('processing');
-      console.log('Initiating x402 payment for product:', product.id);
-
-      // Simulate x402 payment processing for now
-      const data = { success: true };
-
-      // Simulate x402 payment processing
-      const mockX402PaymentId = `x402_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      setX402PaymentId(mockX402PaymentId);
-
-      // Simulate payment confirmation after a short delay
-      setTimeout(() => {
-        handlePaymentConfirmation(mockX402PaymentId);
-      }, 2000);
+      setPaymentStatus('creating-escrow');
+      console.log('Creating X402 escrow for product:', product.id);
 
       toast({
-        title: "💳 TrustPay Processing",
-        description: "Your x402 micropayment is being processed securely...",
+        title: "🔒 Creating Secure Escrow",
+        description: "Setting up X402 micropayment escrow...",
       });
 
-    } catch (error) {
+      // Step 1: Create escrow wallet
+      const escrowResponse = await fetch('/api/x402/create-escrow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: JSON.stringify({
+          buyer: 'current_user',
+          seller: 'merchant',
+          amount,
+          productId: product.id
+        })
+      });
+
+      const escrowData = await escrowResponse.json();
+      if (!escrowData.success) {
+        throw new Error(escrowData.error || 'Failed to create escrow');
+      }
+
+      setEscrowDetails(escrowData);
+
+      // Step 2: Lock funds with PaymentIntent
+      const lockResponse = await fetch('/api/x402/lock-funds', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: JSON.stringify({
+          amount,
+          currency: currency.toLowerCase(),
+          escrowId: escrowData.escrowId
+        })
+      });
+
+      const lockData = await lockResponse.json();
+      if (!lockData.success) {
+        throw new Error(lockData.error || 'Failed to lock funds');
+      }
+
+      setClientSecret(lockData.clientSecret);
+      setX402PaymentId(lockData.paymentIntentId);
+      setPaymentStatus('payment-ready');
+
+      toast({
+        title: "💳 Payment Ready",
+        description: "Enter your payment details to complete X402 transaction",
+      });
+
+    } catch (error: any) {
       console.error('Error initiating x402 payment:', error);
       setPaymentStatus('error');
       toast({
         title: "Payment Error",
-        description: "Failed to initiate payment. Please try again.",
+        description: error.message || "Failed to initiate payment. Please try again.",
         variant: "destructive"
       });
     }
   };
 
-  const handlePaymentConfirmation = async (paymentId: string) => {
+  const handleStripePaymentSuccess = async (paymentIntent: any) => {
     try {
-      console.log('Confirming payment and initiating escrow:', paymentId);
+      console.log('X402 payment succeeded:', paymentIntent.id);
+      setPaymentStatus('processing');
 
-      // Initiate escrow after successful payment
-      const data = await apiClient.initiateEscrow({
-        productId: product.id,
-        amount,
-        currency,
-        x402PaymentId: paymentId
+      toast({
+        title: "✅ Payment Confirmed",
+        description: "Creating escrow transaction...",
       });
 
-      if (data.success) {
-        setEscrowDetails(data.transaction);
-        setPaymentStatus('success');
-        
-        toast({
-          title: "🔒 Escrow Activated!",
-          description: `${currency} ${amount} secured in TrustPay escrow. Funds will be released upon delivery confirmation.`,
-        });
+      // Create escrow transaction in our database
+      const escrowResponse = await fetch('/api/escrow/initiate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          amount,
+          currency,
+          x402PaymentId: paymentIntent.id
+        })
+      });
 
-        onPaymentSuccess(data.transaction.id);
+      const escrowResult = await escrowResponse.json();
+      
+      if (escrowResult.success) {
+        setPaymentStatus('success');
+        toast({
+          title: "🎉 X402 Payment Complete",
+          description: `${product.name} secured in escrow`,
+        });
+        onPaymentSuccess(paymentIntent.id);
       } else {
-        throw new Error(data.error || 'Failed to initiate escrow');
+        throw new Error('Failed to create escrow transaction');
       }
 
-    } catch (error) {
-      console.error('Error confirming payment:', error);
+    } catch (error: any) {
+      console.error('X402 payment confirmation error:', error);
       setPaymentStatus('error');
       toast({
-        title: "Escrow Error",
-        description: "Payment succeeded but escrow setup failed. Please contact support.",
+        title: "Payment Error",
+        description: error.message || "Failed to confirm payment",
         variant: "destructive"
       });
     }
+  };
+
+  const handleStripePaymentError = (error: string) => {
+    setPaymentStatus('error');
+    toast({
+      title: "Payment Failed",
+      description: error,
+      variant: "destructive"
+    });
   };
 
   const getStatusIcon = () => {
     switch (paymentStatus) {
-      case 'processing':
-        return <Clock className="w-5 h-5 animate-spin text-blue-600" />;
       case 'success':
         return <CheckCircle className="w-5 h-5 text-green-600" />;
+      case 'processing':
+      case 'creating-escrow':
+        return <Clock className="w-5 h-5 text-blue-600" />;
       case 'error':
         return <AlertTriangle className="w-5 h-5 text-red-600" />;
       default:
@@ -120,23 +242,134 @@ export const TrustPayment = ({ product, onPaymentSuccess, onPaymentCancel }: Tru
 
   const getStatusMessage = () => {
     switch (paymentStatus) {
+      case 'creating-escrow':
+        return "Creating secure escrow wallet...";
+      case 'payment-ready':
+        return "Ready for payment - enter your details below";
       case 'processing':
-        return 'Processing x402 micropayment...';
+        return "Confirming payment and securing funds...";
       case 'success':
-        return 'Payment successful! Escrow activated.';
+        return `Payment confirmed! ${product.name} is secured in X402 escrow`;
       case 'error':
-        return 'Payment failed. Please try again.';
+        return "Payment failed. Please try again.";
       default:
-        return 'Ready to process secure payment';
+        return "Ultra-low fees, instant settlement, built-in escrow protection";
     }
   };
 
+  if (!stripePromise) {
+    return (
+      <Card className="neo-card">
+        <CardContent className="p-6">
+          <div className="text-center text-red-600">
+            Stripe configuration error. Please check environment variables.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="border-4 border-black">
-      <CardHeader className="bg-purple-100 border-b-4 border-black">
+    <Card className="neo-card">
+      <CardHeader>
         <CardTitle className="flex items-center space-x-2">
-          <Shield className="w-6 h-6" />
-          <span>Step 3: TrustPay Secure Payment</span>
+          {getStatusIcon()}
+          <span>X402 TrustPay - ${amount} {currency}</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="text-sm text-gray-600">
+          {getStatusMessage()}
+        </div>
+
+        {/* X402 Benefits */}
+        <div className="bg-blue-50 p-4 rounded-lg border">
+          <h4 className="font-medium text-blue-900 mb-2">X402 Micropayment Benefits:</h4>
+          <ul className="text-sm text-blue-700 space-y-1">
+            <li>• Ultra-low transaction fees (&lt; $0.01)</li>
+            <li>• Instant settlement with crypto backing</li>
+            <li>• Built-in escrow protection</li>
+            <li>• Trust score integration</li>
+            <li>• Automatic dispute resolution</li>
+          </ul>
+        </div>
+
+        {/* Payment States */}
+        {paymentStatus === 'idle' && (
+          <div className="flex space-x-4">
+            <Button
+              onClick={initiatex402Payment}
+              className="flex-1 neo-button neo-button-blue"
+            >
+              <Shield className="w-4 h-4 mr-2" />
+              Pay with X402 TrustPay
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={onPaymentCancel}
+              className="neo-button neo-button-white"
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
+
+        {paymentStatus === 'creating-escrow' && (
+          <div className="text-center">
+            <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2" />
+            <div className="text-sm text-gray-600">Creating secure escrow...</div>
+          </div>
+        )}
+
+        {paymentStatus === 'payment-ready' && clientSecret && (
+          <Elements stripe={stripePromise} options={{ clientSecret }}>
+            <PaymentForm
+              amount={amount}
+              currency={currency}
+              onPaymentSuccess={handleStripePaymentSuccess}
+              onPaymentError={handleStripePaymentError}
+            />
+          </Elements>
+        )}
+
+        {paymentStatus === 'processing' && (
+          <div className="text-center">
+            <div className="animate-spin w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full mx-auto mb-2" />
+            <div className="text-sm text-gray-600">Securing payment in escrow...</div>
+          </div>
+        )}
+
+        {paymentStatus === 'success' && escrowDetails && (
+          <div className="text-center p-4 bg-green-50 border border-green-200 rounded-lg">
+            <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
+            <div className="text-green-800 font-medium">X402 Payment Complete!</div>
+            <div className="text-sm text-green-600 mt-1">
+              Escrow ID: {escrowDetails.escrowId.slice(-8)}
+            </div>
+          </div>
+        )}
+
+        {paymentStatus === 'error' && (
+          <div className="flex space-x-4">
+            <Button
+              onClick={initiatex402Payment}
+              className="flex-1 neo-button neo-button-blue"
+            >
+              Try Again
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={onPaymentCancel}
+              className="neo-button neo-button-white"
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-6">
