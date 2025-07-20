@@ -17,7 +17,7 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Start muted to allow autoplay
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
   const { user, signIn, signUp } = useAuth();
@@ -28,6 +28,59 @@ const Auth = () => {
       navigate('/');
     }
   }, [user, navigate]);
+
+  // Video auto-play handling
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      // Log when video data is loaded
+      const handleLoadedData = () => {
+        console.log('Auth page video data loaded successfully');
+        // Try to play the video
+        video.play().catch(error => {
+          console.log('Auto-play prevented, video will play when user interacts:', error);
+        });
+      };
+
+      const handleCanPlay = () => {
+        console.log('Auth page video loaded successfully from:', video.src);
+        console.log('Environment:', {
+          isDevelopment: import.meta.env.DEV,
+          isDeployment: import.meta.env.PROD,
+          hostname: window.location.hostname
+        });
+      };
+
+      const handlePlay = () => {
+        console.log('Auth page video started playing');
+      };
+
+      const handlePause = () => {
+        console.log('Auth page video paused');
+      };
+
+      const handleError = (e: Event) => {
+        console.error('Auth page video error:', e);
+      };
+
+      video.addEventListener('loadeddata', handleLoadedData);
+      video.addEventListener('canplay', handleCanPlay);
+      video.addEventListener('play', handlePlay);
+      video.addEventListener('pause', handlePause);
+      video.addEventListener('error', handleError);
+
+      // Force load the video
+      video.load();
+
+      return () => {
+        video.removeEventListener('loadeddata', handleLoadedData);
+        video.removeEventListener('canplay', handleCanPlay);
+        video.removeEventListener('play', handlePlay);
+        video.removeEventListener('pause', handlePause);
+        video.removeEventListener('error', handleError);
+      };
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,10 +119,15 @@ const Auth = () => {
           loop 
           muted={isMuted}
           playsInline
-          poster="/placeholder.svg"
-          preload="metadata"
+          preload="auto"
           className="w-full h-full object-cover"
           style={{ filter: 'brightness(0.8) contrast(1.1)' }}
+          onLoadedData={() => {
+            // Ensure video starts playing when data is loaded
+            if (videoRef.current) {
+              videoRef.current.play().catch(console.log);
+            }
+          }}
         >
           <source src="/videos/globalsocial-bg.mp4" type="video/mp4" />
           {/* Fallback gradient background */}
