@@ -18,13 +18,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [isMuted, setIsMuted] = useState(false);
-  const [videoError, setVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
-  
-  // Detect deployment environment for debugging
-  const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const isDeployment = window.location.hostname.includes('.replit.app') || window.location.hostname.includes('.repl.co');
   const { user, signIn, signUp } = useAuth();
 
   // Redirect if already logged in
@@ -63,99 +58,39 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ fontFamily: 'Roboto Mono, monospace' }}>
-      {/* Video Background with Enhanced Fallback */}
+      {/* Video Background */}
       <div className="absolute inset-0 z-0">
         <video 
           ref={videoRef}
           autoPlay 
           loop 
-          muted={true}
+          muted={isMuted}
           playsInline
           poster="/placeholder.svg"
-          preload="auto"
+          preload="metadata"
           className="w-full h-full object-cover"
           style={{ filter: 'brightness(0.8) contrast(1.1)' }}
-          controls={false}
-          onError={(e) => {
-            console.error('Video failed to load on Auth page:', e);
-            console.log('Video source attempted:', '/videos/globalsocial-bg.mp4');
-            console.log('Environment:', { isDevelopment, isDeployment, hostname: window.location.hostname });
-            console.log('Video element:', videoRef.current);
-            setVideoError(true);
-            // Hide video and show gradient background
-            if (videoRef.current) {
-              videoRef.current.style.display = 'none';
-            }
-          }}
-          onCanPlay={() => {
-            console.log('Auth page video loaded successfully from:', '/videos/globalsocial-bg.mp4');
-            console.log('Environment:', { isDevelopment, isDeployment, hostname: window.location.hostname });
-            setVideoError(false);
-            // Ensure video is visible
-            if (videoRef.current) {
-              videoRef.current.style.display = 'block';
-            }
-          }}
-          onLoadStart={() => {
-            console.log('Auth page video loading started...');
-            console.log('Environment:', { isDevelopment, isDeployment, hostname: window.location.hostname });
-          }}
-          onLoadedData={() => {
-            console.log('Auth page video data loaded successfully');
-          }}
-          onPlay={() => {
-            console.log('Auth page video started playing');
-          }}
-          onPause={() => {
-            console.log('Auth page video paused');
-          }}
         >
           <source src="/videos/globalsocial-bg.mp4" type="video/mp4" />
+          {/* Fallback gradient background */}
+          <div className="w-full h-full bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900"></div>
         </video>
-        
-        {/* Enhanced Gradient Fallback Background */}
-        <div 
-          className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ${videoError ? 'opacity-100' : 'opacity-0'}`}
-          style={{
-            background: `
-              linear-gradient(135deg, #1e40af 0%, #7c3aed 30%, #4338ca 60%, #1e40af 100%),
-              radial-gradient(circle at 30% 70%, rgba(139, 69, 19, 0.3) 0%, transparent 50%),
-              radial-gradient(circle at 70% 30%, rgba(255, 215, 0, 0.2) 0%, transparent 50%)
-            `,
-            zIndex: videoError ? 1 : -1,
-          }}
-        >
-          {/* Animated overlay for dynamic effect */}
-          <div className="absolute inset-0 opacity-30">
-            <div className="h-full w-full bg-gradient-to-r from-transparent via-white to-transparent animate-pulse"></div>
-          </div>
-          
-          {/* Debug info for deployment */}
-          {videoError && (
-            <div className="absolute top-4 left-4 bg-black bg-opacity-75 text-white p-2 rounded text-xs">
-              Video fallback active • {window.location.hostname}
-            </div>
-          )}
-        </div>
-        
-        {/* Light overlay for better text readability */}
+        {/* Light overlay for better text readability while keeping video visible */}
         <div className="absolute inset-0 bg-black bg-opacity-10"></div>
       </div>
 
-      {/* Mute Button - positioned to avoid overlapping and only show if video is loaded */}
-      {!videoError && (
-        <button
-          onClick={toggleMute}
-          className="fixed top-6 right-6 neo-brutalist bg-white bg-opacity-90 hover:bg-opacity-100 p-3 z-30 transition-all duration-200"
-          title={isMuted ? "Unmute Audio" : "Mute Audio"}
-        >
-          {isMuted ? (
-            <VolumeX className="w-6 h-6 text-black" />
-          ) : (
-            <Volume2 className="w-6 h-6 text-black" />
-          )}
-        </button>
-      )}
+      {/* Mute Button */}
+      <button
+        onClick={toggleMute}
+        className="fixed top-6 left-6 neo-brutalist bg-white bg-opacity-90 hover:bg-opacity-100 p-3 z-30 transition-all duration-200"
+        title={isMuted ? "Unmute Audio" : "Mute Audio"}
+      >
+        {isMuted ? (
+          <VolumeX className="w-6 h-6 text-black" />
+        ) : (
+          <Volume2 className="w-6 h-6 text-black" />
+        )}
+      </button>
 
       {/* Compact login positioned at bottom right-center - stable positioning */}
       <div className="fixed bottom-4 right-8 w-80 lg:w-80 md:w-72 sm:w-full sm:right-4 sm:left-4 neo-brutalist bg-white bg-opacity-95 backdrop-blur-sm z-20" style={{ 

@@ -1068,10 +1068,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { redditService } = await import('./reddit-service');
       const state = Math.random().toString(36).substring(7);
-      
-      // Use the correct domain from environment or fallback to host header
-      const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || req.get('host');
-      const redirectUri = `https://${domain}/api/reddit/callback`;
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/reddit/callback`;
       
       const authUrl = redditService.getAuthorizationUrl(redirectUri, state);
       
@@ -1108,10 +1105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { redditService } = await import('./reddit-service');
-      
-      // Use the correct domain from environment or fallback to host header
-      const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || req.get('host');
-      const redirectUri = `https://${domain}/api/reddit/callback`;
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/reddit/callback`;
       
       const success = await redditService.exchangeCodeForToken(code as string, redirectUri);
       
@@ -1222,31 +1216,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error(`Error searching local subreddit for ${req.params.location}:`, error);
       res.status(500).json({ error: 'Failed to search local subreddit' });
-    }
-  });
-
-  // Enhanced health check for Replit deployment monitoring
-  app.get('/api/health', async (req, res) => {
-    try {
-      res.json({ 
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        version: '2025.1.0',
-        environment: process.env.NODE_ENV || 'development',
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
-        features: {
-          reddit_integration: !!process.env.REDDIT_CLIENT_ID,
-          openai_enabled: !!process.env.OPENAI_API_KEY,
-          database_connected: !!process.env.DATABASE_URL
-        }
-      });
-    } catch (error) {
-      res.status(503).json({
-        status: 'unhealthy',
-        timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
     }
   });
 

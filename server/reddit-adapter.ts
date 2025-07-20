@@ -213,7 +213,7 @@ export class RedditPostAdapter {
     const image = this.getImageUrl(post);
 
     return {
-      id: `reddit_${post.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `reddit_${post.id}`,
       userId: `reddit_${post.author}`,
       user: {
         id: `reddit_${post.author}`,
