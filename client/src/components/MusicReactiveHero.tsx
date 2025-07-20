@@ -30,18 +30,18 @@ export default function MusicReactiveHero({ userName }: Props) {
       boxShadow: "6px 6px 0 #000",
     });
 
-    // --- Neo-Brutalist Hero Content (anchored to top 30%) ---
+    // --- Subtle Hero Content (positioned higher to show more animation) ---
     const titleContainer = document.createElement("div");
     Object.assign(titleContainer.style, {
       position: "absolute", 
       left: "50%", 
-      top: "35%", // Anchored to top 35% for better balance
+      top: "25%", // Positioned higher to give more space to animations
       transform: "translate(-50%, -50%)",
       zIndex: "3",
       pointerEvents: "none",
       textAlign: "center",
-      width: "90%",
-      maxWidth: "900px",
+      width: "85%",
+      maxWidth: "700px",
     });
 
     const title = document.createElement("div");
@@ -59,24 +59,26 @@ export default function MusicReactiveHero({ userName }: Props) {
       pointerEvents: "auto", // Enable button interactions
     });
 
-    // Play Button
+    // Play Button - Smaller and more subtle
     const playButton = document.createElement("button");
     playButton.textContent = "PLAY";
-    playButton.className = "neo-button neo-button-orange";
+    playButton.className = "neo-button neo-button-white";
     Object.assign(playButton.style, {
-      fontSize: "18px",
-      padding: "20px 32px",
-      minWidth: "140px",
+      fontSize: "14px",
+      padding: "12px 20px",
+      minWidth: "90px",
+      opacity: "0.9",
     });
 
-    // Upload Button
+    // Upload Button - Smaller and more subtle
     const uploadButton = document.createElement("button");
     uploadButton.textContent = "UPLOAD";
-    uploadButton.className = "neo-button neo-button-neon-yellow";
+    uploadButton.className = "neo-button neo-button-white";
     Object.assign(uploadButton.style, {
-      fontSize: "18px",
-      padding: "20px 32px",
-      minWidth: "140px",
+      fontSize: "14px",
+      padding: "12px 20px",
+      minWidth: "90px",
+      opacity: "0.9",
     });
 
     buttonsContainer.appendChild(playButton);

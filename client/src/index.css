@@ -138,37 +138,37 @@ body {
 /* Hero Title Styles */
 .neo-hero-title {
   font-family: 'Archivo Black', sans-serif;
-  font-weight: 900;
-  font-size: clamp(4rem, 10vw, 8rem);
-  color: var(--replit-orange);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  color: rgba(255, 255, 255, 0.85);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  line-height: 0.9;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
   margin: 0;
-  padding: 40px 0 20px 0;
-  border-bottom: 6px solid var(--black);
-  text-shadow: 0 4px 16px rgba(0,0,0,0.8);
+  padding: 20px 0 10px 0;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
 }
 
 .neo-hero-subtitle {
   font-family: 'Public Sans', sans-serif;
-  font-weight: 600;
-  font-size: clamp(1rem, 2.5vw, 1.5rem);
-  color: rgba(255, 255, 255, 0.9);
+  font-weight: 400;
+  font-size: clamp(0.8rem, 1.8vw, 1.1rem);
+  color: rgba(255, 255, 255, 0.6);
   text-transform: lowercase;
-  letter-spacing: 0.02em;
-  margin: 20px 0 40px 0;
+  letter-spacing: 0.01em;
+  margin: 10px 0 20px 0;
   padding: 0;
 }
 
 /* Hero Button Container */
 .neo-hero-buttons {
   display: flex;
-  gap: 24px;
+  gap: 16px;
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-  margin-top: 40px;
+  margin-top: 20px;
 }
 
 /* Neo-brutalist Cards */
