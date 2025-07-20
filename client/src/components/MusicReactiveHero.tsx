@@ -22,24 +22,25 @@ export default function MusicReactiveHero({ userName }: Props) {
     Object.assign(mount.style, {
       position: "relative",
       width: "100%",
-      height: "700px",
+      height: window.innerWidth <= 768 ? "350px" : "550px", // Mobile responsive
+      maxHeight: window.innerWidth <= 768 ? "350px" : "550px",
       background: "#111",
-      border: "4px solid #fff",
-      borderRadius: "0",
-      boxShadow: "8px 8px 0 #000",
+      border: "3px solid #000",
+      borderRadius: "8px",
+      boxShadow: "6px 6px 0 #000",
     });
 
-    // --- Username Overlay (large text across light ray like GLOBAL SOCIAL) ---
+    // --- Username Overlay (anchored to top 30%) ---
     const titleContainer = document.createElement("div");
     Object.assign(titleContainer.style, {
       position: "absolute", 
       left: "50%", 
-      top: "50%",
+      top: "30%", // Anchored to top 30% instead of center
       transform: "translate(-50%, -50%)",
       color: "#fff", 
       zIndex: "3",
       textShadow: "0 4px 16px rgba(0,0,0,0.8)", 
-      fontFamily: "Arial, sans-serif",
+      fontFamily: "'Archivo Black', sans-serif",
       pointerEvents: "none",
       textAlign: "center",
       whiteSpace: "nowrap",

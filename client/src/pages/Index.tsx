@@ -80,9 +80,9 @@ const Index = () => {
         )}
       </button>
       
-      {/* Music Reactive Hero Section wrapped in neobrutalist container */}
-      <div className="p-6 bg-gray-100">
-        <div className="neo-brutalist bg-white">
+      {/* Compressed Hero Section - Desktop 550px, Mobile 350px */}
+      <div className="px-6 pt-6 pb-4 bg-gray-100">
+        <div className="neo-card bg-white h-[550px] md:h-[550px] sm:h-[350px] overflow-hidden">
           <MusicReactiveHero userName={user?.fullName || user?.email?.split('@')[0]?.toUpperCase() || "WELCOME"} />
         </div>
       </div>
@@ -97,8 +97,8 @@ const Index = () => {
           <div className="p-6">
             {/* Current Tab Indicator */}
             <div className="mb-8 text-center">
-              <div className="neo-brutalist bg-white text-black px-6 py-3 inline-block">
-                <span className="font-black text-xl uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
+              <div className="neo-button neo-button-yellow text-black px-8 py-4 inline-block">
+                <span className="font-black text-2xl uppercase" style={{ fontFamily: 'Archivo Black, sans-serif', letterSpacing: '2px' }}>
                   {activeTab === "feed" && "🌐 GLOBAL FEED"}
                   {activeTab === "agents" && "🤖 AI AGENTS"}
                   {activeTab === "trust" && "🔐 TRUST NETWORK"}
@@ -110,14 +110,17 @@ const Index = () => {
             {/* Content Based on Active Tab */}
             <div className="max-w-7xl mx-auto">
               {activeTab === "feed" && (
-                <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-                  {/* Main Feed - larger and centered */}
-                  <div className="xl:col-span-3">
+                <div className="flex flex-col lg:flex-row gap-8">
+                  {/* Main Feed - 66% width with 40px margins on desktop */}
+                  <div className="flex-1 lg:max-w-[66%] mx-0 lg:mx-10">
                     <SocialFeed />
                   </div>
                   
-                  {/* Right Side Panel - larger */}
-                  <div className="xl:col-span-1">
+                  {/* Divider between menu and chat - 32px spacing (desktop only) */}
+                  <div className="hidden lg:block w-1 bg-black mr-8"></div>
+                  
+                  {/* Right Side Panel with proper spacing */}
+                  <div className="w-full lg:w-80">
                     <div className="sticky top-6">
                       <BlinkChatPanel />
                     </div>
@@ -144,13 +147,13 @@ const Index = () => {
                       Traveler Connections
                     </h2>
                     <p className="text-black font-bold mb-12 text-lg">Interactive 3D map to discover travelers coming to any city worldwide</p>
-                    <Button 
+                    <button 
                       onClick={() => navigate('/traveler-world-map')}
-                      className="neo-brutalist bg-lime-400 text-black hover:bg-lime-500 px-12 py-6 font-black uppercase text-lg"
-                      style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}
+                      className="neo-button neo-button-green px-12 py-6 font-black text-lg"
+                      style={{ fontFamily: 'Archivo Black, sans-serif', letterSpacing: '1px' }}
                     >
                       🌍 Launch 3D Map
-                    </Button>
+                    </button>
                   </div>
                 </div>
               )}

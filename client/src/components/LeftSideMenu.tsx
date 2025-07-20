@@ -55,12 +55,12 @@ export const LeftSideMenu = ({ activeTab, onTabChange }: LeftSideMenuProps) => {
               <button
                 key={item.id}
                 onClick={() => onTabChange(item.id)}
-                className={`neo-brutalist w-full text-left transition-colors ${
-                  isCollapsed ? 'p-4 justify-center' : 'p-6'
+                className={`neo-button w-full text-left transition-colors ${
+                  isCollapsed ? 'px-4 py-5 justify-center' : 'px-6 py-5'
                 } ${
                   activeTab === item.id 
-                    ? 'bg-black text-white' 
-                    : 'bg-white text-black hover:bg-gray-100'
+                    ? 'neo-button-pink text-white' 
+                    : 'neo-button-white text-black hover:bg-gray-100'
                 }`}
                 title={isCollapsed ? item.label : undefined}
               >
@@ -97,8 +97,8 @@ export const LeftSideMenu = ({ activeTab, onTabChange }: LeftSideMenuProps) => {
           )}
           <button
             onClick={() => handleNavigation("/demo")}
-            className={`neo-brutalist bg-lime-400 text-black hover:bg-lime-500 w-full text-left ${
-              isCollapsed ? 'p-3 justify-center' : 'p-4'
+            className={`neo-button neo-button-green w-full text-left ${
+              isCollapsed ? 'px-3 py-4 justify-center' : 'px-4 py-5'
             }`}
             title={isCollapsed ? "Demo Flow" : undefined}
           >

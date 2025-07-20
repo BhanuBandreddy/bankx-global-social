@@ -418,10 +418,10 @@ export const SocialFeed = () => {
 
   return (
     <div className="space-y-6">
-      {/* Global Feed - Responsive Design */}
-      <div className="w-full bg-white border-4 border-black">
+      {/* Global Feed with Neo-Brutalist Design */}
+      <div className="w-full neo-card bg-white">
         {/* Feed Header */}
-        <div className="p-6 border-b-4 border-black bg-white sticky top-0 z-10">
+        <div className="p-6 border-b-3 border-black bg-white sticky top-0 z-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-black uppercase tracking-tight">Global Feed</h2>
             <div className="flex items-center space-x-2 text-sm">
@@ -455,10 +455,10 @@ export const SocialFeed = () => {
           </div>
         </div>
 
-        {/* Vertical Feed */}
-        <div className="space-y-0">
+        {/* Vertical Feed with Card Layout */}
+        <div className="p-4 space-y-6">
           {feedPosts.map((post) => (
-            <div key={post.id} className="border-b-4 border-black bg-white">
+            <div key={post.id} className="neo-card bg-white border-3 border-black">
               {/* User Header with Trust Level */}
               <div className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
