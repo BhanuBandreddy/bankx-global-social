@@ -25,9 +25,9 @@ export const LeftSideMenu = ({ activeTab, onTabChange }: LeftSideMenuProps) => {
   ];
 
   return (
-    <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-white border-r-4 border-black h-full transition-all duration-300`} style={{ fontFamily: 'Roboto Mono, monospace' }}>
+    <div className={`${isCollapsed ? 'w-20' : 'w-80'} bg-white border-r-4 border-black h-full transition-all duration-300`} style={{ fontFamily: 'Roboto Mono, monospace' }}>
       {/* Header with Toggle */}
-      <div className="p-6 border-b-4 border-black bg-gray-100 flex items-center justify-between">
+      <div className="p-8 border-b-4 border-black bg-gray-100 flex items-center justify-between">
         {!isCollapsed && (
           <h2 className="text-xl font-black text-black uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '3px' }}>
             MENU
@@ -42,7 +42,7 @@ export const LeftSideMenu = ({ activeTab, onTabChange }: LeftSideMenuProps) => {
       </div>
 
       {/* Menu Content */}
-      <div className="p-6 space-y-8">
+      <div className="p-8 space-y-8">
         {/* Main Navigation */}
         <div>
           {!isCollapsed && (
@@ -56,7 +56,7 @@ export const LeftSideMenu = ({ activeTab, onTabChange }: LeftSideMenuProps) => {
                 key={item.id}
                 onClick={() => onTabChange(item.id)}
                 className={`neo-brutalist w-full text-left transition-colors ${
-                  isCollapsed ? 'p-3 justify-center' : 'p-4'
+                  isCollapsed ? 'p-4 justify-center' : 'p-6'
                 } ${
                   activeTab === item.id 
                     ? 'bg-black text-white' 

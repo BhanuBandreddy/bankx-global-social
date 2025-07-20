@@ -12,7 +12,7 @@ import { CustomIcons } from "@/components/CustomIcons";
 import { Button } from "@/components/ui/button";
 import { Volume2, VolumeX } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { RedditAuth } from "@/components/RedditAuth";
+// Reddit integration runs invisibly in backend - no frontend UI needed
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("feed");
@@ -107,44 +107,52 @@ const Index = () => {
             </div>
 
             {/* Content Based on Active Tab */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main Content Area */}
-              <div className="lg:col-span-2">
-                {activeTab === "feed" && <SocialFeed />}
-                {activeTab === "agents" && <AgentDashboard />}
-                {activeTab === "trust" && <TrustMetrics />}
-                {activeTab === "travelers" && (
-                  <div className="text-center py-12">
-                    <div className="neo-brutalist bg-white p-8">
-                      <h2 className="text-3xl font-black text-black mb-4 uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
-                        Traveler Connections
-                      </h2>
-                      <p className="text-black font-bold mb-8">Interactive 3D map to discover travelers coming to any city worldwide</p>
-                      <Button 
-                        onClick={() => navigate('/traveler-world-map')}
-                        className="neo-brutalist bg-lime-400 text-black hover:bg-lime-500 px-8 py-4 font-black uppercase"
-                        style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}
-                      >
-                        🌍 Launch 3D Map
-                      </Button>
+            <div className="max-w-7xl mx-auto">
+              {activeTab === "feed" && (
+                <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+                  {/* Main Feed - larger and centered */}
+                  <div className="xl:col-span-3">
+                    <SocialFeed />
+                  </div>
+                  
+                  {/* Right Side Panel - larger */}
+                  <div className="xl:col-span-1">
+                    <div className="sticky top-6">
+                      <BlinkChatPanel />
                     </div>
                   </div>
-                )}
-              </div>
-
-              {/* Right Side Panels */}
-              <div className="lg:col-span-1 space-y-6">
-                {/* Reddit Integration */}
-                <RedditAuth onAuthComplete={() => {
-                  // Refresh the feed when Reddit auth completes
-                  if (activeTab === 'feed') {
-                    window.location.reload();
-                  }
-                }} />
-                
-                {/* Blink Chat Panel */}
-                <BlinkChatPanel />
-              </div>
+                </div>
+              )}
+              
+              {activeTab === "agents" && (
+                <div className="max-w-6xl mx-auto">
+                  <AgentDashboard />
+                </div>
+              )}
+              
+              {activeTab === "trust" && (
+                <div className="max-w-6xl mx-auto">
+                  <TrustMetrics />
+                </div>
+              )}
+              
+              {activeTab === "travelers" && (
+                <div className="max-w-4xl mx-auto text-center py-12">
+                  <div className="neo-brutalist bg-white p-12">
+                    <h2 className="text-4xl font-black text-black mb-6 uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
+                      Traveler Connections
+                    </h2>
+                    <p className="text-black font-bold mb-12 text-lg">Interactive 3D map to discover travelers coming to any city worldwide</p>
+                    <Button 
+                      onClick={() => navigate('/traveler-world-map')}
+                      className="neo-brutalist bg-lime-400 text-black hover:bg-lime-500 px-12 py-6 font-black uppercase text-lg"
+                      style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}
+                    >
+                      🌍 Launch 3D Map
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

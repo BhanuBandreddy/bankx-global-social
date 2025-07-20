@@ -87,13 +87,13 @@ export const BlinkChatPanel = ({ isExpanded = false }: BlinkChatPanelProps) => {
 
   return (
     <div className={`neo-brutalist bg-cyan-50 border-4 border-black transition-all duration-300 ${
-      isMinimized ? 'h-16' : 'h-96'
+      isMinimized ? 'h-20' : 'h-[700px]'
     }`} style={{ fontFamily: 'Roboto Mono, monospace' }}>
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b-4 border-black bg-cyan-100">
-        <div className="flex items-center space-x-2">
-          <Bot className="w-5 h-5 text-black" strokeWidth={2.5} />
-          <h3 className="font-black text-sm uppercase text-black" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
+      <div className="flex items-center justify-between p-4 border-b-4 border-black bg-cyan-100">
+        <div className="flex items-center space-x-3">
+          <Bot className="w-6 h-6 text-black" strokeWidth={2.5} />
+          <h3 className="font-black text-lg uppercase text-black" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px' }}>
             BLINK CHAT
           </h3>
         </div>
@@ -108,9 +108,9 @@ export const BlinkChatPanel = ({ isExpanded = false }: BlinkChatPanelProps) => {
 
       {/* Chat Content */}
       {!isMinimized && (
-        <div className="flex flex-col h-80">
+        <div className="flex flex-col h-[650px]">
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.length === 0 ? (
               <div className="text-center py-8">
                 <Bot className="w-12 h-12 mx-auto text-gray-400 mb-3" strokeWidth={1.5} />
@@ -161,7 +161,7 @@ export const BlinkChatPanel = ({ isExpanded = false }: BlinkChatPanelProps) => {
           </div>
 
           {/* Input Area */}
-          <div className="border-t-4 border-black bg-cyan-100 p-3">
+          <div className="border-t-4 border-black bg-cyan-100 p-4">
             <div className="flex space-x-2">
               <Input
                 value={input}

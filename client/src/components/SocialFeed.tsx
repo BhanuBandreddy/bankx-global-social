@@ -418,26 +418,26 @@ export const SocialFeed = () => {
 
   return (
     <div className="space-y-6">
-      {/* Global Feed - Clean Mobile-First Design */}
-      <div className="max-w-md mx-auto bg-white border-4 border-black">
+      {/* Global Feed - Responsive Design */}
+      <div className="w-full bg-white border-4 border-black">
         {/* Feed Header */}
-        <div className="p-4 border-b-4 border-black bg-white sticky top-0 z-10">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xl font-bold text-black uppercase tracking-tight">Global Feed</h2>
-            <div className="flex items-center space-x-1 text-sm">
-              <div className="w-2 h-2 bg-green-400 border border-black rounded-full animate-pulse"></div>
-              <span className="text-green-600 font-bold">LIVE</span>
+        <div className="p-6 border-b-4 border-black bg-white sticky top-0 z-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-black uppercase tracking-tight">Global Feed</h2>
+            <div className="flex items-center space-x-2 text-sm">
+              <div className="w-3 h-3 bg-green-400 border border-black rounded-full animate-pulse"></div>
+              <span className="text-green-600 font-bold text-lg">LIVE</span>
             </div>
           </div>
           
           {/* Location Filter */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold text-gray-600">LOCATION:</span>
+            <div className="flex items-center space-x-3">
+              <span className="text-sm font-bold text-gray-600">LOCATION:</span>
               <select 
                 value={selectedLocation} 
                 onChange={(e) => setSelectedLocation(e.target.value)}
-                className="neo-brutalist text-xs px-2 py-1 bg-white border-2 border-black"
+                className="neo-brutalist text-sm px-4 py-2 bg-white border-2 border-black"
               >
                 <option value="New York">New York</option>
                 <option value="Tokyo">Tokyo</option>
