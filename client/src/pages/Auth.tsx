@@ -121,7 +121,7 @@ const Auth = () => {
           playsInline
           preload="auto"
           className="w-full h-full object-cover"
-          style={{ filter: 'brightness(0.8) contrast(1.1)' }}
+          style={{ filter: 'brightness(0.9) contrast(1.0)' }}
           onLoadedData={() => {
             // Ensure video starts playing when data is loaded
             if (videoRef.current) {
@@ -132,15 +132,14 @@ const Auth = () => {
           <source src="/videos/globalsocial-bg.mp4" type="video/mp4" />
           {/* Fallback gradient background if video fails */}
         </video>
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 opacity-50"></div>
         {/* Light overlay for better text readability while keeping video visible */}
-        <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+        <div className="absolute inset-0 bg-black bg-opacity-5"></div>
       </div>
 
       {/* Mute Button */}
       <button
         onClick={toggleMute}
-        className="fixed top-6 left-6 neo-brutalist bg-white bg-opacity-90 hover:bg-opacity-100 p-3 z-30 transition-all duration-200"
+        className="fixed top-6 right-6 neo-brutalist bg-white bg-opacity-90 hover:bg-opacity-100 p-3 z-30 transition-all duration-200"
         title={isMuted ? "Unmute Audio" : "Mute Audio"}
       >
         {isMuted ? (

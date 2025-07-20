@@ -302,10 +302,11 @@ class RedditService {
 
   // Demo data that shows the Reddit integration structure
   private getDemoRedditPosts(subreddit: string, limit: number): RedditPost[] {
+    const timestamp = Date.now();
     const demoData: { [key: string]: RedditPost[] } = {
       'travel': [
         {
-          id: 'demo_travel_1',
+          id: `reddit_demo_travel_1_${timestamp}`,
           title: 'Amazing hidden gems in Tokyo you need to visit',
           selftext: 'Just returned from a month in Tokyo and discovered these incredible spots that most tourists miss...',
           author: 'TravelEnthusiast',
@@ -323,7 +324,7 @@ class RedditService {
           }
         },
         {
-          id: 'demo_travel_2',
+          id: `reddit_demo_travel_2_${timestamp}`,
           title: 'Solo travel safety tips for first-time backpackers',
           selftext: 'After 3 years of solo backpacking across 40 countries, here are the essential safety tips...',
           author: 'BackpackerLife',
@@ -343,7 +344,7 @@ class RedditService {
       ],
       'deals': [
         {
-          id: 'demo_deals_1',
+          id: `reddit_demo_deals_1_${timestamp}`,
           title: '[Amazon] Premium Noise-Cancelling Headphones - 60% off ($89.99)',
           selftext: 'These headphones are usually $220+. Great reviews and perfect for travel!',
           author: 'DealHunter',
@@ -361,7 +362,7 @@ class RedditService {
           }
         },
         {
-          id: 'demo_deals_2',
+          id: `reddit_demo_deals_2_${timestamp}`,
           title: '[Best Buy] 4K Smart TV 55" - $399 (Reg $899)',
           selftext: 'Incredible deal on this highly-rated 4K smart TV. Perfect for gaming and streaming!',
           author: 'TechDeals',
@@ -381,7 +382,7 @@ class RedditService {
       ],
       'electronics': [
         {
-          id: 'demo_electronics_1',
+          id: `reddit_demo_electronics_1_${timestamp}`,
           title: 'New smartphone with 200MP camera - hands-on review',
           selftext: 'Just got my hands on the latest flagship. The camera quality is incredible...',
           author: 'TechReviewer',
