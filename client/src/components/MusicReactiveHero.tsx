@@ -30,71 +30,69 @@ export default function MusicReactiveHero({ userName }: Props) {
       boxShadow: "6px 6px 0 #000",
     });
 
-    // --- Username Overlay (anchored to top 30%) ---
+    // --- Neo-Brutalist Hero Content (anchored to top 30%) ---
     const titleContainer = document.createElement("div");
     Object.assign(titleContainer.style, {
       position: "absolute", 
       left: "50%", 
-      top: "30%", // Anchored to top 30% instead of center
+      top: "35%", // Anchored to top 35% for better balance
       transform: "translate(-50%, -50%)",
-      color: "#fff", 
       zIndex: "3",
-      textShadow: "0 4px 16px rgba(0,0,0,0.8)", 
-      fontFamily: "'Archivo Black', sans-serif",
       pointerEvents: "none",
       textAlign: "center",
-      whiteSpace: "nowrap",
+      width: "90%",
+      maxWidth: "900px",
     });
 
     const title = document.createElement("div");
     title.textContent = userName;
-    Object.assign(title.style, {
-      fontWeight: "900",
-      fontSize: "clamp(3rem, 8vw, 8rem)", 
-      letterSpacing: "0.1em", 
-      textTransform: "uppercase",
-      marginBottom: "0.5rem"
-    });
+    title.className = "neo-hero-title";
 
     const subtitle = document.createElement("div");
     subtitle.textContent = "shaping a world beyond borders";
-    Object.assign(subtitle.style, {
-      fontWeight: "400",
-      fontSize: "clamp(0.8rem, 2vw, 1.5rem)", 
-      letterSpacing: "0.05em", 
-      textTransform: "lowercase",
-      opacity: "0.8"
+    subtitle.className = "neo-hero-subtitle";
+
+    // Hero Buttons Container
+    const buttonsContainer = document.createElement("div");
+    buttonsContainer.className = "neo-hero-buttons";
+    Object.assign(buttonsContainer.style, {
+      pointerEvents: "auto", // Enable button interactions
     });
+
+    // Play Button
+    const playButton = document.createElement("button");
+    playButton.textContent = "PLAY";
+    playButton.className = "neo-button neo-button-orange";
+    Object.assign(playButton.style, {
+      fontSize: "18px",
+      padding: "20px 32px",
+      minWidth: "140px",
+    });
+
+    // Upload Button
+    const uploadButton = document.createElement("button");
+    uploadButton.textContent = "UPLOAD";
+    uploadButton.className = "neo-button neo-button-neon-yellow";
+    Object.assign(uploadButton.style, {
+      fontSize: "18px",
+      padding: "20px 32px",
+      minWidth: "140px",
+    });
+
+    buttonsContainer.appendChild(playButton);
+    buttonsContainer.appendChild(uploadButton);
+
+    // Upload Input (hidden)
+    const uploadInput = document.createElement("input");
+    uploadInput.type = "file";
+    uploadInput.accept = "audio/*";
+    uploadInput.style.display = "none";
+    buttonsContainer.appendChild(uploadInput);
 
     titleContainer.appendChild(title);
     titleContainer.appendChild(subtitle);
+    titleContainer.appendChild(buttonsContainer);
     mount.appendChild(titleContainer);
-
-    // --- Compact Controls ---
-    const controls = document.createElement("div");
-    Object.assign(controls.style, {
-      position: "absolute", top: "36px", width: "100%",
-      display: "flex", justifyContent: "center", alignItems: "center", gap: "16px",
-      zIndex: "10",
-    });
-    const playBtn = document.createElement("button");
-    playBtn.textContent = "PLAY";
-    Object.assign(playBtn.style, {
-      background: "#fff", color: "#111", fontWeight: "600", fontFamily: "Roboto Mono, monospace",
-      borderRadius: "14px", border: "0", fontSize: "1rem", padding: "8px 22px",
-      cursor: "pointer", boxShadow: "0 2px 8px #0002"
-    });
-    controls.appendChild(playBtn);
-    const input = document.createElement("input");
-    input.type = "file"; input.accept = "audio/*"; input.style.display = "none";
-    const uploadLabel = document.createElement("label");
-    uploadLabel.textContent = "Upload your song";
-    Object.assign(uploadLabel.style, {
-      background: "#fff", color: "#111", fontWeight: "600", fontFamily: "Roboto Mono, monospace",
-      borderRadius: "14px", padding: "8px 22px", cursor: "pointer", boxShadow: "0 2px 8px #0002"
-    });
-    uploadLabel.appendChild(input);
-    controls.appendChild(uploadLabel); mount.appendChild(controls);
 
     // Load user's current track on mount
     const loadCurrentTrack = async () => {
@@ -294,7 +292,8 @@ export default function MusicReactiveHero({ userName }: Props) {
     audio.src = "https://assets.codepen.io/7558/kosikk-slow-motion.ogg";
     audio.loop = true;
 
-    playBtn.onclick = async () => {
+    // Hero Button Event Handlers
+    playButton.onclick = async () => {
       try {
         if (!playing) {
           if (!ctx) {
@@ -309,13 +308,13 @@ export default function MusicReactiveHero({ userName }: Props) {
           }
           await ctx.resume();
           await audio.play();
-          playBtn.textContent = "STOP";
+          playButton.textContent = "STOP";
           playing = true;
           uniforms.isPlaying.value = true;
           audioStartedAt = performance.now();
         } else {
           audio.pause();
-          playBtn.textContent = "PLAY";
+          playButton.textContent = "PLAY";
           playing = false;
           uniforms.isPlaying.value = false;
         }
@@ -324,7 +323,12 @@ export default function MusicReactiveHero({ userName }: Props) {
         // Gracefully handle audio errors without breaking the visualization
       }
     };
-    input.onchange = async (e: any) => {
+    
+    uploadButton.onclick = () => {
+      uploadInput.click();
+    };
+    
+    uploadInput.onchange = async (e: any) => {
       try {
         const file = e.target.files && e.target.files[0];
         if (file) {
@@ -332,7 +336,7 @@ export default function MusicReactiveHero({ userName }: Props) {
           const formData = new FormData();
           formData.append('track', file);
           
-          uploadLabel.textContent = "Uploading...";
+          uploadButton.textContent = "UPLOADING...";
           
           const response = await fetch('/api/tracks/upload', {
             method: 'POST',
@@ -358,23 +362,23 @@ export default function MusicReactiveHero({ userName }: Props) {
               const audioUrl = URL.createObjectURL(audioBlob);
               audio.src = audioUrl;
               audio.play().catch(() => {});
-              if (!playing) playBtn.click();
-              uploadLabel.textContent = `Playing: ${result.track.originalName}`;
+              if (!playing) playButton.click();
+              uploadButton.textContent = `♪ ${result.track.originalName.slice(0, 10)}`;
             } else {
-              uploadLabel.textContent = "Stream failed";
+              uploadButton.textContent = "STREAM FAILED";
             }
           } else {
-            uploadLabel.textContent = "Upload failed";
+            uploadButton.textContent = "UPLOAD FAILED";
             // Fallback to local URL for immediate playback
             const url = URL.createObjectURL(file);
             audio.src = url;
             audio.play().catch(() => {});
-            if (!playing) playBtn.click();
+            if (!playing) playButton.click();
           }
         }
       } catch (error) {
         console.log("File upload error (non-critical):", error);
-        uploadLabel.textContent = "Upload your song";
+        uploadButton.textContent = "UPLOAD";
       }
     };
 
