@@ -4,6 +4,7 @@
 Social trust network platform with AI agents, payment escrow, and logistics coordination. Successfully migrated from Lovable/Supabase to Replit's built-in PostgreSQL database.
 
 ## Recent Changes
+- **Real X402 Stripe Payment System Implementation (July 2025)**: Implemented complete X402 micropayment system using real Stripe API with three core endpoints (create-escrow, lock-funds, release-funds); enhanced TrustPayment component with Stripe Elements integration for real payment processing; users now experience actual Stripe payment forms with escrow wallet creation, PaymentIntent fund locking, and database transaction recording; maintains backward compatibility with existing mock system while providing genuine payment processing capabilities; includes proper error handling, loading states, and payment confirmation flow
 - **Neo-Brutalist Design System Implementation (July 2025)**: Completely refactored design system with vibrant color palette (#FEE440 yellow, #FF2975 pink, #04E762 green), bold typography (Lexend Mega, Archivo Black, Public Sans), large buttons with 20px+ fonts and 32px padding, 3px black borders with 6px shadows, compressed hero section to 550px desktop/350px mobile with top 30% text anchoring, global feed limited to 66% width with 40px margins, neo-card layout with 24px vertical spacing, 32px spacing between menu and chat with black divider, asymmetrical card layouts throughout, mobile responsive adjustments, and modular CSS classes for easy maintenance
 - **Responsive Design & Reddit UI Removal (July 2025)**: Fixed mute button positioning to stay fixed at top-right corner (z-index 9999); improved responsive layout with larger components for bigger screens - menu expanded to 320px, feed takes full width, Blink chat increased to 700px height; completely removed all Reddit branding and UI elements from frontend while maintaining invisible backend integration; layout now properly utilizes screen real estate with better component alignment and sizing
 - **Reddit API Integration Complete (July 2025)**: Successfully implemented comprehensive Reddit API integration with proper Authorization Code Flow OAuth authentication, session management, and Reddit auth UI component; enhanced global feed UI to seamlessly display rich content with images and metadata without Reddit branding; increased post limit from 5 to 50 posts; implemented location-based content filtering with city-specific subreddit mapping; Reddit integration runs invisibly in backend with "COMMUNITY VERIFIED" badges; users can now connect to Reddit via OAuth popup for enhanced community content; framework ready for testing with valid Reddit API credentials
@@ -84,6 +85,7 @@ Social trust network platform with AI agents, payment escrow, and logistics coor
 - `/api/auth/*`: Authentication (signup, signin, user data)
 - `/api/feed`: Global social feed with product integration
 - `/api/products`: Product catalog and merchant management
+- `/api/x402/*`: Real Stripe-based X402 micropayment system (create-escrow, lock-funds, release-funds)
 - `/api/escrow/*`: Enhanced payment escrow with delivery options
 - `/api/delivery-options/*`: Multi-modal delivery system
 - `/api/travelers/*`: Peer delivery network matching
@@ -111,6 +113,8 @@ Social trust network platform with AI agents, payment escrow, and logistics coor
 - `JWT_SECRET`: For authentication tokens
 - `OPENAI_API_KEY`: For AI agent functionality
 - `MAPBOX_PUBLIC_TOKEN`: For mapping features
+- `STRIPE_SECRET_KEY`: For X402 payment processing (server-side)
+- `VITE_STRIPE_PUBLIC_KEY`: For X402 payment processing (client-side)
 - `DATABASE_URL`: PostgreSQL connection (auto-configured)
 
 ## Development Notes
