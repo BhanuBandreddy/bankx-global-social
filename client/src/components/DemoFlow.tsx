@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { SharedProductDiscovery } from "./shared/ProductDiscovery";
-import { SharedTrustPayment } from "./shared/TrustPayment";
+import { TrustPayment } from "./TrustPayment";
 import { PathSyncLogistics } from "./PathSyncLogistics";
 import { DemoProgressHeader } from "./demo/DemoProgressHeader";
 import { FileUploadStep } from "./demo/FileUploadStep";
@@ -194,11 +194,10 @@ export const DemoFlow = () => {
       )}
 
       {currentStep === 2 && selectedProduct && (
-        <SharedTrustPayment
+        <TrustPayment
           product={selectedProduct}
           onPaymentSuccess={handlePaymentSuccess}
           onPaymentCancel={handlePaymentCancel}
-          isDemo={true}
         />
       )}
 
