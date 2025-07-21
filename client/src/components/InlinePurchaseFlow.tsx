@@ -312,7 +312,7 @@ export const InlinePurchaseFlow = ({ post, isOpen, onClose }: InlinePurchaseFlow
         disabled={loading}
         className="w-full bg-black text-white border-2 border-black hover:bg-gray-800 font-bold py-3 shadow-[2px_2px_0px_0px_#000] hover:shadow-[4px_4px_0px_0px_#000] transition-all"
       >
-        {loading ? "Processing..." : "Secure Payment with Trust Oracle"}
+        {loading ? "Processing..." : "Pay with X402 (Real Stripe)"}
       </Button>
     </div>
   );
