@@ -185,7 +185,7 @@ const Auth = () => {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required={!isLogin}
-                  className="neo-brutalist w-full h-10 text-sm font-bold placeholder:text-gray-600 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="neo-brutalist w-full h-10 text-sm font-bold placeholder:text-gray-600 bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none"
                   placeholder="ENTER NAME"
                   style={{ fontFamily: 'Roboto Mono, monospace', transition: 'box-shadow 0.2s ease' }}
                 />
@@ -202,7 +202,7 @@ const Auth = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="neo-brutalist w-full h-10 text-sm font-bold placeholder:text-gray-600 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="neo-brutalist w-full h-10 text-sm font-bold placeholder:text-gray-600 bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none"
                 placeholder="EMAIL@DOMAIN.COM"
                 style={{ fontFamily: 'Roboto Mono, monospace', transition: 'box-shadow 0.2s ease' }}
               />
@@ -218,7 +218,7 @@ const Auth = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="neo-brutalist w-full h-10 text-sm font-bold placeholder:text-gray-600 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="neo-brutalist w-full h-10 text-sm font-bold placeholder:text-gray-600 bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none"
                 placeholder="••••••••"
                 minLength={6}
                 style={{ fontFamily: 'Roboto Mono, monospace', transition: 'box-shadow 0.2s ease' }}
@@ -233,7 +233,7 @@ const Auth = () => {
 
             <Button 
               type="submit" 
-              className="neo-brutalist w-full h-10 bg-blue-600 text-white hover:bg-blue-700 font-black text-sm uppercase disabled:opacity-50"
+              className="neo-brutalist w-full h-10 bg-orange-600 text-white hover:bg-orange-700 font-black text-sm uppercase disabled:opacity-50"
               disabled={loading}
               style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px', transition: 'background-color 0.2s ease' }}
             >
@@ -250,7 +250,7 @@ const Auth = () => {
                   setPassword('');
                   setFullName('');
                 }}
-                className="neo-brutalist bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50 px-4 py-2 font-black text-xs uppercase"
+                className="neo-brutalist bg-white text-orange-600 border-2 border-orange-600 hover:bg-orange-50 px-4 py-2 font-black text-xs uppercase"
                 style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '1px', transition: 'background-color 0.2s ease' }}
               >
                 {isLogin ? "REGISTER" : "LOGIN"}
