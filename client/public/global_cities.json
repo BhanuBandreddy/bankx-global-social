@@ -1,0 +1,202 @@
+[
+  {
+    "city": "Delhi",
+    "country": "India",
+    "iata": "DEL",
+    "lat": 28.5562,
+    "lon": 77.1000,
+    "type": "indian_hub",
+    "population": 32900000,
+    "daily_arrivals": 45000
+  },
+  {
+    "city": "Mumbai",
+    "country": "India", 
+    "iata": "BOM",
+    "lat": 19.0896,
+    "lon": 72.8656,
+    "type": "indian_hub",
+    "population": 21673000,
+    "daily_arrivals": 38000
+  },
+  {
+    "city": "Bengaluru",
+    "country": "India",
+    "iata": "BLR", 
+    "lat": 12.9716,
+    "lon": 77.5946,
+    "type": "indian_hub",
+    "population": 13193000,
+    "daily_arrivals": 22000
+  },
+  {
+    "city": "Chennai",
+    "country": "India",
+    "iata": "MAA",
+    "lat": 13.0827,
+    "lon": 80.2707,
+    "type": "indian_hub",
+    "population": 11503000,
+    "daily_arrivals": 18000
+  },
+  {
+    "city": "New York",
+    "country": "United States",
+    "iata": "JFK",
+    "lat": 40.7128,
+    "lon": -74.0060,
+    "type": "global_hub",
+    "population": 8336000,
+    "daily_arrivals": 125000
+  },
+  {
+    "city": "London",
+    "country": "United Kingdom",
+    "iata": "LHR",
+    "lat": 51.5074,
+    "lon": -0.1278,
+    "type": "global_hub",
+    "population": 9540000,
+    "daily_arrivals": 110000
+  },
+  {
+    "city": "Dubai",
+    "country": "UAE",
+    "iata": "DXB",
+    "lat": 25.2048,
+    "lon": 55.2708,
+    "type": "global_hub",
+    "population": 3500000,
+    "daily_arrivals": 85000
+  },
+  {
+    "city": "Singapore",
+    "country": "Singapore",
+    "iata": "SIN",
+    "lat": 1.3521,
+    "lon": 103.8198,
+    "type": "global_hub",
+    "population": 5900000,
+    "daily_arrivals": 72000
+  },
+  {
+    "city": "Tokyo",
+    "country": "Japan",
+    "iata": "NRT",
+    "lat": 35.6762,
+    "lon": 139.6503,
+    "type": "global_hub",
+    "population": 37400000,
+    "daily_arrivals": 95000
+  },
+  {
+    "city": "Hong Kong",
+    "country": "Hong Kong",
+    "iata": "HKG",
+    "lat": 22.3193,
+    "lon": 114.1694,
+    "type": "global_hub",
+    "population": 7500000,
+    "daily_arrivals": 68000
+  },
+  {
+    "city": "Bangkok",
+    "country": "Thailand",
+    "iata": "BKK",
+    "lat": 13.7563,
+    "lon": 100.5018,
+    "type": "regional_hub",
+    "population": 10600000,
+    "daily_arrivals": 45000
+  },
+  {
+    "city": "Kuala Lumpur",
+    "country": "Malaysia",
+    "iata": "KUL",
+    "lat": 3.1390,
+    "lon": 101.6869,
+    "type": "regional_hub",
+    "population": 8200000,
+    "daily_arrivals": 32000
+  },
+  {
+    "city": "Sydney",
+    "country": "Australia",
+    "iata": "SYD",
+    "lat": -33.8688,
+    "lon": 151.2093,
+    "type": "global_hub",
+    "population": 5300000,
+    "daily_arrivals": 42000
+  },
+  {
+    "city": "Frankfurt",
+    "country": "Germany",
+    "iata": "FRA",
+    "lat": 50.1109,
+    "lon": 8.6821,
+    "type": "global_hub",
+    "population": 760000,
+    "daily_arrivals": 78000
+  },
+  {
+    "city": "Paris",
+    "country": "France",
+    "iata": "CDG",
+    "lat": 48.8566,
+    "lon": 2.3522,
+    "type": "global_hub",
+    "population": 11000000,
+    "daily_arrivals": 65000
+  },
+  {
+    "city": "Amsterdam",
+    "country": "Netherlands",
+    "iata": "AMS",
+    "lat": 52.3676,
+    "lon": 4.9041,
+    "type": "global_hub",
+    "population": 1150000,
+    "daily_arrivals": 58000
+  },
+  {
+    "city": "Los Angeles",
+    "country": "United States",
+    "iata": "LAX",
+    "lat": 34.0522,
+    "lon": -118.2437,
+    "type": "global_hub",
+    "population": 4000000,
+    "daily_arrivals": 87000
+  },
+  {
+    "city": "Toronto",
+    "country": "Canada",
+    "iata": "YYZ",
+    "lat": 43.6532,
+    "lon": -79.3832,
+    "type": "global_hub",
+    "population": 2930000,
+    "daily_arrivals": 48000
+  },
+  {
+    "city": "Doha",
+    "country": "Qatar",
+    "iata": "DOH",
+    "lat": 25.2854,
+    "lon": 51.5310,
+    "type": "regional_hub",
+    "population": 640000,
+    "daily_arrivals": 55000
+  },
+  {
+    "city": "Istanbul",
+    "country": "Turkey",
+    "iata": "IST",
+    "lat": 41.0082,
+    "lon": 28.9784,
+    "type": "global_hub",
+    "population": 15500000,
+    "daily_arrivals": 62000
+  }
+]

@@ -1,0 +1,45 @@
+Date,Origin_City,Destination_City,Travelers,Purpose,Flight_Count
+2025-01-15,New York,Delhi,2340,Business,12
+2025-01-15,London,Mumbai,1890,Tourism,8
+2025-01-15,Dubai,Bengaluru,1650,Business,15
+2025-01-15,Singapore,Chennai,980,Business,6
+2025-01-15,Frankfurt,Delhi,1420,Business,7
+2025-01-15,Paris,Mumbai,1120,Tourism,5
+2025-01-15,Tokyo,Delhi,1680,Business,9
+2025-01-15,Hong Kong,Mumbai,1340,Business,11
+2025-01-15,Bangkok,Chennai,890,Tourism,4
+2025-01-15,Kuala Lumpur,Bengaluru,760,Business,3
+2025-01-15,Sydney,Mumbai,1050,Tourism,4
+2025-01-15,Los Angeles,Delhi,1980,Business,8
+2025-01-15,Toronto,Mumbai,890,Immigration,3
+2025-01-15,Amsterdam,Bengaluru,1240,Business,6
+2025-01-15,Doha,Delhi,2890,Transit,22
+2025-01-15,Istanbul,Mumbai,1560,Business,9
+2025-01-15,Delhi,New York,2180,Business,11
+2025-01-15,Mumbai,London,1670,Business,7
+2025-01-15,Bengaluru,Singapore,1920,Business,14
+2025-01-15,Chennai,Dubai,1230,Business,8
+2025-01-15,Delhi,Frankfurt,1380,Business,6
+2025-01-15,Mumbai,Paris,980,Tourism,4
+2025-01-15,Delhi,Tokyo,1540,Business,8
+2025-01-15,Mumbai,Hong Kong,1190,Business,9
+2025-01-15,Chennai,Bangkok,760,Tourism,3
+2025-01-15,Bengaluru,Kuala Lumpur,820,Business,4
+2025-01-15,Mumbai,Sydney,920,Immigration,3
+2025-01-15,Delhi,Los Angeles,1820,Business,7
+2025-01-15,Mumbai,Toronto,740,Immigration,2
+2025-01-15,Bengaluru,Amsterdam,1150,Business,5
+2025-01-15,Delhi,Doha,2340,Transit,18
+2025-01-15,Mumbai,Istanbul,1290,Business,7
+2025-01-15,London,New York,4560,Business,25
+2025-01-15,Paris,London,3890,Business,18
+2025-01-15,Frankfurt,Amsterdam,2340,Business,12
+2025-01-15,Dubai,Doha,1890,Business,14
+2025-01-15,Singapore,Hong Kong,2670,Business,16
+2025-01-15,Tokyo,Singapore,2340,Business,13
+2025-01-15,Bangkok,Singapore,1890,Business,9
+2025-01-15,Sydney,Singapore,2120,Business,11
+2025-01-15,Los Angeles,New York,5670,Business,32
+2025-01-15,Toronto,New York,3240,Business,19
+2025-01-15,Amsterdam,London,2890,Business,15
+2025-01-15,Istanbul,Frankfurt,2340,Business,12
