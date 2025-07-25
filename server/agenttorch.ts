@@ -41,7 +41,7 @@ class AgentTorchSimulator {
   // Update simulation with real event data
   updateFromRealEvents(events: any[]): void {
     console.log(`🔄 AgentTorch updating simulation with ${events.length} real events`);
-    
+
     // Extract location-based activity from events
     const locationActivity = events.reduce((acc, event) => {
       const location = event.payload?.location || 'Tokyo'; // Default fallback
@@ -67,6 +67,15 @@ class AgentTorchSimulator {
   }
 
   private initializeSimulation() {
+    this.lastUpdate = new Date();
+    this.simulationData = [];
+
+    const cities = ['Tokyo', 'Paris', 'New York', 'Seoul', 'Lagos', 'São Paulo', 'Mumbai', 'Kyoto'];
+    const productTags = ['electronics', 'fashion', 'local-crafts', 'sneakers', 'beauty', 'handmade'];
+
+    // Ensure data is always generated
+    console.log('🚀 Initializing AgentTorch simulation data...');
+
     // Generate simulation ID
     this.simulationId = createHash('sha256')
       .update(`simulation:${Date.now()}:${randomBytes(8).toString('hex')}`)
@@ -91,11 +100,11 @@ class AgentTorchSimulator {
       productTags.forEach(tag => {
         // Simulate realistic demand patterns
         const baseScore = 0.3 + Math.random() * 0.4; // 0.3-0.7 base
-        
+
         // Add seasonal/time-based variations
         const timeBoost = this.getTimeBasedBoost(city, tag);
         const finalScore = Math.min(1.0, baseScore + timeBoost);
-        
+
         // Determine trend
         const trendRandom = Math.random();
         let trend: 'rising' | 'falling' | 'stable';
@@ -119,17 +128,17 @@ class AgentTorchSimulator {
 
   private getTimeBasedBoost(city: string, tag: string): number {
     const hour = new Date().getHours();
-    
+
     // Paris electronics surge in evening
     if (city === 'Paris' && tag === 'electronics' && hour >= 18 && hour <= 21) {
       return 0.25;
     }
-    
+
     // Tokyo fashion trends in afternoon
     if (city === 'Tokyo' && tag === 'fashion' && hour >= 14 && hour <= 17) {
       return 0.3;
     }
-    
+
     // Sneakers always trending in major cities
     if (['Paris', 'Tokyo', 'New York'].includes(city) && tag === 'sneakers') {
       return 0.2;
@@ -183,7 +192,7 @@ class AgentTorchSimulator {
     recommendation: string;
   } {
     const item = this.getCrowdHeat({ city, product_tag })[0];
-    
+
     if (!item) {
       return {
         is_surge: false,
@@ -228,23 +237,24 @@ class AgentTorchSimulator {
   }
 }
 
-// Singleton instance for the application
+// Initialize singleton and ensure data is loaded
 export const agentTorchSimulator = new AgentTorchSimulator();
+agentTorchSimulator.getCrowdHeat(); // Force initialization
 
 // Enhanced AgentTorch integration with event bus
 export class AgentTorchEventProcessor {
   async processBatchEvents(events: any[]): Promise<any> {
     console.log(`🔄 AgentTorch processing ${events.length} events`);
-    
+
     // Group events by location and category
     const locationGroups = this.groupEventsByLocation(events);
-    
+
     // Generate crowd heat predictions
     const predictions = await this.generateCrowdHeatPredictions(locationGroups);
-    
+
     // Update simulator with real event data
     agentTorchSimulator.updateFromRealEvents(events);
-    
+
     return {
       processedEvents: events.length,
       predictions,
@@ -266,17 +276,17 @@ export class AgentTorchEventProcessor {
 
   private async generateCrowdHeatPredictions(locationGroups: Record<string, any[]>): Promise<any[]> {
     const predictions = [];
-    
+
     for (const [location, events] of Object.entries(locationGroups)) {
       if (location === 'unknown') continue;
-      
+
       // Analyze event patterns
       const userActions = events.filter(e => e.topic.startsWith('user.'));
       const agentActions = events.filter(e => e.topic.startsWith('agent.'));
-      
+
       // Generate prediction based on activity level
       const activityScore = this.calculateActivityScore(userActions, agentActions);
-      
+
       predictions.push({
         location,
         predicted_demand: activityScore,
@@ -286,7 +296,7 @@ export class AgentTorchEventProcessor {
         timestamp: new Date()
       });
     }
-    
+
     return predictions;
   }
 
@@ -294,23 +304,23 @@ export class AgentTorchEventProcessor {
     // Weight user actions more heavily than agent actions
     const userWeight = 0.7;
     const agentWeight = 0.3;
-    
+
     const userScore = Math.min(100, userActions.length * 10);
     const agentScore = Math.min(100, agentActions.length * 5);
-    
+
     return Math.round(userScore * userWeight + agentScore * agentWeight);
   }
 
   private extractActivityFactors(events: any[]): string[] {
     const factors = new Set<string>();
-    
+
     events.forEach(event => {
       if (event.topic.includes('purchase')) factors.add('high_purchase_activity');
       if (event.topic.includes('travel')) factors.add('travel_activity');
       if (event.topic.includes('chat')) factors.add('social_engagement');
       if (event.topic.includes('delivery')) factors.add('logistics_demand');
     });
-    
+
     return Array.from(factors);
   }
 }
@@ -322,7 +332,7 @@ export function formatCrowdBadge(heatData: CrowdHeatData): string {
   const trendIcon = heatData.trend === 'rising' ? '↑' : 
                    heatData.trend === 'falling' ? '↓' : '→';
   const percentage = Math.round(heatData.demand_score * 100);
-  
+
   return `🧭 Crowd signal: ${heatData.product_tag} ${trendIcon}${percentage}% in ${heatData.city}`;
 }
 
@@ -332,7 +342,7 @@ export function shouldAdjustEscrow(city: string, product_tag: string, trust_scor
   reason: string;
 } {
   const surge = agentTorchSimulator.getDemandSurge(city, product_tag);
-  
+
   if (surge.is_surge && trust_score < 60) {
     return {
       adjust: true,

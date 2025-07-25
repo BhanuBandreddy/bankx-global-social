@@ -124,7 +124,20 @@ router.get('/current', authMiddleware, async (req, res) => {
       .from(userCurrentTrack)
       .where(eq(userCurrentTrack.userId, userId));
 
-    res.json({ track: track || null });
+    if (!track) {
+        // Define a default track object
+        const defaultTrack = {
+            id: 'default-track',
+            originalName: 'Welcome to GlobalSocial',
+            fileSize: 0,
+            mimeType: 'audio/mpeg', // or a suitable default
+            updatedAt: new Date(),
+        };
+        console.log('No tracks found, returning default track');
+        return res.json({ track: defaultTrack });
+    }
+
+    res.json({ track: track });
   } catch (error) {
     console.error('Get current track error:', error);
     res.status(500).json({ error: 'Failed to get current track' });
