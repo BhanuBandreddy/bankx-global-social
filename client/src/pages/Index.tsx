@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
@@ -55,7 +54,7 @@ const Index = () => {
     // This will communicate with the MusicReactiveHero component
     // Since the component manages its own audio, we'll add a global context or event
     setHeroAudioMuted(!heroAudioMuted);
-    
+
     // Dispatch custom event to communicate with the hero component
     window.dispatchEvent(new CustomEvent('toggleHeroAudio', { 
       detail: { muted: !heroAudioMuted } 
@@ -63,9 +62,9 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100" style={{ fontFamily: 'Roboto Mono, monospace' }}>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       <Navbar />
-      
+
       {/* Global Audio Mute Button - Fixed Position Below Navbar */}
       <button
         onClick={toggleHeroAudio}
@@ -79,19 +78,19 @@ const Index = () => {
           <Volume2 className="w-6 h-6 text-black" />
         )}
       </button>
-      
+
       {/* Compressed Hero Section - Desktop 550px, Mobile 350px */}
       <div className="px-6 pt-6 pb-4 bg-gray-100">
         <div className="neo-card bg-white h-[550px] md:h-[550px] sm:h-[350px] overflow-hidden">
           <MusicReactiveHero userName={user?.fullName || user?.email?.split('@')[0]?.toUpperCase() || "WELCOME"} />
         </div>
       </div>
-      
+
       {/* Main Content with Left Menu */}
       <div className="flex h-screen">
         {/* Left Side Menu */}
         <LeftSideMenu activeTab={activeTab} onTabChange={setActiveTab} />
-        
+
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-6">
@@ -115,10 +114,10 @@ const Index = () => {
                   <div className="flex-1 lg:max-w-[66%] mx-0 lg:mx-10">
                     <SocialFeed />
                   </div>
-                  
+
                   {/* Divider between menu and chat - 32px spacing (desktop only) */}
                   <div className="hidden lg:block w-1 bg-black mr-8"></div>
-                  
+
                   {/* Right Side Panel with proper spacing */}
                   <div className="w-full lg:w-80">
                     <div className="sticky top-6">
@@ -127,19 +126,19 @@ const Index = () => {
                   </div>
                 </div>
               )}
-              
+
               {activeTab === "agents" && (
                 <div className="max-w-6xl mx-auto">
                   <AgentDashboard />
                 </div>
               )}
-              
+
               {activeTab === "trust" && (
                 <div className="max-w-6xl mx-auto">
                   <TrustMetrics />
                 </div>
               )}
-              
+
               {activeTab === "travelers" && (
                 <div className="max-w-4xl mx-auto text-center py-12">
                   <div className="neo-brutalist bg-white p-12">
@@ -161,6 +160,7 @@ const Index = () => {
           </div>
         </div>
       </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_320px] gap-4 min-h-[calc(100vh-80px)] p-4">
 
 
     </div>

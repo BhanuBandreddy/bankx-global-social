@@ -1,11 +1,10 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&family=Bebas+Neue:wght@400&family=Lexend+Mega:wght@400;700;900&family=Public+Sans:wght@400;700;900&family=Archivo+Black:wght@400&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Neo-Brutalist Design System */
+/* Neo-brutalist Design System - Enhanced */
 :root {
   --primary-yellow: #FEE440;
   --primary-pink: #FF2975;
@@ -13,9 +12,14 @@
   --replit-orange: #F26207;
   --neon-yellow: #FFFC00;
   --electric-blue: #4361EE;
+  --cyber-purple: #8A2BE2;
+  --hot-pink: #FF1493;
+  --lime-green: #32CD32;
   --black: #000000;
   --white: #FFFFFF;
   --gray-light: #f5f5f5;
+  --gray-medium: #cccccc;
+  --shadow-color: rgba(0, 0, 0, 0.8);
 }
 
 /* Neo-brutalist Base Styles */
@@ -54,7 +58,7 @@ body {
     padding: 16px 24px;
     box-shadow: 4px 4px 0 var(--black);
   }
-  
+
   .neo-button:hover {
     box-shadow: 2px 2px 0 var(--black);
   }
@@ -266,7 +270,7 @@ h1, h2, h3 {
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
-    
+
     /* Custom design system colors */
     --ink: 0 0% 0%;
     --ink-foreground: 0 0% 100%;
@@ -308,7 +312,7 @@ h1, h2, h3 {
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-    
+
     /* Custom design system colors for dark mode */
     --ink: 0 0% 0%;
     --ink-foreground: 0 0% 100%;
