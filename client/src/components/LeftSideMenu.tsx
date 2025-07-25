@@ -21,7 +21,7 @@ export const LeftSideMenu = ({ activeTab, onTabChange }: LeftSideMenuProps) => {
     { id: "feed", label: "Global Feed", icon: "🌐", description: "Social commerce feed" },
     { id: "agents", label: "AI Agents", icon: "🤖", description: "NANDA agent network" },
     { id: "trust", label: "Trust Network", icon: "🔐", description: "Trust score system" },
-    { id: "travelers", label: "Connections", icon: "✈️", description: "3D traveler discovery" },
+    { id: "travelers", label: "Connections", icon: "✈️", description: "Explore" },
   ];
 
   return (
