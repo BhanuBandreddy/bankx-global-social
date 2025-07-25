@@ -54,6 +54,7 @@ export const BlinkChatPanel = ({ isExpanded = false }: BlinkChatPanelProps) => {
       });
 
       const data = await response.json();
+      console.log('Blink API response:', data); // Debug log
       
       if (data.success) {
         const assistantMessage: ChatMessage = {
@@ -62,8 +63,10 @@ export const BlinkChatPanel = ({ isExpanded = false }: BlinkChatPanelProps) => {
           content: data.finalAnswer || data.response || "I'm here to help!",
           timestamp: new Date()
         };
+        console.log('Adding assistant message:', assistantMessage); // Debug log
         setMessages(prev => [...prev, assistantMessage]);
       } else {
+        console.error('API returned error:', data.error);
         throw new Error(data.error || 'Failed to get response');
       }
     } catch (error) {
