@@ -16,6 +16,7 @@ import Logistics from "./pages/Logistics";
 import Workflow from "./pages/Workflow";
 import AgentDashboardPage from "./pages/AgentDashboardPage";
 import TravelerDiscoveryFixed from "./pages/TravelerDiscoveryFixed";
+import MultiAgentDiagram from "./components/MultiAgentDiagram";
 import TravelerWorldMap from "./pages/TravelerWorldMap";
 import TravelerWorldMapNew from "./pages/TravelerWorldMapNew";
 import NotFound from "./pages/NotFound";
@@ -51,6 +52,7 @@ const App = () => {
               <Route path="/agent-dashboard" element={<AgentDashboardPage />} />
               <Route path="/traveler-discovery" element={<TravelerDiscoveryFixed />} />
               <Route path="/traveler-world-map" element={<TravelerWorldMapNew />} />
+              <Route path="/multi-agent-diagram" element={<MultiAgentDiagram />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
