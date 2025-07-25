@@ -160,9 +160,6 @@ const Index = () => {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_320px] gap-4 min-h-[calc(100vh-80px)] p-4">
-
-
     </div>
   );
 };
