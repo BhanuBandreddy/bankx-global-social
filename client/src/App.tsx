@@ -15,7 +15,7 @@ import Redirect from "./pages/Redirect";
 import Logistics from "./pages/Logistics";
 import Workflow from "./pages/Workflow";
 import AgentDashboardPage from "./pages/AgentDashboardPage";
-import TravelerDiscovery from "./pages/TravelerDiscovery";
+import TravelerDiscoveryFixed from "./pages/TravelerDiscoveryFixed";
 import TravelerWorldMap from "./pages/TravelerWorldMap";
 import TravelerWorldMapNew from "./pages/TravelerWorldMapNew";
 import NotFound from "./pages/NotFound";
@@ -49,7 +49,7 @@ const App = () => {
               <Route path="/logistics" element={<Logistics />} />
               <Route path="/workflow" element={<Workflow />} />
               <Route path="/agent-dashboard" element={<AgentDashboardPage />} />
-              <Route path="/traveler-discovery" element={<TravelerDiscovery />} />
+              <Route path="/traveler-discovery" element={<TravelerDiscoveryFixed />} />
               <Route path="/traveler-world-map" element={<TravelerWorldMapNew />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

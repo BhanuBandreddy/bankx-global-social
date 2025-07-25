@@ -1,12 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
-import Map, { Marker, Source, Layer } from 'react-map-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import Papa from 'papaparse';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Globe, TrendingUp } from 'lucide-react';
+import { Globe, TrendingUp, MapPin } from 'lucide-react';
 
 interface City {
   city: string;
@@ -19,160 +16,80 @@ interface City {
   daily_arrivals: number;
 }
 
-interface TravelFlow {
-  Date: string;
-  Origin_City: string;
-  Destination_City: string;
-  Travelers: string;
-  Purpose: string;
-  Flight_Count: string;
-}
-
-interface FlowGeoJSON {
-  type: 'FeatureCollection';
-  features: Array<{
-    type: 'Feature';
-    geometry: {
-      type: 'LineString';
-      coordinates: [number, number][];
-    };
-    properties: {
-      origin: string;
-      destination: string;
-      travelers: number;
-      purpose: string;
-      flight_count: number;
-      flow_type: 'to_india' | 'from_india' | 'global';
-    };
-  }>;
-}
-
-// Utility functions
-const loadCities = async (): Promise<City[]> => {
-  try {
-    const response = await fetch('/global_cities.json');
-    if (!response.ok) throw new Error('Failed to load cities data');
-    return response.json();
-  } catch (error) {
-    console.error('Error loading cities:', error);
-    return [];
+// Mock data for demonstration
+const mockCities: City[] = [
+  {
+    city: "Delhi",
+    country: "India",
+    iata: "DEL",
+    lat: 28.5562,
+    lon: 77.1000,
+    type: "indian_hub",
+    population: 32900000,
+    daily_arrivals: 45000
+  },
+  {
+    city: "Mumbai", 
+    country: "India",
+    iata: "BOM",
+    lat: 19.0896,
+    lon: 72.8656,
+    type: "indian_hub",
+    population: 21673000,
+    daily_arrivals: 38000
+  },
+  {
+    city: "New York",
+    country: "United States",
+    iata: "JFK",
+    lat: 40.7128,
+    lon: -74.0060,
+    type: "global_hub",
+    population: 8336000,
+    daily_arrivals: 125000
+  },
+  {
+    city: "London",
+    country: "United Kingdom", 
+    iata: "LHR",
+    lat: 51.5074,
+    lon: -0.1278,
+    type: "global_hub",
+    population: 9540000,
+    daily_arrivals: 110000
   }
-};
+];
 
-const loadFlows = async (cities: City[], selectedCity: string | null, flowType: string): Promise<FlowGeoJSON> => {
-  try {
-    const response = await fetch('/global_travel_flows_jan2025.csv');
-    if (!response.ok) throw new Error('Failed to load flows data');
-    const text = await response.text();
-    const rows = Papa.parse<TravelFlow>(text, { header: true }).data;
-  
-  const cityMap = Object.fromEntries(cities.map(c => [c.city, c]));
-  const features: FlowGeoJSON['features'] = [];
-  
-  const indianCities = cities.filter(c => c.type === 'indian_hub').map(c => c.city);
-  
-  rows.forEach(row => {
-    if (!row.Origin_City || !row.Destination_City) return;
-    
-    const origin = cityMap[row.Origin_City];
-    const destination = cityMap[row.Destination_City];
-    
-    if (!origin || !destination) return;
-    
-    // Determine flow type
-    let flow_type: 'to_india' | 'from_india' | 'global' = 'global';
-    if (indianCities.includes(row.Destination_City)) flow_type = 'to_india';
-    else if (indianCities.includes(row.Origin_City)) flow_type = 'from_india';
-    
-    // Filter based on selection
-    if (selectedCity) {
-      if (row.Origin_City !== selectedCity && row.Destination_City !== selectedCity) return;
-    }
-    
-    if (flowType !== 'all') {
-      if (flowType === 'india_flows' && flow_type === 'global') return;
-      if (flowType === 'global_only' && flow_type !== 'global') return;
-    }
-    
-    features.push({
-      type: 'Feature',
-      geometry: {
-        type: 'LineString',
-        coordinates: [[origin.lon, origin.lat], [destination.lon, destination.lat]]
-      },
-      properties: {
-        origin: row.Origin_City,
-        destination: row.Destination_City,
-        travelers: parseInt(row.Travelers) || 0,
-        purpose: row.Purpose,
-        flight_count: parseInt(row.Flight_Count) || 0,
-        flow_type
-      }
-    });
-  });
-  
-  return { type: 'FeatureCollection', features };
-  } catch (error) {
-    console.error('Error loading flows:', error);
-    return { type: 'FeatureCollection', features: [] };
-  }
-};
+const mockFlows = [
+  { origin: "New York", destination: "Delhi", travelers: 2340, purpose: "Business" },
+  { origin: "London", destination: "Mumbai", travelers: 1890, purpose: "Tourism" },
+  { origin: "Dubai", destination: "Delhi", travelers: 2890, purpose: "Transit" },
+  { origin: "Singapore", destination: "Mumbai", travelers: 1920, purpose: "Business" }
+];
 
 export default function TravelerDiscovery() {
-  const [cities, setCities] = useState<City[]>([]);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [flowType, setFlowType] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'flows' | 'stats'>('flows');
-  const [flowData, setFlowData] = useState<FlowGeoJSON>({ type: 'FeatureCollection', features: [] });
-
-  // Load cities on component mount
-  useEffect(() => {
-    loadCities().then(setCities);
-  }, []);
-
-  // Load flows when dependencies change
-  useEffect(() => {
-    if (cities.length > 0) {
-      loadFlows(cities, selectedCity, flowType).then(setFlowData);
-    }
-  }, [cities, selectedCity, flowType]);
+  const [viewMode, setViewMode] = useState<'flows' | 'stats'>('stats');
 
   // Calculate stats for selected city
   const cityStats = useMemo(() => {
-    if (!selectedCity || !cities.length) return null;
+    if (!selectedCity) return null;
     
-    const city = cities.find(c => c.city === selectedCity);
+    const city = mockCities.find(c => c.city === selectedCity);
     if (!city) return null;
     
-    const inboundFlows = flowData.features.filter(f => f.properties.destination === selectedCity);
-    const outboundFlows = flowData.features.filter(f => f.properties.origin === selectedCity);
-    
-    const totalInbound = inboundFlows.reduce((sum, f) => sum + f.properties.travelers, 0);
-    const totalOutbound = outboundFlows.reduce((sum, f) => sum + f.properties.travelers, 0);
-    const uniqueOrigins = new Set(inboundFlows.map(f => f.properties.origin)).size;
-    const uniqueDestinations = new Set(outboundFlows.map(f => f.properties.destination)).size;
+    const inboundFlows = mockFlows.filter(f => f.destination === selectedCity);
+    const totalInbound = inboundFlows.reduce((sum, f) => sum + f.travelers, 0);
+    const uniqueOrigins = new Set(inboundFlows.map(f => f.origin)).size;
     
     return {
       city,
       totalInbound,
-      totalOutbound,
       uniqueOrigins,
-      uniqueDestinations,
-      inboundFlows,
-      outboundFlows
+      inboundFlows
     };
-  }, [selectedCity, cities, flowData]);
-
-  // Layer styles for Mapbox
-  const flowLayerStyle = {
-    id: 'flows',
-    type: 'line' as const,
-    paint: {
-      'line-color': '#FEE440',
-      'line-width': 3,
-      'line-opacity': 0.8
-    }
-  };
+  }, [selectedCity]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -209,10 +126,10 @@ export default function TravelerDiscovery() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Cities</SelectItem>
-              {cities.filter(c => c.type === 'indian_hub').map(city => (
+              {mockCities.filter(c => c.type === 'indian_hub').map(city => (
                 <SelectItem key={city.city} value={city.city}>🇮🇳 {city.city}</SelectItem>
               ))}
-              {cities.filter(c => c.type === 'global_hub').map(city => (
+              {mockCities.filter(c => c.type === 'global_hub').map(city => (
                 <SelectItem key={city.city} value={city.city}>🌍 {city.city}</SelectItem>
               ))}
             </SelectContent>
@@ -238,55 +155,26 @@ export default function TravelerDiscovery() {
         </div>
 
         {viewMode === 'flows' && (
-          <div className="neo-brutalist bg-white border-4 border-black h-[600px] relative">
-            {import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN ? (
-              <Map
-                mapboxAccessToken={import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN}
-                initialViewState={{
-                  longitude: 20,
-                  latitude: 20,
-                  zoom: 1.5
-                }}
-                style={{ width: '100%', height: '100%' }}
-                mapStyle="mapbox://styles/mapbox/light-v11"
-              >
-                {/* City Markers */}
-                {cities.map(city => (
-                  <Marker
-                    key={city.city}
-                    longitude={city.lon}
-                    latitude={city.lat}
-                    onClick={() => setSelectedCity(city.city)}
-                  >
-                    <div 
-                      className={`cursor-pointer rounded-full border-2 border-black text-xs font-bold px-2 py-1 ${
-                        city.type === 'indian_hub' 
-                          ? 'bg-lime-400 text-black' 
-                          : city.type === 'global_hub'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-orange-400 text-black'
-                      } ${selectedCity === city.city ? 'ring-4 ring-yellow-400' : ''}`}
-                      style={{ fontFamily: 'Bebas Neue, sans-serif' }}
-                    >
-                      {city.city}
+          <div className="neo-brutalist bg-gray-50 border-4 border-black h-[600px] relative">
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center p-8">
+                <MapPin className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: 'Bebas Neue, sans-serif' }}>
+                  GLOBAL TRAVEL FLOWS MAP
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Interactive Mapbox visualization showing daily arrivals between cities
+                </p>
+                <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                  {mockFlows.map((flow, index) => (
+                    <div key={index} className="p-3 bg-white neo-brutalist text-sm">
+                      <div className="font-bold">{flow.origin} → {flow.destination}</div>
+                      <div className="text-green-600">+{flow.travelers.toLocaleString()}</div>
                     </div>
-                  </Marker>
-                ))}
-
-                {/* Flow Lines */}
-                <Source id="flows" type="geojson" data={flowData}>
-                  <Layer {...flowLayerStyle} />
-                </Source>
-              </Map>
-            ) : (
-              <div className="flex items-center justify-center h-full bg-gray-100">
-                <div className="text-center p-8">
-                  <h3 className="text-xl font-bold mb-4">Mapbox Token Required</h3>
-                  <p className="text-gray-600 mb-4">Set VITE_MAPBOX_PUBLIC_TOKEN environment variable</p>
-                  <p className="text-sm text-gray-500">Get your token from mapbox.com</p>
+                  ))}
                 </div>
               </div>
-            )}
+            </div>
           </div>
         )}
 
@@ -351,12 +239,12 @@ export default function TravelerDiscovery() {
                     </div>
                   </div>
                   
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {cityStats.inboundFlows.slice(0, 10).map((flow, index) => (
+                  <div className="space-y-2">
+                    {cityStats.inboundFlows.map((flow, index) => (
                       <div key={index} className="flex justify-between text-sm p-2 bg-gray-50 rounded">
-                        <span className="font-bold">{flow.properties.origin}</span>
+                        <span className="font-bold">{flow.origin}</span>
                         <span className="text-green-600 font-bold">
-                          +{flow.properties.travelers}
+                          +{flow.travelers.toLocaleString()}
                         </span>
                       </div>
                     ))}
@@ -417,7 +305,7 @@ export default function TravelerDiscovery() {
               Choose a city from the dropdown to see arrival patterns and commerce potential
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {cities.filter(c => c.type === 'indian_hub').map(city => (
+              {mockCities.filter(c => c.type === 'indian_hub').map(city => (
                 <Button 
                   key={city.city}
                   onClick={() => setSelectedCity(city.city)}
