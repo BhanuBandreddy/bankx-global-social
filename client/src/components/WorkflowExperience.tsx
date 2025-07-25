@@ -299,20 +299,6 @@ export const WorkflowExperience = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Navigation Back to Main App */}
-      <div className="flex items-center space-x-6 mb-8">
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/')}
-          className="neo-brutalist bg-white hover:bg-gray-100 px-6 py-3"
-        >
-          <ArrowLeft className="w-4 h-4 mr-3" />
-          Back to App
-        </Button>
-        <h1 className="text-2xl font-bold text-black uppercase" style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '3px' }}>
-          Workflow Experience
-        </h1>
-      </div>
 
       {/* Experience Progress Header */}
       <Card className="border-4 border-black">

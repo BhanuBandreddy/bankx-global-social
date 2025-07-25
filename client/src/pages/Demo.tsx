@@ -198,48 +198,21 @@ export default function Demo() {
           {/* Individual Demo Views */}
           {selectedDemo === 'workflow' && (
             <div className="space-y-6">
-              <div className="flex items-center space-x-4 mb-6">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setSelectedDemo('overview')}
-                  className="border-2 border-black"
-                >
-                  ← Back to Overview
-                </Button>
-                <h2 className="text-2xl font-bold">PDF Itinerary Workflow</h2>
-              </div>
+              <h2 className="text-2xl font-bold mb-6">PDF Itinerary Workflow</h2>
               <WorkflowExperience />
             </div>
           )}
 
           {selectedDemo === 'localelens' && (
             <div className="space-y-6">
-              <div className="flex items-center space-x-4 mb-6">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setSelectedDemo('overview')}
-                  className="border-2 border-black"
-                >
-                  ← Back to Overview
-                </Button>
-                <h2 className="text-2xl font-bold">LocaleLens Discovery</h2>
-              </div>
+              <h2 className="text-2xl font-bold mb-6">LocaleLens Discovery</h2>
               <LocaleLensDemo destination="Tokyo" />
             </div>
           )}
 
           {selectedDemo === 'agenttorch' && (
             <div className="space-y-6">
-              <div className="flex items-center space-x-4 mb-6">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setSelectedDemo('overview')}
-                  className="border-2 border-black"
-                >
-                  ← Back to Overview
-                </Button>
-                <h2 className="text-2xl font-bold">AgentTorch Intelligence</h2>
-              </div>
+              <h2 className="text-2xl font-bold mb-6">AgentTorch Intelligence</h2>
               <AgentTorchDemo />
             </div>
           )}
