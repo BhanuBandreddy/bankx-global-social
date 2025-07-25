@@ -1,0 +1,139 @@
+Here is a **Replit project prompt** precisely to your requirements—Mapbox-based, using CSV-to-GeoJSON scripts, designed to *replace only the “Connections” user journey* with a global/international traveler flows map. **No other functionalities are created or modified.** This is ready for your devs to implement and extend.
+
+## 🌏 Global Social – Connections Map (International Arrivals/Departures)
+
+### **Goal**
+Replace the “Connections” journey with an interactive map (Mapbox) showing:
+- Indian international cities as markers.
+- City selection → dynamically animates traveler inflow/outflow to/from that city for a user-selected week/date range.
+- Under the hood: CSV data parsed client-side → translated to GeoJSON → rendered on Mapbox map as animated arcs/lines and markers.
+
+### 🚩 **Quick Project Steps – For Replit README**
+
+#### **Step 1: Setup Mapbox**
+- Create a [Mapbox account](https://account.mapbox.com/) for a free API token.
+- In Replit, in your root create a file:  
+  `.env`  
+  ```
+  REACT_APP_MAPBOX_TOKEN=your_mapbox_token_here
+  ```
+
+#### **Step 2: Project Directory Structure**
+- Do **not** touch unrelated files.
+- Only *replace/refactor*:
+  - `/client/src/pages/Connections.jsx` *(or .js or .tsx, as appropriate)*
+  - New utils/components under `/client/src/geo/` (for parsing/conversion).
+
+#### **Step 3: Add Data**
+- Place your CSV as:  
+  `/client/public/global_social_june2025.csv`
+- Place city geocoords as `/client/public/cities.json`. Example entry:
+  ```json
+  [
+    { "city": "Delhi", "country": "India", "iata": "DEL", "lat": 28.5562, "lon": 77.1000 },
+    { "city": "Mumbai", "country": "India", "iata": "BOM", "lat": 19.0896, "lon": 72.8656 }
+  ]
+  ```
+
+#### **Step 4: Install Required Packages**
+```bash
+npm install react-map-gl mapbox-gl papaparse date-fns
+```
+
+### 🗺️ **/client/src/pages/Connections.jsx (Core Mapbox Replacement)**
+
+```jsx
+import React, { useState, useMemo } from "react";
+import Map, { Marker, Source, Layer } from "react-map-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import Papa from "papaparse";
+import { format, parseISO, isWithinInterval } from "date-fns";
+
+// Load Data
+const cities = require("../public/cities.json");
+
+// Utility: parse CSV and turn into GeoJSON flows for selected city/dates
+async function loadFlows(csvPath, cities, selected, start, end) {
+  const resp = await fetch(csvPath); 
+  const text = await resp.text();
+  const rows = Papa.parse(text, { header: true }).data;
+  // Helper: city code/index for quick lookups
+  const cityMap = Object.fromEntries(cities.map(c => [c.city.trim().toLowerCase(), c]));
+  // Filter and build features
+  const features = [];
+  rows.forEach(row => {
+    const date = parseISO(row.Date);
+    if (!isWithinInterval(date, { start, end })) return;
+    // Arrivals to selected city
+    if (row.Global_City && row.Global_City.trim().toLowerCase() === selected.trim().toLowerCase() && row.City_IN) {
+      const from = cityMap[row.City_IN.trim().toLowerCase()];
+      const to = cityMap[row.Global_City.trim().toLowerCase()];
+      if (from && to) features.push({
+        type: "Feature",
+        geometry: { type: "LineString", coordinates: [[from.lon, from.lat], [to.lon, to.lat]] },
+        properties: { type: "arrival", count: Number(row.Travelers_IN), from: from.city, to: to.city, date: row.Date }
+      });
+    }
+    // Departures from selected city
+    if (row.City_OUT && row.City_OUT.trim().toLowerCase() === selected.trim().toLowerCase() && row.Global_City) {
+      const from = cityMap[row.City_OUT.trim().toLowerCase()];
+      const to = cityMap[row.Global_City.trim().toLowerCase()];
+      if (from && to) features.push({
+        type: "Feature",
+        geometry: { type: "LineString", coordinates: [[from.lon, from.lat], [to.lon, to.lat]] },
+        properties: { type: "departure", count: Number(row.Travelers_OUT), from: from.city, to: to.city, date: row.Date }
+      });
+    }
+  });
+  return { type: "FeatureCollection", features };
+}
+
+export default function Connections() {
+  const [selectedCity, setSelectedCity] = useState("Delhi");
+  const [dateRange, setDateRange] = useState({ start: new Date("2025-06-01"), end: new Date("2025-06-07") });
+  const [geoJson, setGeoJson] = useState({ type: "FeatureCollection", features: [] });
+
+  // Load and update flows when selection changes
+  React.useEffect(() => {
+    loadFlows("/global_social_june2025.csv", cities, selectedCity, dateRange.start, dateRange.end)
+      .then(setGeoJson);
+  }, [selectedCity, dateRange]);
+
+  return (
+    
+      
+        {/* Markers for all cities */}
+        {cities.map(city =>
+           setSelectedCity(city.city)}>
+              {city.city}
+          
+        )}
+        {/* Arcs for flows */}
+        
+          
+        
+      
+      {/* Date Range Picker (replace with real component/UI as needed) */}
+      
+         setDateRange(r => ({ ...r, start: new Date(e.target.value) }))} />
+         setDateRange(r => ({ ...r, end: new Date(e.target.value) }))} />
+        Currently viewing {selectedCity}
+      
+    
+  );
+}
+```
+---
+
+### **Requirements Recap**
+- **Replaces only the user journey/page/component under “Connections”**.
+- No global state, no other UI/logic changed.
+- All CSS for map/city markers is inlined or placed in Connections-specific CSS if needed.
+- Data flows are all generated from the user’s CSV (with your expected columns).
+
+**Ready to fork/run!**  
+- *Fork, drop your token/csv, tune marker and line styles, and ship a visually compelling “Connections” experience powered by Mapbox and dynamic flows.*
+
+Let me know if you want an instant `cities.json` generator, a loader that works with your actual CSV, or help tweaking UI styles!
+
+[1] https://replit.com/@hareeshb3/global-social
