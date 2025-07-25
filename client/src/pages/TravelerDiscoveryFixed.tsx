@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Globe, TrendingUp, MapPin } from 'lucide-react';
+import { Globe, TrendingUp, MapPin, ArrowLeft, Home } from 'lucide-react';
 
 interface City {
   city: string;
@@ -68,6 +69,7 @@ const mockFlows = [
 ];
 
 export default function TravelerDiscovery() {
+  const navigate = useNavigate();
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [flowType, setFlowType] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'flows' | 'stats'>('stats');
@@ -93,14 +95,38 @@ export default function TravelerDiscovery() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="neo-brutalist bg-black text-white p-6 mb-0" style={{ 
+      {/* Navigation Header */}
+      <div className="neo-brutalist bg-black text-white p-4 mb-0">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button 
+              onClick={() => navigate('/')}
+              className="neo-brutalist bg-lime-400 text-black hover:bg-lime-300 px-4 py-2"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Main
+            </Button>
+            <Button 
+              onClick={() => navigate('/')}
+              className="neo-brutalist bg-white text-black hover:bg-gray-100 px-4 py-2"
+            >
+              <Home className="w-4 h-4 mr-2" />
+              Home
+            </Button>
+          </div>
+          <div style={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '2px' }}>
+            <h1 className="text-2xl font-black">GLOBAL CONNECTIONS</h1>
+          </div>
+        </div>
+      </div>
+
+      {/* Subtitle Header */}
+      <div className="bg-lime-400 text-black p-4" style={{ 
         fontFamily: 'Bebas Neue, sans-serif', 
-        letterSpacing: '2px' 
+        letterSpacing: '1px' 
       }}>
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-black mb-2">GLOBAL CONNECTIONS</h1>
-          <p className="text-lime-400 text-lg font-bold">
+        <div className="max-w-7xl mx-auto text-center">
+          <p className="text-lg font-bold">
             Daily arrivals • International flows • Commerce potential
           </p>
         </div>
