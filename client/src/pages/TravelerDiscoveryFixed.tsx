@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Globe, TrendingUp, MapPin, ArrowLeft, Home } from 'lucide-react';
+import MapboxDrillDown from "@/components/MapboxDrillDown";
 
 interface City {
   city: string;
@@ -100,7 +101,7 @@ export default function TravelerDiscovery() {
   const navigate = useNavigate();
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<any | null>(null);
-  const [viewMode, setViewMode] = useState<'map' | 'city' | 'people' | 'chat'>('map');
+  const [viewMode, setViewMode] = useState<'map' | 'mapbox' | 'city' | 'people' | 'chat'>('map');
   const [drillDownPath, setDrillDownPath] = useState<string[]>([]);
 
   // Navigation functions
@@ -187,13 +188,39 @@ export default function TravelerDiscovery() {
               )}
             </div>
           </div>
-          <p className="text-lg font-bold">
-            Map → Cities → People → Chat
-          </p>
+          <div className="flex space-x-4">
+            <Button 
+              onClick={() => setViewMode('map')}
+              className={`neo-brutalist text-sm ${viewMode === 'map' ? 'bg-black text-lime-400' : 'bg-white text-black'}`}
+            >
+              Data View
+            </Button>
+            <Button 
+              onClick={() => setViewMode('mapbox')}
+              className={`neo-brutalist text-sm ${viewMode === 'mapbox' ? 'bg-black text-lime-400' : 'bg-white text-black'}`}
+            >
+              Map View
+            </Button>
+          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
+
+        {/* MAPBOX INTERACTIVE MAP */}
+        {viewMode === 'mapbox' && (
+          <div>
+            <div className="mb-4 p-4 bg-lime-400 neo-brutalist text-black">
+              <h3 className="font-black text-lg mb-2" style={{ fontFamily: 'Bebas Neue, sans-serif' }}>
+                INTERACTIVE TRAVEL MAP
+              </h3>
+              <p className="text-sm">
+                Zoom and click markers to drill down: Global → Airports → Individual Travelers
+              </p>
+            </div>
+            <MapboxDrillDown onPersonSelect={handlePersonSelect} />
+          </div>
+        )}
 
         {/* 1. MAP VIEW - Global Cities */}
         {viewMode === 'map' && (
