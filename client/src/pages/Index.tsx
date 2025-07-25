@@ -148,11 +148,11 @@ const Index = () => {
                     </h2>
                     <p className="text-black font-bold mb-12 text-lg">Interactive 3D map to discover travelers coming to any city worldwide</p>
                     <button 
-                      onClick={() => navigate('/traveler-world-map')}
+                      onClick={() => navigate('/traveler-discovery')}
                       className="neo-button neo-button-green px-12 py-6 font-black text-lg"
                       style={{ fontFamily: 'Archivo Black, sans-serif', letterSpacing: '1px' }}
                     >
-                      🌍 Launch 3D Map
+                      🌍 View Connections
                     </button>
                   </div>
                 </div>

@@ -130,7 +130,7 @@ export const HamburgerMenu = () => {
                 </button>
 
                 <button
-                  onClick={() => handleNavigation("/", "travelers")}
+                  onClick={() => window.location.href = "/traveler-discovery"}
                   className="neo-brutalist bg-white text-black hover:bg-gray-100 p-4 w-full text-left block"
                 >
                   <div className="flex items-center space-x-3">
@@ -140,7 +140,7 @@ export const HamburgerMenu = () => {
                         Connections
                       </div>
                       <div className="text-xs text-gray-600 font-medium">
-                        3D traveler discovery
+                        Global travel flows
                       </div>
                     </div>
                   </div>
