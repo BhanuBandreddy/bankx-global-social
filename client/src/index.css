@@ -331,3 +331,37 @@ h1, h2, h3 {
     @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent;
   }
 }
+
+/* Flow Map Animations */
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+.flow-line-animation {
+  animation: flowLine 3s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+@keyframes flowLine {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0.3;
+  }
+}

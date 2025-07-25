@@ -181,23 +181,101 @@ export default function TravelerDiscovery() {
         </div>
 
         {viewMode === 'flows' && (
-          <div className="neo-brutalist bg-gray-50 border-4 border-black h-[600px] relative">
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center p-8">
-                <MapPin className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-2xl font-bold mb-4" style={{ fontFamily: 'Bebas Neue, sans-serif' }}>
-                  GLOBAL TRAVEL FLOWS MAP
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Interactive Mapbox visualization showing daily arrivals between cities
-                </p>
-                <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-                  {mockFlows.map((flow, index) => (
-                    <div key={index} className="p-3 bg-white neo-brutalist text-sm">
-                      <div className="font-bold">{flow.origin} → {flow.destination}</div>
-                      <div className="text-green-600">+{flow.travelers.toLocaleString()}</div>
-                    </div>
-                  ))}
+          <div className="neo-brutalist bg-gray-900 border-4 border-black h-[600px] relative overflow-hidden">
+            {/* World Map Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900">
+              {/* Continents as simplified shapes */}
+              <svg className="w-full h-full" viewBox="0 0 1000 500">
+                {/* Asia */}
+                <path d="M600 150 L750 120 L820 180 L780 250 L720 280 L650 260 L600 200 Z" fill="#1e293b" opacity="0.7" />
+                {/* Europe */}
+                <path d="M480 120 L520 100 L550 130 L530 160 L480 150 Z" fill="#1e293b" opacity="0.7" />
+                {/* North America */}
+                <path d="M200 100 L350 90 L380 150 L320 200 L250 180 L200 140 Z" fill="#1e293b" opacity="0.7" />
+                {/* Africa */}
+                <path d="M480 180 L520 170 L540 220 L520 300 L480 290 L460 240 Z" fill="#1e293b" opacity="0.7" />
+              </svg>
+            </div>
+
+            {/* City Markers */}
+            <div className="absolute inset-0">
+              {/* Delhi */}
+              <div className="absolute" style={{ left: '68%', top: '35%' }}>
+                <div className="w-4 h-4 bg-lime-400 rounded-full border-2 border-black pulse-animation"></div>
+                <div className="text-white text-xs font-bold mt-1">Delhi</div>
+              </div>
+              
+              {/* Mumbai */}
+              <div className="absolute" style={{ left: '66%', top: '42%' }}>
+                <div className="w-4 h-4 bg-lime-400 rounded-full border-2 border-black pulse-animation"></div>
+                <div className="text-white text-xs font-bold mt-1">Mumbai</div>
+              </div>
+
+              {/* New York */}
+              <div className="absolute" style={{ left: '25%', top: '28%' }}>
+                <div className="w-4 h-4 bg-yellow-400 rounded-full border-2 border-black pulse-animation"></div>
+                <div className="text-white text-xs font-bold mt-1">NYC</div>
+              </div>
+
+              {/* London */}
+              <div className="absolute" style={{ left: '48%', top: '25%' }}>
+                <div className="w-4 h-4 bg-yellow-400 rounded-full border-2 border-black pulse-animation"></div>
+                <div className="text-white text-xs font-bold mt-1">London</div>
+              </div>
+            </div>
+
+            {/* Flow Lines */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none">
+              {/* NYC to Delhi */}
+              <path 
+                d="M 250 140 Q 450 100 680 175" 
+                stroke="#ff2975" 
+                strokeWidth="3" 
+                fill="none" 
+                strokeDasharray="5,5"
+                className="flow-line-animation"
+              />
+              
+              {/* London to Mumbai */}
+              <path 
+                d="M 480 125 Q 550 180 660 210" 
+                stroke="#04e762" 
+                strokeWidth="3" 
+                fill="none" 
+                strokeDasharray="5,5"
+                className="flow-line-animation"
+                style={{ animationDelay: '1s' }}
+              />
+            </svg>
+
+            {/* Flow Statistics Overlay */}
+            <div className="absolute bottom-4 left-4 right-4">
+              <div className="grid grid-cols-2 gap-4">
+                {mockFlows.map((flow, index) => (
+                  <div key={index} className="p-3 bg-black bg-opacity-80 neo-brutalist text-white text-sm">
+                    <div className="font-bold text-yellow-400">{flow.origin} → {flow.destination}</div>
+                    <div className="text-lime-400 font-bold">+{flow.travelers.toLocaleString()} travelers</div>
+                    <div className="text-gray-300">{flow.purpose}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Legend */}
+            <div className="absolute top-4 right-4 bg-black bg-opacity-80 neo-brutalist p-4 text-white">
+              <h4 className="font-bold mb-2">Legend</h4>
+              <div className="space-y-1 text-sm">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-lime-400 rounded-full"></div>
+                  <span>Indian Hubs</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                  <span>Global Hubs</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-1 bg-pink-500"></div>
+                  <span>Flow Lines</span>
                 </div>
               </div>
             </div>
