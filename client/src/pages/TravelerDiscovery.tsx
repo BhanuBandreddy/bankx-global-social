@@ -205,12 +205,12 @@ export default function TravelerDiscovery() {
             </SelectContent>
           </Select>
           
-          <Select value={selectedCity || ''} onValueChange={(value) => setSelectedCity(value || null)}>
+          <Select value={selectedCity || 'all'} onValueChange={(value) => setSelectedCity(value === 'all' ? null : value)}>
             <SelectTrigger className="neo-brutalist">
               <SelectValue placeholder="Select City" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Cities</SelectItem>
+              <SelectItem value="all">All Cities</SelectItem>
               {cities.filter(c => c.type === 'indian_hub').map(city => (
                 <SelectItem key={city.city} value={city.city}>🇮🇳 {city.city}</SelectItem>
               ))}
